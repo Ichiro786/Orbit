@@ -1,11 +1,13 @@
 package com.wangzan101.mika.task
 
 import com.wangzan101.mika.R
+import com.wangzan101.mika.core.whatsapp.explicitWhatsappOwnerRequest
 import com.wangzan101.mika.i18n.tr
 import com.wangzan101.mika.i18n.trPlural
 import com.wangzan101.mika.core.uistate.IdleScroll
 import com.wangzan101.mika.core.cap.web.PagePacing
 import com.wangzan101.mika.core.uistate.PlacePace
+import com.wangzan101.mika.whatsapp.AndroidWhatsappOwnerPort
 import kotlin.random.Random
 import com.wangzan101.mika.core.action.OutwardPacing
 import com.wangzan101.mika.core.cap.phone.AppPacePlan
@@ -1218,6 +1220,11 @@ class TaskRun(
                     !conditionCheck && (service.application as MikaApp).calls.settings.state.value.enabled
                 },
                 whatsapp = (service.application as MikaApp).whatsapp.takeIf { !conditionCheck && it.toolsAvailable() }?.port,
+                // Result push to the user's own WhatsApp: only for phone-UI tasks whose request explicitly asks for it
+                // (never without that opt-in); link snapshot, recheck and once-per-run delivery live in the sender.
+                whatsappOwner = if (provenance.origin == RunOrigin.Ui && !conditionCheck && explicitWhatsappOwnerRequest(goal)) {
+                    AndroidWhatsappOwnerPort(service.application as MikaApp, key)
+                } else null,
                 // 设置里允许 Mika 改自己时,才把 settings_list、settings_set 发给模型
                 selfConfig = if (FeatureFlags.get(service).selfConfig()) {
                     com.wangzan101.mika.settings.SelfConfigImpl(FeatureFlags.get(service))

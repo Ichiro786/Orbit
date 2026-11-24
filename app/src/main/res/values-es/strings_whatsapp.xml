@@ -61,4 +61,5 @@
     <string name="whatsapp_tool_chats">Chats de WhatsApp</string>
     <string name="whatsapp_tool_read">Leer WhatsApp</string>
     <string name="whatsapp_tool_send">Enviar mensaje de WhatsApp</string>
+    <string name="whatsapp_tool_send_owner">Enviar el resultado a mi WhatsApp</string>
 </resources>

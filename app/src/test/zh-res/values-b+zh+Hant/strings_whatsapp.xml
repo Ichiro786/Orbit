@@ -61,4 +61,5 @@
     <string name="whatsapp_tool_chats">WhatsApp 對話</string>
     <string name="whatsapp_tool_read">讀取 WhatsApp</string>
     <string name="whatsapp_tool_send">傳送 WhatsApp 訊息</string>
+    <string name="whatsapp_tool_send_owner">把結果傳到我的 WhatsApp</string>
 </resources>

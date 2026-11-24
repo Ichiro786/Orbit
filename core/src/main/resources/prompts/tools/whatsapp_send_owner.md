@@ -1,0 +1,1 @@
+Send the final result of this task to the user's own WhatsApp chat (Message yourself). Use it once, only because the user explicitly asked for the result there, and never send the same text twice. A delivered status means WhatsApp accepted the message, not that the user has read it; if delivery fails or is uncertain, report exactly that.

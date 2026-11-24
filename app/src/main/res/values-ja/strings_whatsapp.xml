@@ -61,4 +61,5 @@
     <string name="whatsapp_tool_chats">WhatsApp のチャット</string>
     <string name="whatsapp_tool_read">WhatsApp を読む</string>
     <string name="whatsapp_tool_send">WhatsApp メッセージを送信</string>
+    <string name="whatsapp_tool_send_owner">結果を自分の WhatsApp に送信</string>
 </resources>

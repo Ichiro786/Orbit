@@ -35,7 +35,7 @@ enum class Verb {
     ImageGenerate, ImageEdit, ImageSave,
     RootCommand,
     CallState, CallDial, CallAnswer, CallHangup, CallTakeover,
-    WhatsappChats, WhatsappRead, WhatsappSend,
+    WhatsappChats, WhatsappRead, WhatsappSend, WhatsappSendOwner,
     Wait, AskUser, RequestConfirmation, HandToUser, HandleObstacle, EndNotDone, UpdatePlan,
     KnowledgeSearch, KnowledgeRead, SkillSearch, SkillRead, SkillSave, MemorySearch, MemorySave, MemoryEdit, ProfileEdit, HistoryRead, NoticesRead, WebSearch,
     TaskMemorySearch, TaskMemoryTimeline, TaskMemoryStep,

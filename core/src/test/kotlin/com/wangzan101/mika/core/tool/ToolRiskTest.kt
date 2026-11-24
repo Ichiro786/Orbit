@@ -90,7 +90,7 @@ class ToolRiskTest {
                 "phone_call_state", "phone_call_dial", "phone_call_answer", "phone_call_hangup", "phone_call_takeover",
                 "list_device_files", "copy_device_file", "search_device_files", "list_device_directory_hints", "update_device_directory_description",
                 "audio_generate", "audio_save", "audio_transcribe", "speak",
-                "image_generate", "image_edit", "image_save", "whatsapp_chats", "whatsapp_read", "whatsapp_send")
+                "image_generate", "image_edit", "image_save", "whatsapp_chats", "whatsapp_read", "whatsapp_send", "whatsapp_send_owner")
         assertEquals(refused, allTools().filter { !it.readOnly }.map { it.name }.toSet())
         // root 命令、通话、WhatsApp 工具都只在给了端口时登记:各给一个,所有工具都在
         val d = toolDispatcher(FakeScreen(), audio = NoAudioPort, audioSaveEnabled = true, audioSpeakTool = true, transcribe = NoTranscribePort,
@@ -111,6 +111,8 @@ class ToolRiskTest {
             override suspend fun read(chat: String, limit: Int) = JsonObject(emptyMap())
             override suspend fun send(chat: String, text: String) = JsonObject(emptyMap())
             override fun chatName(chat: String): String? = null
+        }, whatsappOwner = com.wangzan101.mika.core.whatsapp.WhatsappOwnerPort {
+            com.wangzan101.mika.core.whatsapp.WhatsappOwnerResult(com.wangzan101.mika.core.whatsapp.WhatsappOwnerResult.Status.Unavailable)
         })
         for (name in names) {
             val r = d.executeRead(Part.ToolCall("c", name, "{}")).content

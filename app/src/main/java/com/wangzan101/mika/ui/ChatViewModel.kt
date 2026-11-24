@@ -2827,6 +2827,7 @@ class ToolLabels(private val tools: ToolIndex, private val legacy: LegacyNames =
             "whatsapp_chats" to R.string.whatsapp_tool_chats,
             "whatsapp_read" to R.string.whatsapp_tool_read,
             "whatsapp_send" to R.string.whatsapp_tool_send,
+            "whatsapp_send_owner" to R.string.whatsapp_tool_send_owner,
             "write_file" to R.string.tool_write_file,
         )
 

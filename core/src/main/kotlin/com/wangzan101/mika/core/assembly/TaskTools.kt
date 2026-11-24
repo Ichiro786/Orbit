@@ -168,6 +168,8 @@ fun toolDispatcher(
     phoneCalls: com.wangzan101.mika.core.calls.PhoneCallPort? = null,
     /** The linked WhatsApp account, limited to the chats the user allowed; null when not linked or no chat is allowed. */
     whatsapp: com.wangzan101.mika.core.whatsapp.WhatsappPort? = null,
+    /** Pushes this task's result to the user's own WhatsApp chat; null unless the user explicitly asked for that and WhatsApp is linked. */
+    whatsappOwner: com.wangzan101.mika.core.whatsapp.WhatsappOwnerPort? = null,
     smsLogin: com.wangzan101.mika.core.cap.phone.sms.SmsLoginPort? = null,
     /** 跨会话任务摘要;给了才提供 task_memory_search / task_memory_timeline / task_memory_step。 */
     taskMemory: com.wangzan101.mika.core.memory.TaskMemoryStore? = null,
@@ -245,6 +247,12 @@ fun toolDispatcher(
             override val id = "whatsapp"
             override fun open(spec: RunSpec) = com.wangzan101.mika.core.whatsapp.WhatsappCapability(port)
         }
+    }, whatsappOwner?.let { port ->
+        // Only assembled when the user asked for the result on their WhatsApp and a linked chat exists
+        object : CapabilityProvider {
+            override val id = com.wangzan101.mika.core.whatsapp.WhatsappOwnerCapability.WHATSAPP_OWNER
+            override fun open(spec: RunSpec) = com.wangzan101.mika.core.whatsapp.WhatsappOwnerCapability(port)
+        }
     }, helper?.let { port ->
         object : CapabilityProvider {
             override val id = DEVICE_FILES
@@ -302,7 +310,7 @@ fun recordedTools(): ToolIndex = legacyNames().let { legacy -> ToolIndex(allTool
 /** Mika 所有可能提供的工具,按发给模型的顺序。 */
 internal fun allTools(): List<AgentTool> =
     GeneralGroup.tools + PhoneCapability.tools() + WebGroup.tools + SandboxGroup.tools + com.wangzan101.mika.core.cap.audio.AudioGroup.tools + com.wangzan101.mika.core.cap.transcribe.TranscribeGroup.tools + com.wangzan101.mika.core.cap.image.ImageGroup.tools + RootGroup.tools + com.wangzan101.mika.core.calls.callAgentTools + helperFileTools +
-        com.wangzan101.mika.core.whatsapp.whatsappAgentTools
+        com.wangzan101.mika.core.whatsapp.whatsappAgentTools + com.wangzan101.mika.core.whatsapp.whatsappOwnerAgentTools
 
 /** Mika 所有可能提供的工具的声明。 */
 fun knownTools(): ToolIndex = ToolIndex(allTools())
