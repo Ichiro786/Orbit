@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keypool_keys">API 金鑰</string>
+    <string name="keypool_one">API 金鑰池 · 1 個金鑰</string>
+    <string name="keypool_many">API 金鑰池 · 金鑰:%1$d · 輪換中</string>
+    <string name="keypool_show">顯示金鑰</string>
+    <string name="keypool_hide">隱藏金鑰</string>
+    <string name="keypool_show_short">顯示</string>
+    <string name="keypool_hide_short">隱藏</string>
+    <string name="keypool_none">未設定金鑰</string>
+    <string name="keypool_none_sub">新增金鑰以連接此服務商</string>
+    <string name="keypool_required">必填</string>
+    <string name="keypool_key_n">金鑰 %1$d</string>
+    <string name="keypool_active">使用中</string>
+    <string name="keypool_remove">移除</string>
+    <string name="keypool_add">新增 API 金鑰</string>
+    <string name="keypool_add_first">貼上金鑰以連接</string>
+    <string name="keypool_add_more">向輪換池新增另一個金鑰</string>
+    <string name="keypool_footer_many">金鑰自動輪換:遇到限流(429)或逾時的金鑰會被略過,直到恢復。</string>
+    <string name="keypool_footer_one">多加幾個金鑰,其中一個被限流時會自動切換。</string>
+    <string name="keypool_paste_hint">貼上一個或多個金鑰(以逗號或換行分隔)</string>
+    <string name="keypool_detected">金鑰池:偵測到 %1$d 個金鑰(遇 429 或逾時輪換)</string>
+    <string name="keypool_add_body">貼上一個金鑰,或以逗號、換行分隔的多個金鑰一次全部新增。</string>
+    <string name="keypool_paste_here">在此貼上 API 金鑰</string>
+    <string name="keypool_add_detected">偵測到金鑰:%1$d。全部加入輪換池。</string>
+    <string name="keypool_add_one">1 個金鑰可新增</string>
+    <string name="keypool_add_n">新增金鑰:%1$d</string>
+    <string name="keypool_setup_detected">偵測到金鑰:%1$d。遇限流或逾時時輪換。</string>
+    <string name="keypool_setup_one">1 個金鑰已就緒</string>
+    <string name="models_no_providers">沒有已連接的服務商</string>
+    <string name="models_providers_pool">服務商:%1$d · 池中金鑰:%2$d</string>
+    <string name="models_providers_n">服務商:%1$d</string>
+    <string name="model_remove_backup">移除備用</string>
+</resources>

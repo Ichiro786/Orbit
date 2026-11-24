@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keypool_keys">Chaves de API</string>
+    <string name="keypool_one">Grupo de chaves de API · 1 chave</string>
+    <string name="keypool_many">Grupo de chaves de API · Chaves: %1$d · em rodízio</string>
+    <string name="keypool_show">Mostrar chaves</string>
+    <string name="keypool_hide">Ocultar chaves</string>
+    <string name="keypool_show_short">Mostrar</string>
+    <string name="keypool_hide_short">Ocultar</string>
+    <string name="keypool_none">Nenhuma chave configurada</string>
+    <string name="keypool_none_sub">Adicione uma chave para conectar este provedor</string>
+    <string name="keypool_required">Obrigatória</string>
+    <string name="keypool_key_n">Chave %1$d</string>
+    <string name="keypool_active">Ativa</string>
+    <string name="keypool_remove">Remover</string>
+    <string name="keypool_add">Adicionar chave de API</string>
+    <string name="keypool_add_first">Cole sua chave para conectar</string>
+    <string name="keypool_add_more">Adicione outra chave ao grupo de rodízio</string>
+    <string name="keypool_footer_many">As chaves alternam sozinhas: uma chave que atinge o limite de solicitações (429) ou o tempo limite é pulada até se recuperar.</string>
+    <string name="keypool_footer_one">Adicione mais chaves para trocar automaticamente quando uma atingir o limite.</string>
+    <string name="keypool_paste_hint">Cole uma ou mais chaves (separadas por vírgula ou quebra de linha)</string>
+    <string name="keypool_detected">Grupo de chaves: %1$d chaves detectadas (alternam em 429 ou tempo limite)</string>
+    <string name="keypool_add_body">Cole uma chave, ou várias separadas por vírgulas ou quebras de linha para adicionar todas de uma vez.</string>
+    <string name="keypool_paste_here">Cole as chaves de API aqui</string>
+    <string name="keypool_add_detected">Chaves detectadas: %1$d. Todas serão adicionadas ao grupo de rodízio.</string>
+    <string name="keypool_add_one">1 chave pronta para adicionar</string>
+    <string name="keypool_add_n">Adicionar chaves: %1$d</string>
+    <string name="keypool_setup_detected">Chaves detectadas: %1$d. O grupo alterna em limites ou tempos esgotados.</string>
+    <string name="keypool_setup_one">1 chave pronta</string>
+    <string name="models_no_providers">Nenhum provedor conectado</string>
+    <string name="models_providers_pool">Provedores: %1$d · chaves no grupo: %2$d</string>
+    <string name="models_providers_n">Provedores: %1$d</string>
+    <string name="model_remove_backup">Remover reserva</string>
+</resources>

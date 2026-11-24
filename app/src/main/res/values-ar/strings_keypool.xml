@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keypool_keys">مفاتيح API</string>
+    <string name="keypool_one">مجموعة مفاتيح API · مفتاح واحد</string>
+    <string name="keypool_many">مجموعة مفاتيح API · المفاتيح: %1$d · بالتناوب</string>
+    <string name="keypool_show">إظهار المفاتيح</string>
+    <string name="keypool_hide">إخفاء المفاتيح</string>
+    <string name="keypool_show_short">إظهار</string>
+    <string name="keypool_hide_short">إخفاء</string>
+    <string name="keypool_none">لا يوجد مفتاح</string>
+    <string name="keypool_none_sub">أضف مفتاحًا لربط هذا المزوّد</string>
+    <string name="keypool_required">مطلوب</string>
+    <string name="keypool_key_n">المفتاح %1$d</string>
+    <string name="keypool_active">نشط</string>
+    <string name="keypool_remove">إزالة</string>
+    <string name="keypool_add">إضافة مفتاح API</string>
+    <string name="keypool_add_first">الصق مفتاحك للاتصال</string>
+    <string name="keypool_add_more">أضف مفتاحًا آخر إلى مجموعة التناوب</string>
+    <string name="keypool_footer_many">تتناوب المفاتيح تلقائيًا: يُتخطّى المفتاح الذي يبلغ حد الطلبات (429) أو تنتهي مهلته حتى يتعافى.</string>
+    <string name="keypool_footer_one">أضف مفاتيح أخرى للتبديل تلقائيًا عند بلوغ أحدها الحد.</string>
+    <string name="keypool_paste_hint">الصق مفتاحًا أو أكثر (مفصولة بفواصل أو أسطر جديدة)</string>
+    <string name="keypool_detected">مجموعة المفاتيح: تم اكتشاف %1$d مفاتيح (تتناوب عند 429 أو انتهاء المهلة)</string>
+    <string name="keypool_add_body">الصق مفتاحًا واحدًا، أو عدة مفاتيح مفصولة بفواصل أو أسطر جديدة لإضافتها كلها مرة واحدة.</string>
+    <string name="keypool_paste_here">الصق مفاتيح API هنا</string>
+    <string name="keypool_add_detected">المفاتيح المكتشفة: %1$d. ستُضاف كلها إلى مجموعة التناوب.</string>
+    <string name="keypool_add_one">مفتاح واحد جاهز للإضافة</string>
+    <string name="keypool_add_n">إضافة المفاتيح: %1$d</string>
+    <string name="keypool_setup_detected">المفاتيح المكتشفة: %1$d. تتناوب المجموعة عند بلوغ الحد أو انتهاء المهلة.</string>
+    <string name="keypool_setup_one">مفتاح واحد جاهز</string>
+    <string name="models_no_providers">لا يوجد مزوّدون متصلون</string>
+    <string name="models_providers_pool">المزوّدون: %1$d · المفاتيح في المجموعة: %2$d</string>
+    <string name="models_providers_n">المزوّدون: %1$d</string>
+    <string name="model_remove_backup">إزالة الاحتياطي</string>
+</resources>

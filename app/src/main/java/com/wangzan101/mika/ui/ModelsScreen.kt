@@ -441,14 +441,14 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
             val poolHealthy = keys.size
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 GroupLabel(
-                    if (poolHealthy == 0) "API Keys"
-                    else if (poolHealthy == 1) "API Key Pool  ·  1 key"
-                    else "API Key Pool  ·  $poolHealthy keys  ·  auto-rotating",
+                    if (poolHealthy == 0) stringResource(R.string.keypool_keys)
+                    else if (poolHealthy == 1) stringResource(R.string.keypool_one)
+                    else stringResource(R.string.keypool_many, poolHealthy),
                     Modifier.weight(1f),
                 )
                 if (keys.isNotEmpty()) {
                     Text(
-                        if (showKeys) "Hide Keys" else "Show Keys",
+                        stringResource(if (showKeys) R.string.keypool_hide else R.string.keypool_show),
                         color = c.accent,
                         fontSize = MikaType.Caption.fontSize,
                         fontWeight = FontWeight.Medium,
@@ -462,8 +462,8 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
             GroupCard {
                 if (keys.isEmpty()) {
                     // No keys yet — prominent empty state
-                    ListRow(null, "No key configured", subtitle = "Add a key to connect this provider", first = true) {
-                        RowValue("Required", ValueTone.Bad)
+                    ListRow(null, stringResource(R.string.keypool_none), subtitle = stringResource(R.string.keypool_none_sub), first = true) {
+                        RowValue(stringResource(R.string.keypool_required), ValueTone.Bad)
                     }
                 } else {
                     keys.forEachIndexed { i, k ->
@@ -472,11 +472,11 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                             k.length > 8  -> "${k.take(4)}…${k.takeLast(4)}"
                             else          -> "••••••••"
                         }
-                        ListRow(null, "Key ${i + 1}", subtitle = displayKey, first = i == 0) {
-                            RowValue("Active", ValueTone.Ok)
+                        ListRow(null, stringResource(R.string.keypool_key_n, i + 1), subtitle = displayKey, first = i == 0) {
+                            RowValue(stringResource(R.string.keypool_active), ValueTone.Ok)
                             if (keys.size > 1) {
                                 Text(
-                                    "Remove",
+                                    stringResource(R.string.keypool_remove),
                                     color = c.bad,
                                     style = MikaType.Caption,
                                     modifier = Modifier
@@ -491,16 +491,16 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                 // Add key — always visible
                 ListRow(
                     icon = MikaIcons.Plus,
-                    title = "Add API Key",
-                    subtitle = if (keys.isEmpty()) "Paste your key to connect" else "Add another key to the rotation pool",
+                    title = stringResource(R.string.keypool_add),
+                    subtitle = stringResource(if (keys.isEmpty()) R.string.keypool_add_first else R.string.keypool_add_more),
                     first = keys.isEmpty(),
                     onClick = { addingKey = true },
                 ) { RowChevron() }
             }
             if (keys.size > 1) {
-                FooterNote("Keys rotate automatically. Any key that hits a 429 rate-limit or timeout is skipped until it recovers — zero downtime.")
+                FooterNote(stringResource(R.string.keypool_footer_many))
             } else if (keys.size == 1) {
-                FooterNote("Add more keys to enable automatic failover rotation.")
+                FooterNote(stringResource(R.string.keypool_footer_one))
             }
         }
 
@@ -605,7 +605,7 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(Modifier.weight(1f)) {
-                                if (key.isEmpty()) Text("Paste one or more keys (comma or newline separated)", style = MikaType.Body, color = c.ink3)
+                                if (key.isEmpty()) Text(stringResource(R.string.keypool_paste_hint), style = MikaType.Body, color = c.ink3)
                                 BasicTextField(
                                     key,
                                     { raw ->
@@ -632,7 +632,7 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                         }
                         if (parsedKeys.size > 1) {
                             Text(
-                                "✓ Key Pool: ${parsedKeys.size} API keys detected (auto-rotating on 429/timeout)",
+                                "✓ " + stringResource(R.string.keypool_detected, parsedKeys.size),
                                 style = MikaType.Caption,
                                 color = c.ok,
                                 modifier = Modifier.padding(top = MikaSpace.S8),
@@ -667,10 +667,10 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
             onDismissRequest = { addingKey = false },
             title = {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Add API Key", Modifier.weight(1f))
+                    Text(stringResource(R.string.keypool_add), Modifier.weight(1f))
                     if (newKeyText.isNotEmpty()) {
                         Text(
-                            if (showAddKey) "Hide" else "Show",
+                            stringResource(if (showAddKey) R.string.keypool_hide_short else R.string.keypool_show_short),
                             color = c.accent,
                             fontSize = MikaType.Caption.fontSize,
                             modifier = Modifier
@@ -684,7 +684,7 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                 KeyboardDismissArea {
                     Column(Modifier.fillMaxWidth()) {
                         Text(
-                            "Paste one key, or multiple keys separated by commas or new lines to add them all at once.",
+                            stringResource(R.string.keypool_add_body),
                             style = MikaType.Caption, color = c.ink2,
                             modifier = Modifier.padding(bottom = MikaSpace.S8),
                         )
@@ -695,7 +695,7 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                         ) {
                             if (newKeyText.isEmpty()) {
                                 Text(
-                                    "Paste API key(s) here",
+                                    stringResource(R.string.keypool_paste_here),
                                     style = MikaType.Body, color = c.ink3,
                                 )
                             }
@@ -720,12 +720,12 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                         // Live feedback
                         when {
                             parsedAdding.size > 1 -> Text(
-                                "${parsedAdding.size} keys detected — all will be added to the rotation pool",
+                                stringResource(R.string.keypool_add_detected, parsedAdding.size),
                                 style = MikaType.Caption, color = c.ok,
                                 modifier = Modifier.padding(top = MikaSpace.S8),
                             )
                             newKeyText.isNotBlank() && !blocked -> Text(
-                                "1 key ready to add",
+                                stringResource(R.string.keypool_add_one),
                                 style = MikaType.Caption, color = c.ok,
                                 modifier = Modifier.padding(top = MikaSpace.S8),
                             )
@@ -743,7 +743,7 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                         actions.addKey(newKeyText.trim())
                     },
                     enabled = newKeyText.isNotBlank() && !blocked,
-                ) { Text(if (parsedAdding.size > 1) "Add ${parsedAdding.size} Keys" else ModelsCopy.SAVE) }
+                ) { Text(if (parsedAdding.size > 1) stringResource(R.string.keypool_add_n, parsedAdding.size) else ModelsCopy.SAVE) }
             },
             dismissButton = { TextButton({ addingKey = false }) { Text(ModelSetupCopy.CANCEL) } },
         )

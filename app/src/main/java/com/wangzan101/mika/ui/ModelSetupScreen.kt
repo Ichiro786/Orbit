@@ -499,9 +499,9 @@ fun ModelSetupContent(
                         ui.providerKeyMap[p.id]?.size ?: 0
                     }
                     val providerSubtitle = when {
-                        ui.providers.isEmpty() -> "No providers connected"
-                        totalKeys > 1 -> "${ui.providers.size} providers · $totalKeys keys in pool"
-                        else -> "${ui.providers.size} provider${if (ui.providers.size > 1) "s" else ""}"
+                        ui.providers.isEmpty() -> stringResource(R.string.models_no_providers)
+                        totalKeys > 1 -> stringResource(R.string.models_providers_pool, ui.providers.size, totalKeys)
+                        else -> stringResource(R.string.models_providers_n, ui.providers.size)
                     }
                     GroupCard {
                         ListRow(MikaIcons.Key, ModelsCopy.PROVIDERS, providerSubtitle, first = true, onClick = actions.openProviders) {
@@ -762,7 +762,7 @@ internal fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions, stand
             // Live pool feedback
             when {
                 poolActive -> Text(
-                    "${parsedKeys.size} keys detected — pool will auto-rotate on rate-limit or timeout",
+                    stringResource(R.string.keypool_setup_detected, parsedKeys.size),
                     Modifier.padding(top = MikaSpace.S8).testTag("setup-key-notice"),
                     style = MikaType.Caption, color = c.ok,
                 )
@@ -777,7 +777,7 @@ internal fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions, stand
                     style = MikaType.Caption, color = c.ink2,
                 )
                 f.apiKey.isNotBlank() -> Text(
-                    "1 key ready",
+                    stringResource(R.string.keypool_setup_one),
                     Modifier.padding(top = MikaSpace.S8),
                     style = MikaType.Caption, color = c.ok,
                 )
@@ -1237,7 +1237,7 @@ private fun FallbackSection(
                         ) {
                             Icon(
                                 MikaIcons.Close,
-                                contentDescription = "Remove backup",
+                                contentDescription = stringResource(R.string.model_remove_backup),
                                 tint = c.ink3,
                                 modifier = Modifier.size(MikaSize.SmallIcon),
                             )
