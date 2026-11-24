@@ -186,7 +186,7 @@ internal class ImageSave(private val ask: Boolean) : AgentTool {
      */
     override fun approvalRisk(args: JsonObject): ApprovalRisk = if (ask) {
         ApprovalRisk(ActionRisk.Change, ask = ConfirmationRequest(
-            IrrevAction.other, "", "保存图片到相册:${nameOf(args)}", null, GALLERY_CONFIRM_APP,
+            IrrevAction.other, "", "Save picture to Gallery: ${nameOf(args)}", null, GALLERY_CONFIRM_APP,
         ))
     } else {
         ApprovalRisk(ActionRisk.Change)

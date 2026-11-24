@@ -168,7 +168,7 @@ internal fun VoiceModelContent(store: ProviderStore, settings: VoiceSettings, on
                         player.play(
                             tts,
                             TtsRequest(
-                                "你好，我是 Mika。这是一段声音测试。",
+                                "Hi, I'm Orbit. This is a voice test.",
                                 choice.voice.ifBlank { null },
                                 choice.speed,
                                 "wav",
@@ -334,7 +334,7 @@ private fun MigratedVoiceModelContent(
                         player.play(
                             model,
                             TtsRequest(
-                                "你好，我是 Mika。这是一段声音测试。",
+                                "Hi, I'm Orbit. This is a voice test.",
                                 state.voice.ifBlank { null },
                                 state.speed,
                                 "wav",

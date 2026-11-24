@@ -273,7 +273,7 @@ object EvalTasks {
                 is Check.AskedUser -> Unit
                 is Check.WebHas -> {
                     val u = c.url.trim().lowercase()
-                    if (!u.startsWith("https://") && !u.startsWith("http://")) errs += "${t.id}: checks[$i] url 须是 http(s) 网址"
+                    if (!u.startsWith("https://") && !u.startsWith("http://")) errs += "${t.id}: checks[$i] url must be an http(s) URL"
                     if (c.text.isBlank()) errs += "${t.id}: checks[$i] text 为空"
                 }
             }

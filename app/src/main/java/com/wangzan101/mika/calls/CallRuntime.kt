@@ -188,8 +188,8 @@ class CallRuntime(private val app: MikaApp) {
             var previousRevision = -1L
             voiceProfiles.revision.collect { current ->
                 if (previousRevision >= 0 && current > previousRevision) {
-                    lockedDial?.let { finishLockedDial(it, "实时语音配置已变更，未执行锁屏拨出") }
-                    cancelWork("实时语音配置已变更，电话由系统处理")
+                    lockedDial?.let { finishLockedDial(it, "Realtime voice settings changed; locked-screen dial not performed") }
+                    cancelWork("Realtime voice settings changed; the system is handling the call")
                 }
                 previousRevision = current
             }
@@ -578,9 +578,9 @@ class CallRuntime(private val app: MikaApp) {
         if (realtimeController.migrated) realtimeController.callProvider() else ProfileRealtimeProvider()
 
     suspend fun selectVoiceProfile(id: String): CallActionResult = onMain {
-        if (work != null || lockedDial != null) return@onMain fail("请先结束当前通话或锁屏拨出安排")
+        if (work != null || lockedDial != null) return@onMain fail("End the current call or locked-screen dial first")
         if (realtimeController.migrated) {
-            val profile = voiceProfiles.get(id) ?: return@onMain fail("实时语音配置不存在")
+            val profile = voiceProfiles.get(id) ?: return@onMain fail("This realtime voice profile no longer exists")
             val ref = RealtimeSelectionController.legacyProfileRef(id, profile.model)
             realtimeController.select(ref)
             val config = settings.state.value
@@ -590,9 +590,9 @@ class CallRuntime(private val app: MikaApp) {
                 autoAnswer = false,
             ))
             publish()
-            return@onMain ok("已选择${profile.name}，自动接听需要重新开启")
+            return@onMain ok("Selected ${profile.name}; turn auto-answer on again")
         }
-        val profile = voiceProfiles.get(id) ?: return@onMain fail("实时语音配置不存在")
+        val profile = voiceProfiles.get(id) ?: return@onMain fail("This realtime voice profile no longer exists")
         settings.save(settings.state.value.copy(
             activeVoiceProfileId = profile.id,
             speaker = profile.speaker,
@@ -601,7 +601,7 @@ class CallRuntime(private val app: MikaApp) {
             autoAnswer = false,
         ))
         publish()
-        ok("已选择${profile.name}，自动接听需要重新开启")
+        ok("Selected ${profile.name}; turn auto-answer on again")
     }
 
     /** 迁移后语音目录的快照:通话设置页从中列出能做实时通话的模型、标出当前选中的那个。 */
@@ -615,13 +615,13 @@ class CallRuntime(private val app: MikaApp) {
      * 实际用的模型变了就关掉自动接听,要用户在新模型上重新确认;凭据与验证镜像由目录同步。
      */
     suspend fun selectCallVoice(ref: VoiceModelRef?, speaker: String = ""): CallActionResult = onMain {
-        if (work != null || lockedDial != null) return@onMain fail("请先结束当前通话或锁屏拨出安排")
-        if (!realtimeController.migrated) return@onMain fail("实时语音配置尚未迁移")
+        if (work != null || lockedDial != null) return@onMain fail("End the current call or locked-screen dial first")
+        if (!realtimeController.migrated) return@onMain fail("Realtime voice settings have not been migrated yet")
         val before = realtimeController.callCurrent()
         try {
             realtimeController.selectForCalls(ref, speaker)
         } catch (_: VoiceModelError) {
-            return@onMain fail("实时语音模型不存在")
+            return@onMain fail("This realtime voice model no longer exists")
         }
         val now = realtimeController.callCurrent()
         val config = settings.state.value
@@ -631,7 +631,7 @@ class CallRuntime(private val app: MikaApp) {
             autoAnswer = config.autoAnswer && now == before,
         ))
         publish()
-        ok(if (now == before) "电话语音已保存" else "电话语音已更换，自动接听需要重新开启")
+        ok(if (now == before) "Call voice saved" else "Call voice changed; turn auto-answer on again")
     }
 
     /**
@@ -639,8 +639,8 @@ class CallRuntime(private val app: MikaApp) {
      * a null [engine] with no models makes phone calls follow the voice settings again, realtime choice included.
      */
     suspend fun selectPhoneVoice(engine: CallEngine?, stt: VoiceModelRef?, tts: VoiceModelRef?, ttsVoice: String = ""): CallActionResult = onMain {
-        if (work != null || lockedDial != null) return@onMain fail("请先结束当前通话或锁屏拨出安排")
-        if (!realtimeController.migrated) return@onMain fail("实时语音配置尚未迁移")
+        if (work != null || lockedDial != null) return@onMain fail("End the current call or locked-screen dial first")
+        if (!realtimeController.migrated) return@onMain fail("Realtime voice settings have not been migrated yet")
         val before = standardCalls to callVoiceRef()
         realtimeController.catalog.setPhoneVoice(engine, stt, tts, ttsVoice)
         if (engine == null && stt == null && tts == null) realtimeController.selectForCalls(null)
@@ -648,21 +648,21 @@ class CallRuntime(private val app: MikaApp) {
         val changed = (standardCalls to callVoiceRef()) != before
         if (changed) settings.save(settings.state.value.copy(autoAnswer = false))
         publish()
-        ok(if (changed) "电话语音已更换，自动接听需要重新开启" else "电话语音已保存")
+        ok(if (changed) "Call voice changed; turn auto-answer on again" else "Call voice saved")
     }
 
     suspend fun saveVoiceProfile(profile: CallVoiceProfile, credentials: VolcRealtimeCredentials? = null): CallActionResult = onMain {
-        if (work != null || lockedDial != null) return@onMain fail("请先结束当前通话或锁屏拨出安排")
+        if (work != null || lockedDial != null) return@onMain fail("End the current call or locked-screen dial first")
         if (realtimeController.migrated) {
-            val ref = realtimeController.callCurrent() ?: return@onMain fail("请先选择实时语音模型")
+            val ref = realtimeController.callCurrent() ?: return@onMain fail("Choose a realtime voice model first")
             val model = runCatching { realtimeController.model(ref) }.getOrNull()
-                ?: return@onMain fail("实时语音模型不存在")
-            val binding = model.realtime ?: return@onMain fail("实时语音模型不支持通话")
+                ?: return@onMain fail("This realtime voice model no longer exists")
+            val binding = model.realtime ?: return@onMain fail("This realtime voice model does not support calls")
             if (binding.speaker != profile.speaker) {
                 realtimeController.catalog.upsertModel(model.copy(realtime = binding.copy(speaker = profile.speaker)))
             }
             publish()
-            return@onMain ok("实时语音配置已保存")
+            return@onMain ok("Realtime voice profile saved")
         }
         val previous = voiceProfiles.get(profile.id)
         val saved = withContext(Dispatchers.IO) { voiceProfiles.save(profile, credentials) }
@@ -677,84 +677,84 @@ class CallRuntime(private val app: MikaApp) {
             ))
         }
         publish()
-        ok("实时语音配置已保存")
+        ok("Realtime voice profile saved")
     }
 
     suspend fun deleteVoiceProfile(id: String): CallActionResult = onMain {
-        if (work != null || lockedDial != null) return@onMain fail("请先结束当前通话或锁屏拨出安排")
-        if (realtimeController.migrated) return@onMain fail("请在语音模型目录中删除实时模型")
+        if (work != null || lockedDial != null) return@onMain fail("End the current call or locked-screen dial first")
+        if (realtimeController.migrated) return@onMain fail("Delete realtime models in the voice model catalog")
         withContext(Dispatchers.IO) { voiceProfiles.delete(id, settings.state.value.activeVoiceProfileId) }
         publish()
-        ok("实时语音配置已删除")
+        ok("Realtime voice profile deleted")
     }
 
     suspend fun testVoiceProfile(id: String): CallActionResult = onMain {
-        if (work != null || lockedDial != null) return@onMain fail("请先结束当前通话或锁屏拨出安排")
+        if (work != null || lockedDial != null) return@onMain fail("End the current call or locked-screen dial first")
         if (realtimeController.migrated) {
-            val legacy = voiceProfiles.get(id) ?: return@onMain fail("实时语音配置不存在")
+            val legacy = voiceProfiles.get(id) ?: return@onMain fail("This realtime voice profile no longer exists")
             val ref = RealtimeSelectionController.legacyProfileRef(id, legacy.model)
             val provider = try {
                 realtimeController.provider(ref)
             } catch (e: VoiceModelError) {
-                return@onMain fail("实时语音配置不可用，请检查凭据")
+                return@onMain fail("Realtime voice profile unavailable; check its credentials")
             }
             realtimeController.markConnectionTested(ref, false)
             publish()
             val result = try {
-                val session = provider.connect(CallVoiceProfile(), VolcRealtimeCredentials(), "连接测试。不要生成语音。")
+                val session = provider.connect(CallVoiceProfile(), VolcRealtimeCredentials(), "Connection test. Do not generate speech.")
                 session.close()
                 realtimeController.markConnectionTested(ref, true)
                 if (realtimeController.callCurrent() == ref) publish()
-                ok("实时语音服务连接成功；手机双向音频仍需通过测试电话验证")
+                ok("Connected to the realtime voice service; two-way phone audio still needs a test call")
             } catch (error: Exception) {
                 if (error is CancellationException) throw error
                 val reason = when ((error as? VoiceModelError)?.category) {
-                    VoiceErrorCategory.AUTH_FAILED -> "凭据或服务权限无效"
-                    VoiceErrorCategory.RATE_LIMITED -> "实时语音服务请求过于频繁"
-                    VoiceErrorCategory.TIMEOUT -> "实时语音服务连接超时"
-                    else -> "无法连接实时语音服务"
+                    VoiceErrorCategory.AUTH_FAILED -> "Credentials or service access are invalid"
+                    VoiceErrorCategory.RATE_LIMITED -> "Too many requests to the realtime voice service"
+                    VoiceErrorCategory.TIMEOUT -> "Connecting to the realtime voice service timed out"
+                    else -> "Could not connect to the realtime voice service"
                 }
                 fail(reason)
             }
             return@onMain result
         }
-        val profile = voiceProfiles.get(id) ?: return@onMain fail("实时语音配置不存在")
-        val credentials = voiceProfiles.credentials(id) ?: return@onMain fail("请先配置实时语音凭据")
+        val profile = voiceProfiles.get(id) ?: return@onMain fail("This realtime voice profile no longer exists")
+        val credentials = voiceProfiles.credentials(id) ?: return@onMain fail("Set up realtime voice credentials first")
         voiceProfiles.markConnectionTested(id, false)
         publish()
         try {
-            val session = realtimeProvider().connect(profile, credentials, "连接测试。不要生成语音。")
+            val session = realtimeProvider().connect(profile, credentials, "Connection test. Do not generate speech.")
             session.close()
             voiceProfiles.markConnectionTested(id, true)
             if (settings.state.value.activeVoiceProfileId == id) publish()
-            ok("实时语音服务连接成功；手机双向音频仍需通过测试电话验证")
+            ok("Connected to the realtime voice service; two-way phone audio still needs a test call")
         } catch (error: Exception) {
             if (error is CancellationException) throw error
             val reason = when ((error as? VolcRealtimeException)?.kind) {
-                VolcRealtimeException.Kind.AUTH -> "凭据或服务权限无效"
-                VolcRealtimeException.Kind.RATE_LIMITED -> "实时语音服务请求过于频繁"
-                VolcRealtimeException.Kind.TIMEOUT -> "实时语音服务连接超时"
-                else -> "无法连接实时语音服务"
+                VolcRealtimeException.Kind.AUTH -> "Credentials or service access are invalid"
+                VolcRealtimeException.Kind.RATE_LIMITED -> "Too many requests to the realtime voice service"
+                VolcRealtimeException.Kind.TIMEOUT -> "Connecting to the realtime voice service timed out"
+                else -> "Could not connect to the realtime voice service"
             }
             fail(reason)
         }
     }
 
     suspend fun setAudioVerified(verified: Boolean): CallActionResult = onMain {
-        if (work != null || lockedDial != null) return@onMain fail("请先结束当前通话或锁屏拨出安排")
+        if (work != null || lockedDial != null) return@onMain fail("End the current call or locked-screen dial first")
         val config = settings.state.value
         if (realtimeController.migrated) {
-            val ref = callVoiceRef() ?: return@onMain fail(if (standardCalls) "请先选择通话的听写模型" else "请先选择实时语音模型")
+            val ref = callVoiceRef() ?: return@onMain fail(if (standardCalls) "Choose a speech-to-text model for calls first" else "Choose a realtime voice model first")
             realtimeController.markAudioVerified(ref, config.audioMode, verified)
             settings.save(config.copy(audioVerified = verified, autoAnswer = verified && config.autoAnswer))
             publish()
-            return@onMain ok(if (verified) "已记录本机双向音频验证" else "已取消双向音频验证，自动接听已关闭")
+            return@onMain ok(if (verified) "Two-way audio check recorded for this phone" else "Two-way audio check cleared; auto-answer is off")
         }
         val id = config.activeVoiceProfileId
         withContext(Dispatchers.IO) { voiceProfiles.markAudioVerified(id, config.audioMode, verified) }
         settings.save(config.copy(audioVerified = verified, autoAnswer = verified && config.autoAnswer))
         publish()
-        ok(if (verified) "已记录本机双向音频验证" else "已取消双向音频验证，自动接听已关闭")
+        ok(if (verified) "Two-way audio check recorded for this phone" else "Two-way audio check cleared; auto-answer is off")
     }
 
     suspend fun refresh(): CallActionResult = onMain {
@@ -1052,7 +1052,7 @@ class CallRuntime(private val app: MikaApp) {
                 stop = { target.call.stopDtmfTone() },
                 budget = if (owner != null) target.dtmfBudget else null)
         } catch (cancelled: CancellationException) {
-            recordDtmfStatus(target, owner, "按键发送已停止")
+            recordDtmfStatus(target, owner, "Key presses stopped")
             throw cancelled
         }
         recordDtmfStatus(target, owner, dtmfMessage(result))
@@ -1070,13 +1070,13 @@ class CallRuntime(private val app: MikaApp) {
     }
 
     private fun dtmfMessage(result: CallDtmfResult): String = when (result.status) {
-        "submitted" -> "已提交 ${result.sentDigits} 个按键，等待对方响应"
-        "partial" -> "已提交 ${result.sentDigits}/${result.requestedDigits} 个按键，发送已中断"
-        "invalid_digits" -> "请输入 1 至 32 个按键，仅限 0–9、*、#"
-        "busy" -> "正在发送按键，请稍后再试"
-        "budget_exceeded" -> "本通 AI 按键次数已达上限，可人工接管后使用键盘"
-        "unavailable" -> "通话或 AI 控制权已变化，已停止发送按键"
-        else -> "未能完成按键发送，请等待对方响应后再操作"
+        "submitted" -> "Sent ${result.sentDigits} key presses; waiting for the other side"
+        "partial" -> "Sent ${result.sentDigits}/${result.requestedDigits} key presses; sending was interrupted"
+        "invalid_digits" -> "Enter 1 to 32 keys: 0–9, * and # only"
+        "busy" -> "Keys are being sent; try again shortly"
+        "budget_exceeded" -> "The AI reached its key press limit for this call; take over to use the keypad"
+        "unavailable" -> "The call or AI control changed; key presses stopped"
+        else -> "Key presses could not be completed; wait for the other side before trying again"
     }
 
     suspend fun hangup(expectedCallId: String? = null): CallActionResult = onMain {
@@ -1288,13 +1288,13 @@ class CallRuntime(private val app: MikaApp) {
     private suspend fun ensureOutgoingForegroundService(w: Work) {
         if (standbyService == null) {
             if (!requestCallForegroundService(incoming = false)) {
-                throw CallProblem(standbyStartError ?: "外呼后台电话服务未能启动，未拨号")
+                throw CallProblem(standbyStartError ?: "The background call service did not start; not dialed")
             }
             if (!awaitCallForegroundReady(
                     isStarting = { standbyStarting },
                     isReady = { work === w && standbyService?.leaseAvailable == true },
                 )) {
-                throw CallProblem(standbyStartError ?: "Android 未确认外呼后台电话服务启动，未拨号")
+                throw CallProblem(standbyStartError ?: "Android did not confirm the background call service started; not dialed")
             }
         }
         requireOutgoingForegroundService(w)
@@ -1303,7 +1303,7 @@ class CallRuntime(private val app: MikaApp) {
     private fun requireOutgoingForegroundService(w: Work) {
         val leaseReady = standbyService?.leaseAvailable == true && CallStandbyService.notificationsAvailable(app)
         if (work !== w || !leaseReady || !hasOutgoingForegroundWork()) {
-            throw CallProblem(standbyStartError ?: "外呼后台电话服务不可用，AI 未执行后续操作")
+            throw CallProblem(standbyStartError ?: "The background call service is unavailable; the AI took no further action")
         }
     }
 
@@ -1317,31 +1317,31 @@ class CallRuntime(private val app: MikaApp) {
             if (w.automatic) waitAutoAnswerDelay(w)
             prerequisite(ignoreWork = true)?.let { throw CallProblem(it) }
             validateTarget(w)
-            val helper = shell ?: throw CallProblem("Mika 内置助手未连接")
+            val helper = shell ?: throw CallProblem("Orbit's built-in helper is not connected")
             val migrated = realtimeController.migrated
             val standard = standardCalls
             val provider = if (standard) CascadeCallProvider(cascade, CallUse.Phone) else if (migrated) {
                 try {
                     realtimeController.callProvider()
                 } catch (e: VoiceModelError) {
-                    throw CallProblem("实时语音配置不可用，请检查语音模型")
+                    throw CallProblem("Realtime voice profile unavailable; check the voice model")
                 }
             } else ProfileRealtimeProvider()
             val profile = if (migrated) {
                 activeVoiceProfile()
             } else {
                 voiceProfiles.get(w.config.activeVoiceProfileId)
-                    ?: throw CallProblem("实时语音配置不可用，请重新选择")
+                    ?: throw CallProblem("Realtime voice profile unavailable; choose it again")
             }
             val credentials = if (standard) VolcRealtimeCredentials() else if (migrated) {
                 try {
                     realtimeController.credentials()
                 } catch (e: VoiceModelError) {
-                    throw CallProblem("实时语音凭据不可用，请重新保存")
+                    throw CallProblem("Realtime voice credentials unavailable; save them again")
                 }
             } else {
                 withContext(Dispatchers.IO) { voiceProfiles.credentials(profile.id) }
-                    ?: throw CallProblem("实时语音凭据不可用，请重新保存")
+                    ?: throw CallProblem("Realtime voice credentials unavailable; save them again")
             }
             if (!probeAudio()) throw CallProblem(audioDetail ?: "Two-way call audio is unavailable on this device")
             if (shell !== helper || w.config.audioMode != settings.state.value.audioMode) {
@@ -1357,9 +1357,9 @@ class CallRuntime(private val app: MikaApp) {
             try {
                 provider.validate(profile, systemPrompt, enablePhoneDtmf = true)
             } catch (_: IllegalArgumentException) {
-                throw CallProblem("实时语音配置或本次交代无效，未由 AI 操作电话；请检查配置或缩短交代")
+                throw CallProblem("The realtime voice profile or this task brief is invalid, so the AI did not operate the call; check the profile or shorten the brief")
             } catch (_: VoiceModelError) {
-                throw CallProblem("实时语音配置不可用，未由 AI 操作电话")
+                throw CallProblem("Realtime voice profile unavailable; the AI did not operate the call")
             }
             val session = startCallSession(
                 direction = w.direction,
@@ -1369,8 +1369,8 @@ class CallRuntime(private val app: MikaApp) {
                     val connected = withTimeoutOrNull(5_000L) {
                         provider.connect(profile, credentials, systemPrompt, enablePhoneDtmf = true)
                             .also { w.session = it } // Adopt before the timeout/cancellation boundary.
-                    } ?: throw CallProblem("实时语音连接超时，未由 AI 接管")
-                    if (!connected.setMuted(true)) throw CallProblem("实时语音服务未进入就绪状态")
+                    } ?: throw CallProblem("Realtime voice connection timed out; the AI did not take over")
+                    if (!connected.setMuted(true)) throw CallProblem("The realtime voice service did not become ready")
                     validateSessionTarget(w, helper)
                     connected
                 },
@@ -1465,19 +1465,19 @@ class CallRuntime(private val app: MikaApp) {
         } catch (e: VolcRealtimeException) {
             debugMediaException(w, e)
             w.stopReason.record(when (e.kind) {
-                VolcRealtimeException.Kind.AUTH -> "实时语音服务拒绝认证，请检查电话语音凭据和服务开通状态"
-                VolcRealtimeException.Kind.RATE_LIMITED -> "实时语音达到服务限额，电话由系统处理"
-                VolcRealtimeException.Kind.TIMEOUT, VolcRealtimeException.Kind.NETWORK -> "实时语音连接不可用，电话由系统处理"
-                VolcRealtimeException.Kind.BACKPRESSURE -> "实时音频拥塞，电话由系统处理"
-                else -> "实时语音服务未能继续，请检查通话配置"
+                VolcRealtimeException.Kind.AUTH -> "The realtime voice service rejected the credentials; check the call voice credentials and that the service is enabled"
+                VolcRealtimeException.Kind.RATE_LIMITED -> "Realtime voice service limit reached; the system is handling the call"
+                VolcRealtimeException.Kind.TIMEOUT, VolcRealtimeException.Kind.NETWORK -> "Realtime voice connection unavailable; the system is handling the call"
+                VolcRealtimeException.Kind.BACKPRESSURE -> "Realtime audio is congested; the system is handling the call"
+                else -> "The realtime voice service could not continue; check the call settings"
             })
         } catch (e: VoiceModelError) {
             debugMediaException(w, e)
             w.stopReason.record(when (e.category) {
-                VoiceErrorCategory.AUTH_FAILED -> "实时语音服务拒绝认证，请检查电话语音凭据和服务开通状态"
-                VoiceErrorCategory.RATE_LIMITED -> "实时语音达到服务限额，电话由系统处理"
-                VoiceErrorCategory.TIMEOUT, VoiceErrorCategory.NETWORK -> "实时语音连接不可用，电话由系统处理"
-                else -> "实时语音服务未能继续，请检查通话配置"
+                VoiceErrorCategory.AUTH_FAILED -> "The realtime voice service rejected the credentials; check the call voice credentials and that the service is enabled"
+                VoiceErrorCategory.RATE_LIMITED -> "Realtime voice service limit reached; the system is handling the call"
+                VoiceErrorCategory.TIMEOUT, VoiceErrorCategory.NETWORK -> "Realtime voice connection unavailable; the system is handling the call"
+                else -> "The realtime voice service could not continue; check the call settings"
             })
         } catch (e: Exception) {
             debugMediaException(w, e)
@@ -1933,17 +1933,17 @@ class CallRuntime(private val app: MikaApp) {
     private fun validateSessionTarget(w: Work, helper: IMikaShell) {
         prerequisite(ignoreWork = true)?.let { throw CallProblem(it) }
         if (shell !== helper || w.config.audioMode != settings.state.value.audioMode) {
-            throw CallProblem("通话音频设置或内置助手已变化，AI 未接入")
+            throw CallProblem("Call audio settings or the built-in helper changed; the AI did not join")
         }
         if (w.direction == CallDirection.INCOMING) {
             validateTarget(w)
         } else {
             requireOutgoingForegroundService(w)
-            val target = w.track ?: throw CallProblem("外呼通话已结束，AI 未接入")
+            val target = w.track ?: throw CallProblem("The outgoing call ended; the AI did not join")
             val account = target.call.details?.accountHandle
             if (!sameActiveMuteTarget(w, target) || target.suppressed || !carrierCall(target.call) ||
                 target.direction != CallDirection.OUTGOING || account == null || account != w.sim?.handle) {
-                throw CallProblem("外呼通话已变化，AI 未接入")
+                throw CallProblem("The outgoing call changed; the AI did not join")
             }
         }
     }
@@ -2016,10 +2016,10 @@ class CallRuntime(private val app: MikaApp) {
         !settings.state.value.enabled -> "AI calling is turned off"
         configuring -> "AI calling is being configured"
         !armed || !access.hasPhonePermissions() -> "Prepare AI calling first"
-        shell == null -> "Mika 内置助手未连接"
-        standardCalls && cascade.blocker(CallUse.Phone) != null -> "请先在语音设置里选好通话的听写、朗读和思考模型"
-        !activeVoiceProfile().credentialsConfigured -> "请先配置实时语音凭据"
-        !activeVoiceProfile().connectionTested -> "请先测试实时语音连接"
+        shell == null -> "Orbit's built-in helper is not connected"
+        standardCalls && cascade.blocker(CallUse.Phone) != null -> "Choose the speech-to-text, speech and thinking models for calls in voice settings first"
+        !activeVoiceProfile().credentialsConfigured -> "Set up realtime voice credentials first"
+        !activeVoiceProfile().connectionTested -> "Test the realtime voice connection first"
         !(notificationReady ?: notifications.ready()) -> "Allow AI call notifications so you can cancel or take over"
         !ignoreWork && work?.direction == CallDirection.OUTGOING -> "Already handling another call"
         else -> null
@@ -2113,7 +2113,7 @@ class CallRuntime(private val app: MikaApp) {
             number = current?.number ?: active?.requestedNumber,
             aiActive = active?.aiActive == true,
             voiceStage = active?.takeIf { it.aiActive }?.voiceStage,
-            detail = if (enabled && unobservedManagedCall && current == null) "Android 正在通话，但 Mika 尚未收到该通话的回调" else detail,
+            detail = if (enabled && unobservedManagedCall && current == null) "Android is on a call, but Orbit has not received that call's callback yet" else detail,
             pendingAutoAnswer = pending,
             autoAnswerStage = autoStage,
             autoAnswerRemainingSeconds = countdown,

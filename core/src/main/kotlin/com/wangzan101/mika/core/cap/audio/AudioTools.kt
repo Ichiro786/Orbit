@@ -103,7 +103,7 @@ internal class AudioSave(private val ask: Boolean) : AgentTool {
     /** 保存是改到音乐库的一步:默认每次都要用户这一次的同意。 */
     override fun approvalRisk(args: JsonObject): ApprovalRisk = if (ask) {
         ApprovalRisk(ActionRisk.Change, ask = ConfirmationRequest(
-            IrrevAction.other, "", "保存音频到音乐库:${nameOf(args)}", null, MUSIC_CONFIRM_APP,
+            IrrevAction.other, "", "Save audio to Music: ${nameOf(args)}", null, MUSIC_CONFIRM_APP,
         ))
     } else {
         ApprovalRisk(ActionRisk.Change)

@@ -70,7 +70,7 @@ internal object SpawnAgent : AgentTool {
         val limit = (a.int("maxResultChars", Int.MIN_VALUE, Int.MAX_VALUE) ?: DEFAULT_RESULT_CHARS).coerceIn(MIN_RESULT_CHARS, MAX_RESULT_CHARS)
         val goals = a.strList("tasks", min = 1, max = MAX_BATCH, itemMax = 4000)
             ?: listOfNotNull(a.str("goal", max = 4000)).takeIf { it.isNotEmpty() }
-            ?: return failure("给一个 goal,或用 tasks 一次派几个")
+            ?: return failure("Give a goal, or several at once with tasks")
         if (goals.size == 1) return runOne(goals[0], parent, host, format, steps, limit)
         // 多个:同时开跑,全等完成再回;任何一个失败都不影响别的,各自结果单独报
         val results = coroutineScope {
@@ -81,7 +81,7 @@ internal object SpawnAgent : AgentTool {
                     }
                     catch (e: CancellationException) { throw e }
                     catch (e: Exception) {
-                        val message = Redactor.text("子任务起不来: ${e.message ?: e::class.simpleName}").take(limit)
+                        val message = Redactor.text("The subtask could not start: ${e.message ?: e::class.simpleName}").take(limit)
                         ToolExecution(buildJsonObject {
                             put("ok", false)
                             put("goal", goal.take(200))

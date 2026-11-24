@@ -120,12 +120,12 @@ internal suspend fun awaitTelecomMuteBaseline(
     var observedMutedBaseline = false
     return withTimeoutOrNull(1_500L) {
         while (true) {
-            if (!isCurrent()) throw CallMediaFailure("通话身份或音频助手已变化，AI 未接入音频")
+            if (!isCurrent()) throw CallMediaFailure("The call or audio helper changed; the AI did not connect audio")
             val state = sample()
             // An already-muted handset remains the owner's decision. If it is unmuted
             // while we are still waiting, do not claim the new false baseline and remute it.
             if (observedMutedBaseline && (state.telecomMuted == false || state.hardwareMuted == false)) {
-                throw CallMediaFailure("接管前通话静音已解除，AI 未接入音频")
+                throw CallMediaFailure("The call was unmuted before takeover; the AI did not connect audio")
             }
             if (state.telecomMuted == true && state.hardwareMuted == true) observedMutedBaseline = true
             val baseline = TelecomMuteLease.fromBaseline(state.telecomMuted, state.hardwareMuted)
@@ -141,5 +141,5 @@ internal suspend fun awaitTelecomMuteBaseline(
             delay(25L)
         }
         @Suppress("UNREACHABLE_CODE") null
-    } ?: throw CallMediaFailure("Android 通话音频或原有静音状态未稳定，AI 未接入音频")
+    } ?: throw CallMediaFailure("Android call audio or the original mute state did not settle; the AI did not connect audio")
 }

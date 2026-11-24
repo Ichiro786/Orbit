@@ -93,7 +93,7 @@ internal class CallTelecomAccess(private val context: Context) {
             if (!journal.edit().putBoolean(OWNS_PACKAGE_PERMISSION, true).commit()) return "Could not save phone permission restore info"
             if (command(shell, "pm grant --user $user $pkg ${Manifest.permission.MANAGE_ONGOING_CALLS}") !=
                 CallTelecomCommandOutcome.OK
-            ) return "系统未接受管理通话权限的直接授权"
+            ) return "The system did not accept granting call management access directly"
         }
         return CallTelecomCommandOutcome.OK.verificationFailure("default", managePermission())
     }
@@ -166,9 +166,9 @@ internal enum class CallTelecomCommandOutcome {
         this != OK -> appOpsFailureMessage
         readBack == "default" && telecomGranted -> null
         readBack in setOf("default", "ignore", "deny", "errored", "foreground") ->
-            "已尝试授权，但系统读回的通话管理权限仍为 $readBack，无法启用电话伴侣"
-        readBack != "allow" -> "授权命令已执行，但无法读回通话管理权限状态，请重试"
-        !telecomGranted -> "通话管理权限已读回 allow，但系统通话服务仍未授权，无法启用电话伴侣"
+            "Access was requested, but the system still reports call management as $readBack; AI calling cannot be turned on"
+        readBack != "allow" -> "The grant command ran, but call management access could not be read back; try again"
+        !telecomGranted -> "Call management reads back as allowed, but the system call service is still not authorized; AI calling cannot be turned on"
         else -> null
     }
 

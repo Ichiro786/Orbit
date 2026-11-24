@@ -24,13 +24,13 @@ internal class VoiceBriefingConversation(initialBrief: CallTaskBrief?) {
     /** A null return means keep listening. A snapshot can be returned at most once. */
     fun accept(event: VolcRealtimeEvent.UserTranscript): CallTaskBrief? {
         if (terminal || !event.isFinal) return null
-        if (!event.isCompleteFinal) throw VoiceBriefingFailure("这句话未完整识别，请重新交代")
+        if (!event.isCompleteFinal) throw VoiceBriefingFailure("That sentence was not fully recognized; describe the task again")
         // The shared provider event deliberately has no turn identity/sequence. Never reorder
         // a late correction by arrival time, or silently lose it by discarding it.
-        if (!event.isCurrentTurn) throw VoiceBriefingFailure("口述定稿顺序发生变化，未拨号；请重新完整交代")
+        if (!event.isCurrentTurn) throw VoiceBriefingFailure("The spoken brief arrived out of order; not dialed. Describe the whole task again")
         if (VoiceBriefingAuthorization.matches(event)) {
             if (event.hasUnresolvedPriorTurn) {
-                throw VoiceBriefingFailure("之前的交代尚未完整识别，未拨号；请重新完整交代")
+                throw VoiceBriefingFailure("The earlier brief was not fully recognized; not dialed. Describe the whole task again")
             }
             val brief = snapshot()
             terminal = true
@@ -40,7 +40,7 @@ internal class VoiceBriefingConversation(initialBrief: CallTaskBrief?) {
         // instruction and cannot consume the task capacity twice.
         if (event.text.isNotBlank() && event.text.trim() != turns.lastOrNull()) turns.add(event.text.trim())
         if (ownerTranscript.length > CallTaskBrief.MAX_CONTEXT_CHARS) {
-            throw VoiceBriefingFailure("交代超过可完整保存的长度，请精简后重新开始；本次不会拨号")
+            throw VoiceBriefingFailure("The brief is too long to save in full; shorten it and start again. This call will not be placed")
         }
         return null
     }
@@ -48,7 +48,7 @@ internal class VoiceBriefingConversation(initialBrief: CallTaskBrief?) {
     fun cancel() { terminal = true }
 
     private fun snapshot(): CallTaskBrief {
-        if (turns.isEmpty()) return initial ?: throw VoiceBriefingFailure("还没有听到本次任务，请先交代要办的事")
+        if (turns.isEmpty()) return initial ?: throw VoiceBriefingFailure("No task heard yet; describe what the call should do first")
         val original = initial?.let {
             buildString {
                 append("原有交代：\n目标：").append(it.goal)
@@ -60,7 +60,7 @@ internal class VoiceBriefingConversation(initialBrief: CallTaskBrief?) {
         }.orEmpty()
         val full = original + ownerTranscript
         if (full.length > CallTaskBrief.MAX_CONTEXT_CHARS) {
-            throw VoiceBriefingFailure("交代超过可完整保存的长度，请精简后重新开始；本次不会拨号")
+            throw VoiceBriefingFailure("The brief is too long to save in full; shorten it and start again. This call will not be placed")
         }
         // Keep every owner instruction verbatim, including corrections and boundaries. Model
         // clarifications never enter the task as if they were owner-confirmed facts.

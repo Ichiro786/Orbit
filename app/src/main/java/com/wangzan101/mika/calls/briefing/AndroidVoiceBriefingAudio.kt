@@ -57,18 +57,18 @@ internal class AndroidVoiceBriefingAudio(context: Context) : VoiceBriefingAudio 
                 .setAcceptsDelayedFocusGain(false)
                 .setOnAudioFocusChangeListener { change ->
                     if (change != AudioManager.AUDIOFOCUS_GAIN && !abandoningFocus.get()) {
-                        failAudio("语音被其他音频打断，未拨号；请重新交代")
+                        failAudio("Voice was interrupted by other audio; not dialed. Describe the task again")
                     }
                 }.build()
             focus = requestedFocus
             if (manager?.requestAudioFocus(requestedFocus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                throw VoiceBriefingFailure("暂时无法使用麦克风和扬声器，未拨号")
+                throw VoiceBriefingFailure("The microphone and speaker are unavailable right now; not dialed")
             }
             synchronized(lock) {
                 checkGate(mayUseAudio)
                 val minInput = AudioRecord.getMinBufferSize(INPUT_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
                 val minOutput = AudioTrack.getMinBufferSize(OUTPUT_RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
-                if (minInput <= 0 || minOutput <= 0) throw VoiceBriefingFailure("设备语音输入输出不可用，未拨号")
+                if (minInput <= 0 || minOutput <= 0) throw VoiceBriefingFailure("Voice input and output are unavailable on this device; not dialed")
                 recorder = AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION, INPUT_RATE,
                     AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, maxOf(minInput, CHUNK_BYTES * 4))
                 player = AudioTrack.Builder().setAudioAttributes(attributes)
@@ -76,7 +76,7 @@ internal class AndroidVoiceBriefingAudio(context: Context) : VoiceBriefingAudio 
                         .setChannelMask(AudioFormat.CHANNEL_OUT_MONO).setEncoding(AudioFormat.ENCODING_PCM_16BIT).build())
                     .setTransferMode(AudioTrack.MODE_STREAM).setBufferSizeInBytes(maxOf(minOutput, 9_600)).build()
                 if (recorder!!.state != AudioRecord.STATE_INITIALIZED || player!!.state != AudioTrack.STATE_INITIALIZED) {
-                    throw VoiceBriefingFailure("设备语音输入输出启动失败，未拨号")
+                    throw VoiceBriefingFailure("Voice input and output failed to start; not dialed")
                 }
                 if (AcousticEchoCanceler.isAvailable()) {
                     echo = AcousticEchoCanceler.create(recorder!!.audioSessionId)?.also { it.enabled = true }
@@ -85,7 +85,7 @@ internal class AndroidVoiceBriefingAudio(context: Context) : VoiceBriefingAudio 
                 recorder!!.startRecording()
                 player!!.play()
                 if (recorder!!.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
-                    throw VoiceBriefingFailure("麦克风未能开始录音，未拨号")
+                    throw VoiceBriefingFailure("The microphone did not start recording; not dialed")
                 }
             }
         }
@@ -101,14 +101,14 @@ internal class AndroidVoiceBriefingAudio(context: Context) : VoiceBriefingAudio 
                     val count = synchronized(lock) {
                         checkGate(mayUseAudio)
                         if (recorder!!.activeRecordingConfiguration?.isClientSilenced == true) {
-                            throw VoiceBriefingFailure("系统已停止提供麦克风声音，未拨号")
+                            throw VoiceBriefingFailure("The system stopped providing microphone audio; not dialed")
                         }
                         recorder!!.read(frame, filled, frame.size - filled, AudioRecord.READ_NON_BLOCKING)
                     }
                     checkGate(mayUseAudio)
-                    if (count < 0 || count % 2 != 0) throw VoiceBriefingFailure("麦克风采集失败，未拨号")
+                    if (count < 0 || count % 2 != 0) throw VoiceBriefingFailure("Microphone capture failed; not dialed")
                     if (count == 0) {
-                        if (SystemClock.elapsedRealtime() - lastFrame > 1_500) throw VoiceBriefingFailure("麦克风采集已停止，未拨号")
+                        if (SystemClock.elapsedRealtime() - lastFrame > 1_500) throw VoiceBriefingFailure("Microphone capture stopped; not dialed")
                         delay(5)
                         continue
                     }
@@ -120,7 +120,7 @@ internal class AndroidVoiceBriefingAudio(context: Context) : VoiceBriefingAudio 
                     if (!pacer.send {
                             checkGate(mayUseAudio)
                             send(frame)
-                        }) throw VoiceBriefingFailure("语音发送失败，未拨号")
+                        }) throw VoiceBriefingFailure("Sending voice failed; not dialed")
                     lastFrame = SystemClock.elapsedRealtime()
                     filled = 0
                 }
@@ -149,7 +149,7 @@ internal class AndroidVoiceBriefingAudio(context: Context) : VoiceBriefingAudio 
                         } else {
                             val count = player!!.write(pcm, offset, current.byteCount - offset, AudioTrack.WRITE_NON_BLOCKING)
                             checkGate(mayUseAudio)
-                            if (count < 0 || count % 2 != 0) throw VoiceBriefingFailure("语音播放失败，未拨号")
+                            if (count < 0 || count % 2 != 0) throw VoiceBriefingFailure("Voice playback failed; not dialed")
                             if (count > 0) {
                                 lastProgress = SystemClock.elapsedRealtime()
                                 offset += count
@@ -159,7 +159,7 @@ internal class AndroidVoiceBriefingAudio(context: Context) : VoiceBriefingAudio 
                                     block = null
                                 }
                             } else if (SystemClock.elapsedRealtime() - lastProgress > 2_000) {
-                                throw VoiceBriefingFailure("语音播放停止响应，未拨号")
+                                throw VoiceBriefingFailure("Voice playback stopped responding; not dialed")
                             }
                         }
                     }
@@ -176,7 +176,7 @@ internal class AndroidVoiceBriefingAudio(context: Context) : VoiceBriefingAudio 
         if (stopped.get()) return@synchronized
         // Bound actual PCM duration (including the writer's in-flight block), not the
         // provider's packet count. Short replies can arrive much faster than real-time.
-        if (playbackQueue.offer(pcm) == null) throw VoiceBriefingFailure("语音播放缓冲已满，未拨号")
+        if (playbackQueue.offer(pcm) == null) throw VoiceBriefingFailure("Voice playback buffer is full; not dialed")
     }
 
     override fun interrupt(): Long = synchronized(lock) {

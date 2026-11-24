@@ -131,7 +131,7 @@ internal class CallPcmBridge(
                                     if (!cleared) throw CallMediaFailure("Call audio could not be stopped in time; handed back to the system")
                                     farewell.afterPairedFlush()
                                     if (truncation?.interrupt(heardFrames) == false) {
-                                        throw CallMediaFailure("无法同步已播放的电话音频，已交还系统")
+                                        throw CallMediaFailure("Played call audio could not be synced; the call was handed back to the system")
                                     }
                                 }
                                 // Some providers report a second cancellation after user speech starts.
@@ -176,7 +176,7 @@ internal class CallPcmBridge(
                                         put("requested_digits", result.requestedDigits)
                                         put("remote_confirmed", false)
                                         put("next", "Wait for the next phone prompt; never retry uncertain or partial input automatically.")
-                                    })) throw CallMediaFailure("电话按键结果无法回传，已交还系统")
+                                    })) throw CallMediaFailure("The key press result could not be returned; the call was handed back to the system")
                                 }
                                 if (event.name != "send_dtmf" || digits.isEmpty() || digits.length > 32 ||
                                     digits.any { it !in "0123456789*#" }) {
