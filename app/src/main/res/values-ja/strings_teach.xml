@@ -14,6 +14,7 @@
     <string name="teach_resume">示範を続ける</string>
     <string name="teach_end">示範を終える</string>
     <string name="teach_discard">破棄</string>
+    <string name="teach_discard_confirm">もう一度タップして破棄</string>
     <string name="teach_discard_body">この示範を破棄し、保存した手順を削除しますか？</string>
     <string name="teach_busy">タスクの実行中です。終わってから教えてください。</string>
     <string name="teach_need_a11y">先にユーザー補助をオンにしてください。オフだと操作を見られません。</string>

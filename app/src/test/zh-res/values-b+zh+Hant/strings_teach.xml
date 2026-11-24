@@ -14,6 +14,7 @@
     <string name="teach_resume">繼續示範</string>
     <string name="teach_end">結束示範</string>
     <string name="teach_discard">放棄</string>
+    <string name="teach_discard_confirm">再按一次即捨棄</string>
     <string name="teach_discard_body">放棄這次示範，並刪除已經留下的步驟？</string>
     <string name="teach_busy">有任務在進行。等它結束再教。</string>
     <string name="teach_need_a11y">先打開無障礙，否則 Orbit 看不到你的操作。</string>

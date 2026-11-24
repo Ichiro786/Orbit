@@ -14,6 +14,7 @@
     <string name="teach_resume">Продолжить показ</string>
     <string name="teach_end">Закончить показ</string>
     <string name="teach_discard">Отменить</string>
+    <string name="teach_discard_confirm">Нажмите ещё раз, чтобы удалить</string>
     <string name="teach_discard_body">Отменить этот показ и удалить сохраненные шаги?</string>
     <string name="teach_busy">Задача уже выполняется. Дождитесь конца, прежде чем учить.</string>
     <string name="teach_need_a11y">Сначала включите специальные возможности. Без них Orbit не видит нажатия.</string>

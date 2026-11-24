@@ -14,6 +14,7 @@
     <string name="teach_resume">Resume</string>
     <string name="teach_end">Finish demonstration</string>
     <string name="teach_discard">Discard</string>
+    <string name="teach_discard_confirm">Tap again to discard</string>
     <string name="teach_discard_body">Discard this demonstration and delete the saved steps?</string>
     <string name="teach_busy">A task is running. Wait until it finishes before teaching.</string>
     <string name="teach_need_a11y">Turn on accessibility before demonstrating. Orbit cannot see taps without it.</string>

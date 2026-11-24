@@ -14,6 +14,7 @@
     <string name="teach_resume">시범 계속</string>
     <string name="teach_end">시범 끝내기</string>
     <string name="teach_discard">버리기</string>
+    <string name="teach_discard_confirm">한 번 더 누르면 버립니다</string>
     <string name="teach_discard_body">이번 시범을 버리고 저장된 단계를 삭제할까요?</string>
     <string name="teach_busy">작업이 진행 중입니다. 끝난 뒤에 가르치세요.</string>
     <string name="teach_need_a11y">먼저 접근성을 켜세요. 꺼져 있으면 탭을 볼 수 없습니다.</string>

@@ -14,6 +14,7 @@
     <string name="teach_resume">Lanjutkan</string>
     <string name="teach_end">Akhiri demonstrasi</string>
     <string name="teach_discard">Buang</string>
+    <string name="teach_discard_confirm">Ketuk lagi untuk membuang</string>
     <string name="teach_discard_body">Buang demonstrasi ini dan hapus langkah yang tersimpan?</string>
     <string name="teach_busy">Ada tugas yang berjalan. Tunggu selesai sebelum mengajar.</string>
     <string name="teach_need_a11y">Nyalakan aksesibilitas sebelum demonstrasi. Tanpa itu Orbit tidak melihat ketukan.</string>

@@ -323,9 +323,9 @@ object TeachDraft {
         route.apps.forEach { app ->
             appendLine("App: ${app.label}(${app.packageName})${if (app.browser) "，是这台手机的默认浏览器" else ""}")
         }
-        if (route.folded.isNotEmpty()) appendLine("已按 Mika 的直达能力省掉:${route.folded.joinToString("；")}")
+        if (route.folded.isNotEmpty()) appendLine("已按 Orbit 的直达能力省掉:${route.folded.joinToString("；")}")
         appendLine("整理规则:")
-        appendLine("- 回桌面、找图标、点开 App 只是人在做:Mika 直接打开 App,不要写桌面和图标。")
+        appendLine("- 回桌面、找图标、点开 App 只是人在做:Orbit 直接打开 App,不要写桌面和图标。")
         appendLine("- 打开浏览器、点地址栏、输入、点搜索:写成「直接打开 <链接>」或「在 <站点> 搜索」;链接和关键词由使用时的请求提供,示范里没有保存。")
         appendLine("- 点输入框、输入、提交:合成一步「输入 <内容> 并提交」。")
         appendLine("- 只写真正决定结果的入口、具体按钮、选项、判据和停手条件;等待、重复滚动、无意义返回不写。")
@@ -343,7 +343,7 @@ object TeachDraft {
             appendLine("## 入口")
             appendLine("适用：${plain(session.goal)}")
             val first = route.apps.firstOrNull()
-            if (first != null) appendLine("Mika 直接打开 ${first.label}（${first.packageName}）。只把这次真正出现过的界面当前置条件。")
+            if (first != null) appendLine("Orbit 直接打开 ${first.label}（${first.packageName}）。只把这次真正出现过的界面当前置条件。")
             else appendLine("这次没有留下可用的 App 入口。只把这次真正出现过的界面当前置条件。")
             explained.forEach { appendLine("[你说明的] $it") }
             appendLine("来源只分三种：观察到的、你说明的、以及标明为推测的。这份由本机按示范路线整理，没有另作推测。")

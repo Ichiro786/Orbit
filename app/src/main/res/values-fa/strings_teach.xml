@@ -14,6 +14,7 @@
     <string name="teach_resume">ادامه</string>
     <string name="teach_end">پایان نمایش</string>
     <string name="teach_discard">کنار گذاشتن</string>
+    <string name="teach_discard_confirm">برای کنار گذاشتن دوباره بزنید</string>
     <string name="teach_discard_body">این نمایش کنار گذاشته و مراحل ذخیره‌شده حذف شوند؟</string>
     <string name="teach_busy">کاری در حال اجراست. پیش از آموزش، منتظر پایان آن بمانید.</string>
     <string name="teach_need_a11y">پیش از نمایش، دسترس‌پذیری را روشن کنید. Orbit بدون آن نمی‌تواند لمس‌ها را ببیند.</string>

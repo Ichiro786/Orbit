@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -178,12 +179,10 @@ private fun WideButton(text: String, onClick: () -> Unit, kind: ButtonKind = But
 internal fun TeachIntroPage(initial: String, onStart: (String) -> Unit) {
     var goal by remember(initial) { mutableStateOf(initial) }
     var detailed by remember { mutableStateOf(false) }
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(MikaSpace.S20).testTag("teach-form"),
-        verticalArrangement = Arrangement.spacedBy(MikaSpace.S12),
-    ) {
-        Text(stringResource(R.string.teach_intro_title), style = MikaType.Title, color = MikaTheme.colors.ink)
-        Text(stringResource(R.string.teach_intro_body), style = MikaType.Body, color = MikaTheme.colors.ink2)
+    TeachFrame(Modifier.testTag("teach-form"), actions = {
+        WideButton(stringResource(R.string.teach_start), { onStart(goal) }, modifier = Modifier.testTag("teach-start"))
+    }) {
+        TeachHeading(stringResource(R.string.teach_intro_title), stringResource(R.string.teach_intro_body))
         OrbitTextField(
             goal, { goal = it },
             stringResource(R.string.teach_goal_label),
@@ -191,19 +190,14 @@ internal fun TeachIntroPage(initial: String, onStart: (String) -> Unit) {
             placeholder = stringResource(R.string.teach_goal_hint),
             singleLine = false,
         )
-        MikaCard(Modifier.clickable { detailed = !detailed }.testTag("teach-disclosure")) {
+        MikaCard(Modifier.clickable(role = Role.Button) { detailed = !detailed }.testTag("teach-disclosure")) {
             Text(
                 stringResource(if (detailed) R.string.teach_disclosure else R.string.teach_disclosure_short),
-                Modifier.padding(MikaSpace.S12),
+                Modifier.padding(MikaSpace.S16),
                 style = MikaType.Caption,
                 color = MikaTheme.colors.ink2,
             )
         }
-        MikaButton(
-            stringResource(R.string.teach_start), { onStart(goal) },
-            kind = ButtonKind.Primary, size = ButtonSize.Medium,
-            modifier = Modifier.testTag("teach-start"),
-        )
     }
 }
 
@@ -255,28 +249,15 @@ private fun Interrupted(runtime: TeachRuntime) {
 
 @Composable
 internal fun Summarizing(failed: Boolean, notice: TeachNotice?, onRetry: () -> Unit, onDiscard: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(MikaSpace.S20),
-        verticalArrangement = Arrangement.spacedBy(MikaSpace.S12),
-    ) {
+    TeachFrame(actions = {
+        if (failed) WideButton(stringResource(R.string.teach_retry), onRetry, modifier = Modifier.testTag("teach-retry"))
+        WideButton(stringResource(R.string.teach_discard), onDiscard, kind = if (failed) ButtonKind.Text else ButtonKind.Tonal, modifier = Modifier.testTag("teach-discard"))
+    }) {
         if (failed) {
-            Text(
-                stringResource(if (notice == TeachNotice.NoSteps) R.string.teach_no_steps_again else R.string.teach_draft_failed),
-                style = MikaType.Title, color = MikaTheme.colors.ink,
-            )
-            MikaButton(
-                stringResource(R.string.teach_retry), onRetry,
-                kind = ButtonKind.Primary, size = ButtonSize.Medium,
-                modifier = Modifier.testTag("teach-retry"),
-            )
+            TeachHeading(stringResource(if (notice == TeachNotice.NoSteps) R.string.teach_no_steps_again else R.string.teach_draft_failed))
         } else {
-            Text(stringResource(R.string.teach_summarizing), style = MikaType.Title, color = MikaTheme.colors.ink)
-            Text(stringResource(R.string.teach_summary_head), style = MikaType.Body, color = MikaTheme.colors.ink2)
+            TeachHeading(stringResource(R.string.teach_summarizing), stringResource(R.string.teach_summary_head))
         }
-        MikaButton(
-            stringResource(R.string.teach_discard), onDiscard, kind = ButtonKind.Tonal, size = ButtonSize.Medium,
-            modifier = Modifier.testTag("teach-discard"),
-        )
     }
 }
 
@@ -289,68 +270,47 @@ internal fun TeachSummaryPage(
 ) {
     var foldedOpen by remember { mutableStateOf(false) }
     var confirmDiscard by remember { mutableStateOf(false) }
-    Column(Modifier.fillMaxSize()) {
-        Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState())
-                .padding(horizontal = MikaSpace.S20).padding(top = MikaSpace.S8).testTag("teach-summary"),
-            verticalArrangement = Arrangement.spacedBy(MikaSpace.S8),
-        ) {
-            Text(stringResource(R.string.teach_summary_ready), style = MikaType.Label, color = MikaTheme.colors.accent)
-            Text(view.display, style = MikaType.Title, color = MikaTheme.colors.ink)
-            if (view.description.isNotBlank()) {
-                Text(view.description, style = MikaType.Caption, color = MikaTheme.colors.ink2)
-            }
-            Text(stringResource(R.string.teach_summary_head), style = MikaType.Hint, color = MikaTheme.colors.ink3)
-            if (view.folded.isNotEmpty()) {
-                MikaCard(Modifier.clickable { foldedOpen = !foldedOpen }.testTag("teach-folded")) {
-                    Text(
-                        stringResource(R.string.teach_folded_n, view.folded.size),
-                        Modifier.padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S8),
-                        style = MikaType.Label, color = MikaTheme.colors.ink,
-                    )
-                    if (foldedOpen) {
-                        view.folded.forEach {
-                            Text(
-                                "· $it",
-                                Modifier.padding(start = MikaSpace.S12, end = MikaSpace.S12, bottom = MikaSpace.S4),
-                                style = MikaType.Hint, color = MikaTheme.colors.ink3,
-                            )
-                        }
-                        Spacer(Modifier.height(MikaSpace.S8))
+    val c = MikaTheme.colors
+    TeachFrame(Modifier.testTag("teach-summary"), actions = {
+        WideButton(stringResource(R.string.teach_accept), onAccept, modifier = Modifier.testTag("teach-accept"))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
+            WideButton(stringResource(R.string.teach_redo), onRedo, kind = ButtonKind.Tonal, modifier = Modifier.weight(1f).testTag("teach-redo"))
+            // Discarding the summary takes a second tap, so one slip does not throw the demonstration away
+            WideButton(
+                stringResource(if (confirmDiscard) R.string.teach_discard_confirm else R.string.teach_discard),
+                { if (confirmDiscard) onDiscard() else confirmDiscard = true },
+                kind = ButtonKind.Text, modifier = Modifier.weight(1f).testTag("teach-discard"),
+            )
+        }
+    }) {
+        Column(verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
+            Text(stringResource(R.string.teach_summary_ready), style = MikaType.Label, color = c.accent)
+            TeachHeading(view.display, view.description.takeIf { it.isNotBlank() })
+            Text(stringResource(R.string.teach_summary_head), style = MikaType.Hint, color = c.ink3)
+        }
+        if (view.folded.isNotEmpty()) {
+            MikaCard(Modifier.clickable(role = Role.Button) { foldedOpen = !foldedOpen }.testTag("teach-folded")) {
+                Text(
+                    stringResource(R.string.teach_folded_n, view.folded.size),
+                    Modifier.padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12),
+                    style = MikaType.Label, color = c.ink,
+                )
+                if (foldedOpen) {
+                    view.folded.forEach {
+                        Text(
+                            "· $it",
+                            Modifier.padding(start = MikaSpace.S16, end = MikaSpace.S16, bottom = MikaSpace.S4),
+                            style = MikaType.Hint, color = c.ink3,
+                        )
                     }
+                    Spacer(Modifier.height(MikaSpace.S8))
                 }
             }
-            if (view.basic) {
-                Text(stringResource(R.string.teach_basic_note), style = MikaType.Caption, color = MikaTheme.colors.warn)
-            }
-            SkillReadingView(view.body)
-            Spacer(Modifier.height(MikaSpace.S8))
         }
-        Column(
-            Modifier.padding(horizontal = MikaSpace.S20).padding(top = MikaSpace.S8, bottom = MikaSpace.S16),
-            verticalArrangement = Arrangement.spacedBy(MikaSpace.S8),
-        ) {
-            MikaButton(
-                stringResource(R.string.teach_accept), onAccept,
-                kind = ButtonKind.Primary, size = ButtonSize.Medium,
-                modifier = Modifier.testTag("teach-accept"),
-            )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    stringResource(R.string.teach_redo),
-                    Modifier.clickable(onClick = onRedo).padding(MikaSpace.S8).testTag("teach-redo"),
-                    style = MikaType.Label, color = MikaTheme.colors.ink3,
-                )
-                Text(
-                    stringResource(R.string.teach_discard),
-                    Modifier.clickable {
-                        if (confirmDiscard) onDiscard() else confirmDiscard = true
-                    }.padding(MikaSpace.S8).testTag("teach-discard"),
-                    style = MikaType.Label,
-                    color = if (confirmDiscard) MikaTheme.colors.warn else MikaTheme.colors.ink3,
-                )
-            }
+        if (view.basic) {
+            Text(stringResource(R.string.teach_basic_note), style = MikaType.Caption, color = c.warn)
         }
+        SkillReadingView(view.body)
     }
 }
 
@@ -361,30 +321,12 @@ internal fun TeachDonePage(
     onBackToChat: () -> Unit,
     onTeachAgain: () -> Unit,
 ) {
-    Column(
-        Modifier.fillMaxSize().padding(MikaSpace.S20).testTag("teach-done"),
-        verticalArrangement = Arrangement.spacedBy(MikaSpace.S12, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    TeachFrame(Modifier.testTag("teach-done"), actions = {
+        WideButton(stringResource(R.string.teach_back_chat), onBackToChat, modifier = Modifier.testTag("teach-back-chat"))
+        WideButton(stringResource(R.string.teach_teach_again), onTeachAgain, kind = ButtonKind.Tonal, modifier = Modifier.testTag("teach-again"))
+    }) {
         Text(stringResource(R.string.teach_accepted_title), style = MikaType.Label, color = MikaTheme.colors.accent)
-        Text(
-            stringResource(R.string.teach_accepted_body, name),
-            style = MikaType.Title, color = MikaTheme.colors.ink, textAlign = TextAlign.Center,
-        )
-        if (description.isNotBlank()) {
-            Text(description, style = MikaType.Body, color = MikaTheme.colors.ink2, textAlign = TextAlign.Center)
-        }
-        Spacer(Modifier.height(MikaSpace.S8))
-        MikaButton(
-            stringResource(R.string.teach_back_chat), onBackToChat,
-            kind = ButtonKind.Primary, size = ButtonSize.Medium,
-            modifier = Modifier.testTag("teach-back-chat"),
-        )
-        MikaButton(
-            stringResource(R.string.teach_teach_again), onTeachAgain,
-            kind = ButtonKind.Tonal, size = ButtonSize.Medium,
-            modifier = Modifier.testTag("teach-again"),
-        )
+        TeachHeading(stringResource(R.string.teach_accepted_body, name), description.takeIf { it.isNotBlank() })
     }
 }
 

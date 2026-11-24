@@ -14,6 +14,7 @@
     <string name="teach_resume">متابعة العرض</string>
     <string name="teach_end">إنهاء العرض</string>
     <string name="teach_discard">تجاهل</string>
+    <string name="teach_discard_confirm">انقر مرة أخرى للتجاهل</string>
     <string name="teach_discard_body">تجاهل هذا العرض وحذف الخطوات المحفوظة؟</string>
     <string name="teach_busy">هناك مهمة قيد التشغيل. انتظر حتى تنتهي قبل التعليم.</string>
     <string name="teach_need_a11y">فعّل إمكانية الوصول قبل العرض. بدونها لا ترى Orbit اللمسات.</string>

@@ -14,6 +14,7 @@
     <string name="teach_resume">Seguir</string>
     <string name="teach_end">Terminar demostración</string>
     <string name="teach_discard">Descartar</string>
+    <string name="teach_discard_confirm">Toca de nuevo para descartar</string>
     <string name="teach_discard_body">¿Descartar esta demostración y borrar los pasos guardados?</string>
     <string name="teach_busy">Hay una tarea en curso. Espera a que termine antes de enseñar.</string>
     <string name="teach_need_a11y">Activa la accesibilidad antes de demostrar. Sin ella Orbit no ve los toques.</string>

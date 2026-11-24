@@ -14,6 +14,7 @@
     <string name="teach_resume">继续示范</string>
     <string name="teach_end">结束示范</string>
     <string name="teach_discard">放弃</string>
+    <string name="teach_discard_confirm">再点一次即丢弃</string>
     <string name="teach_discard_body">放弃这次示范，并删除已经留下的步骤？</string>
     <string name="teach_busy">有任务在进行。等它结束再教。</string>
     <string name="teach_need_a11y">先打开无障碍，否则 Orbit 看不到你的操作。</string>
