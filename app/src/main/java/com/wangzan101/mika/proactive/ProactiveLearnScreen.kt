@@ -337,7 +337,7 @@ fun ProactiveLearnScreen(onBack: () -> Unit) {
             text = {
                 Column {
                     Text(stringResource(R.string.proactive_learn_topic_merge_body))
-                    LazyColumn(Modifier.heightIn(max = 320.dp).testTag("merge_targets")) {
+                    LazyColumn(Modifier.heightIn(max = MikaSpace.S8 * 40).testTag("merge_targets")) {
                         items(others, key = { it.id }) { other ->
                             TextButton({
                                 runtime.onLearn { mergeTopic(t.id, other.id) }
@@ -422,7 +422,7 @@ private fun LazyListScope.card(id: String, build: CardRows.() -> Unit) {
     val keys = entries.mapIndexed { i, e -> e.key?.let { "$id/k:$it" }?.takeIf(seen::add) ?: "$id/#$i" }
     itemsIndexed(entries, key = { i, _ -> keys[i] }, contentType = { _, e -> if (e.isRow) 1 else 0 }) { i, e ->
         Box(
-            Modifier.fillMaxWidth().padding(bottom = if (i == entries.lastIndex) 12.dp else 0.dp)
+            Modifier.fillMaxWidth().padding(bottom = if (i == entries.lastIndex) MikaSpace.S12 else 0.dp)
                 .clip(cardRowShape(i, entries.size)).background(MikaTheme.colors.surface),
         ) { e.content(i == firstRow) }
     }

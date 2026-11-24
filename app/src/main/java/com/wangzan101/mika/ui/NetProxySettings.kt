@@ -16,7 +16,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.cap.web.WebProxy
 import com.wangzan101.mika.core.net.ProxyAddress
@@ -64,7 +63,7 @@ fun NetProxyDialog(initial: String, onDismiss: () -> Unit, onSave: (String) -> U
         title = { Text(NetProxyCopy.TITLE) },
         text = {
             Column {
-                DetailNote(NetProxyCopy.SUMMARY, NetProxyCopy.HINT, Modifier.padding(bottom = 4.dp))
+                DetailNote(NetProxyCopy.SUMMARY, NetProxyCopy.HINT, Modifier.padding(bottom = MikaSpace.S4))
                 OutlinedTextField(
                     text, { text = it }, Modifier.fillMaxWidth().padding(top = MikaSpace.S8).testTag("net-proxy-input"),
                     singleLine = true, isError = !ok, placeholder = { Text("http://127.0.0.1:7890") },

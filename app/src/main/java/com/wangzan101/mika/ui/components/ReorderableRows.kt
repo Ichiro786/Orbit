@@ -1,7 +1,7 @@
 package com.wangzan101.mika.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -24,12 +24,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.wangzan101.mika.R
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
+import com.wangzan101.mika.ui.theme.motion
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -125,7 +126,7 @@ fun ReorderableRow(
     val offset by key(ids) {
         animateFloatAsState(
             if (moving) state.dragDistance + state.scroll.value - state.startScroll else (newTop - oldTop).toFloat(),
-            tween(if (moving) 0 else 180), label = "reorder position",
+            if (moving) snap() else MikaTheme.motion.spatialDefault(), label = "reorder position",
         )
     }
     fun save(orderToSave: List<String>) {
@@ -144,7 +145,7 @@ fun ReorderableRow(
     val colors = MikaTheme.colors
     Box(
         Modifier.fillMaxWidth().zIndex(if (moving) 1f else 0f)
-            .graphicsLayer { translationY = offset; shadowElevation = if (moving) 8.dp.toPx() else 0f }
+            .graphicsLayer { translationY = offset; shadowElevation = if (moving) MikaSpace.S8.toPx() else 0f }
             .background(colors.surface)
             .onSizeChanged { state.heights[id] = it.height }
             .semantics {

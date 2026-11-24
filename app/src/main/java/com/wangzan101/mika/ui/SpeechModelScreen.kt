@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.SegmentedControl
 import com.wangzan101.mika.ui.theme.MikaShapes
@@ -27,8 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wangzan101.mika.MikaApp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.i18n.tr
@@ -220,7 +219,7 @@ private fun MigratedSpeechModelContent(
     val c = MikaTheme.colors
     Page(tr(R.string.voice_hub_stt), onBack) {
         Text(
-            tr(R.string.speech_hint), Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2,
+            tr(R.string.speech_hint), Modifier.padding(top = MikaSpace.S4, bottom = MikaSpace.S12), style = MikaType.Body, color = c.ink2,
         )
         GroupCard {
             RadioRow(
@@ -257,7 +256,7 @@ private fun MigratedSpeechModelContent(
             )
         }
         onOpenServices?.let { VoiceMoreServices(it) }
-        FooterNote(tr(R.string.voice_stt_footer), Modifier.padding(top = 8.dp))
+        FooterNote(tr(R.string.voice_stt_footer), Modifier.padding(top = MikaSpace.S8))
     }
 }
 

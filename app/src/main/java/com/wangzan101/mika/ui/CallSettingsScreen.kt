@@ -1,6 +1,7 @@
 package com.wangzan101.mika.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.ui.theme.LocalSkinBackdrop
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.clickable
@@ -29,7 +30,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.calls.*
 import com.wangzan101.mika.ui.components.*
@@ -448,8 +448,8 @@ internal fun CurrentCallCard(
             onDismissRequest = { showActiveTask = false },
             title = { Text(stringResource(R.string.calls_record_brief)) },
             text = {
-                Column(Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.heightIn(max = MikaSpace.S8 * 45).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                     Text(task.goal)
                     task.questions.forEach { Text("• $it") }
                     if (task.context.isNotBlank()) Text(task.context)
@@ -503,13 +503,13 @@ internal fun CurrentCallCard(
                     }
                 }
             }
-            if (state.aiActive) state.voiceStage?.let { CallVoiceStageRow(it, Modifier.padding(start = 46.dp)) }
+            if (state.aiActive) state.voiceStage?.let { CallVoiceStageRow(it, Modifier.padding(start = MikaSpace.S8 * 6)) }
             state.liveTranscript.lastOrNull { it.text.isNotBlank() }?.let { latest ->
                 Row(Modifier.fillMaxWidth().testTag("call-current-latest"),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8), verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(callTranscriptSpeakerLabel(latest.role)),
                         style = MaterialTheme.typography.bodySmall, color = MikaTheme.colors.ink3,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 80.dp))
+                        maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = MikaSpace.S8 * 10))
                     Text(latest.text, style = MaterialTheme.typography.bodySmall, color = MikaTheme.colors.ink2,
                         maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 }
@@ -618,8 +618,8 @@ internal fun CallReceivePage(
         }
         // 开着或暂停中才有暂停/恢复;按钮直接放在开关下面,不再藏进折叠行
         if (config.autoAnswer || paused) {
-            Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(Modifier.fillMaxWidth().padding(start = MikaSpace.S12, end = MikaSpace.S12, bottom = MikaSpace.S8),
+                horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                 if (paused) {
                     TextButton(onClick = onResume, enabled = controlsEnabled, modifier = Modifier.testTag("call-resume-auto")) {
                         Text(stringResource(R.string.calls_auto_resume))
@@ -714,10 +714,10 @@ private fun CallPreferencesPage(
     GroupCard {
         Row(
             Modifier.fillMaxWidth().toggleable(config.summaryEnabled, enabled = canConfigure, role = Role.Switch,
-                onValueChange = onSummaryEnabled).padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically,
+                onValueChange = onSummaryEnabled).padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12),
+            horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12), verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MikaSpace.S4)) {
                 Text(stringResource(R.string.calls_summary_enable), style = MaterialTheme.typography.bodyMedium)
                 Text(stringResource(R.string.calls_summary_cloud_consent), style = MaterialTheme.typography.bodySmall,
                     color = MikaTheme.colors.ink3)
@@ -729,7 +729,7 @@ private fun CallPreferencesPage(
 
     // 不再有「启用」大开关:做完准备清单就是启用,不想用了在这里停用
     if (config.enabled) {
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(MikaSpace.S16))
         GroupCard {
             ListRow(null, stringResource(R.string.calls_disable_short), stringResource(R.string.calls_disable_sub), first = true,
                 titleColor = MaterialTheme.colorScheme.error, onClick = onStop.takeIf { !stopBusy },
@@ -843,7 +843,7 @@ private fun CallProfileDialog(config: CallConfig, onDismiss: () -> Unit, onSave:
         title = { Text(stringResource(R.string.calls_profile)) },
         text = {
             Column(Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                 OutlinedTextField(greeting, { greeting = it }, modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.calls_greeting)) }, maxLines = 3, enabled = !busy,
                     supportingText = { Text(stringResource(R.string.calls_greeting_hint)) })

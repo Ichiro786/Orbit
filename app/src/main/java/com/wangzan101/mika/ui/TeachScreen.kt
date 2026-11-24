@@ -179,8 +179,8 @@ internal fun TeachIntroPage(initial: String, onStart: (String) -> Unit) {
     var goal by remember(initial) { mutableStateOf(initial) }
     var detailed by remember { mutableStateOf(false) }
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp).testTag("teach-form"),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(MikaSpace.S20).testTag("teach-form"),
+        verticalArrangement = Arrangement.spacedBy(MikaSpace.S12),
     ) {
         Text(stringResource(R.string.teach_intro_title), style = MikaType.Title, color = MikaTheme.colors.ink)
         Text(stringResource(R.string.teach_intro_body), style = MikaType.Body, color = MikaTheme.colors.ink2)
@@ -194,7 +194,7 @@ internal fun TeachIntroPage(initial: String, onStart: (String) -> Unit) {
         MikaCard(Modifier.clickable { detailed = !detailed }.testTag("teach-disclosure")) {
             Text(
                 stringResource(if (detailed) R.string.teach_disclosure else R.string.teach_disclosure_short),
-                Modifier.padding(12.dp),
+                Modifier.padding(MikaSpace.S12),
                 style = MikaType.Caption,
                 color = MikaTheme.colors.ink2,
             )
@@ -256,8 +256,8 @@ private fun Interrupted(runtime: TeachRuntime) {
 @Composable
 internal fun Summarizing(failed: Boolean, notice: TeachNotice?, onRetry: () -> Unit, onDiscard: () -> Unit) {
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(MikaSpace.S20),
+        verticalArrangement = Arrangement.spacedBy(MikaSpace.S12),
     ) {
         if (failed) {
             Text(
@@ -292,8 +292,8 @@ internal fun TeachSummaryPage(
     Column(Modifier.fillMaxSize()) {
         Column(
             Modifier.weight(1f).verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp).padding(top = 8.dp).testTag("teach-summary"),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+                .padding(horizontal = MikaSpace.S20).padding(top = MikaSpace.S8).testTag("teach-summary"),
+            verticalArrangement = Arrangement.spacedBy(MikaSpace.S8),
         ) {
             Text(stringResource(R.string.teach_summary_ready), style = MikaType.Label, color = MikaTheme.colors.accent)
             Text(view.display, style = MikaType.Title, color = MikaTheme.colors.ink)
@@ -305,18 +305,18 @@ internal fun TeachSummaryPage(
                 MikaCard(Modifier.clickable { foldedOpen = !foldedOpen }.testTag("teach-folded")) {
                     Text(
                         stringResource(R.string.teach_folded_n, view.folded.size),
-                        Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                        Modifier.padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S8),
                         style = MikaType.Label, color = MikaTheme.colors.ink,
                     )
                     if (foldedOpen) {
                         view.folded.forEach {
                             Text(
                                 "· $it",
-                                Modifier.padding(start = 12.dp, end = 12.dp, bottom = 4.dp),
+                                Modifier.padding(start = MikaSpace.S12, end = MikaSpace.S12, bottom = MikaSpace.S4),
                                 style = MikaType.Hint, color = MikaTheme.colors.ink3,
                             )
                         }
-                        Spacer(Modifier.height(6.dp))
+                        Spacer(Modifier.height(MikaSpace.S8))
                     }
                 }
             }
@@ -324,11 +324,11 @@ internal fun TeachSummaryPage(
                 Text(stringResource(R.string.teach_basic_note), style = MikaType.Caption, color = MikaTheme.colors.warn)
             }
             SkillReadingView(view.body)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(MikaSpace.S8))
         }
         Column(
-            Modifier.padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            Modifier.padding(horizontal = MikaSpace.S20).padding(top = MikaSpace.S8, bottom = MikaSpace.S16),
+            verticalArrangement = Arrangement.spacedBy(MikaSpace.S8),
         ) {
             MikaButton(
                 stringResource(R.string.teach_accept), onAccept,
@@ -338,14 +338,14 @@ internal fun TeachSummaryPage(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
                     stringResource(R.string.teach_redo),
-                    Modifier.clickable(onClick = onRedo).padding(8.dp).testTag("teach-redo"),
+                    Modifier.clickable(onClick = onRedo).padding(MikaSpace.S8).testTag("teach-redo"),
                     style = MikaType.Label, color = MikaTheme.colors.ink3,
                 )
                 Text(
                     stringResource(R.string.teach_discard),
                     Modifier.clickable {
                         if (confirmDiscard) onDiscard() else confirmDiscard = true
-                    }.padding(8.dp).testTag("teach-discard"),
+                    }.padding(MikaSpace.S8).testTag("teach-discard"),
                     style = MikaType.Label,
                     color = if (confirmDiscard) MikaTheme.colors.warn else MikaTheme.colors.ink3,
                 )
@@ -362,8 +362,8 @@ internal fun TeachDonePage(
     onTeachAgain: () -> Unit,
 ) {
     Column(
-        Modifier.fillMaxSize().padding(20.dp).testTag("teach-done"),
-        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+        Modifier.fillMaxSize().padding(MikaSpace.S20).testTag("teach-done"),
+        verticalArrangement = Arrangement.spacedBy(MikaSpace.S12, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(stringResource(R.string.teach_accepted_title), style = MikaType.Label, color = MikaTheme.colors.accent)
@@ -374,7 +374,7 @@ internal fun TeachDonePage(
         if (description.isNotBlank()) {
             Text(description, style = MikaType.Body, color = MikaTheme.colors.ink2, textAlign = TextAlign.Center)
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(MikaSpace.S8))
         MikaButton(
             stringResource(R.string.teach_back_chat), onBackToChat,
             kind = ButtonKind.Primary, size = ButtonSize.Medium,

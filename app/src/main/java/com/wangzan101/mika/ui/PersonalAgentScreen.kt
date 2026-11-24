@@ -49,7 +49,6 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.core.personal.PersonalTask
 import com.wangzan101.mika.core.personal.PersonalSystemException
@@ -292,7 +291,7 @@ internal fun PersonalReply(text: String, error: Boolean, bubble: Modifier = Modi
             MarkdownText(text, MikaType.Body.copy(color = if (error) c.bad else c.ink), bubble)
         }
         IconButton(onClick = { copyMessage(context, MarkdownModel.toPlainText(text).ifBlank { text }) }) {
-            Icon(MikaIcons.Copy, stringResource(R.string.chat_copy), Modifier.size(18.dp), tint = c.ink2)
+            Icon(MikaIcons.Copy, stringResource(R.string.chat_copy), Modifier.size(MikaSize.TileIcon), tint = c.ink2)
         }
     }
 }

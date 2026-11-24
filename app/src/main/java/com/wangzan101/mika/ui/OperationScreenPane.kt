@@ -19,11 +19,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.ui.components.BarIconButton
 import com.wangzan101.mika.ui.components.TopBar
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 
@@ -51,7 +51,7 @@ internal fun OperationScreenPane(frame: Bitmap?, mode: PipMode, onConversations:
                 BarIconButton(MikaIcons.EyeOff, stringResource(R.string.screens_hide_preview), onClose)
             },
         )
-        Box(Modifier.weight(1f).fillMaxSize().padding(4.dp).onSizeChanged { onViewport(it.width, it.height) }.testTag("operation-screen-viewport"), contentAlignment = Alignment.Center) {
+        Box(Modifier.weight(1f).fillMaxSize().padding(MikaSpace.S4).onSizeChanged { onViewport(it.width, it.height) }.testTag("operation-screen-viewport"), contentAlignment = Alignment.Center) {
             if (frame != null) {
                 val image = remember(frame) { frame.asImageBitmap() }
                 Image(image, stringResource(R.string.pip_screen), Modifier.fillMaxSize().then(imageModifier).testTag("operation-screen-frame"),

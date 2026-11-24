@@ -65,6 +65,10 @@ import com.wangzan101.mika.calls.CallVoiceProfile
 import com.wangzan101.mika.calls.CallVoiceProtocol
 import com.wangzan101.mika.calls.VolcRealtimeClient
 import com.wangzan101.mika.calls.VolcRealtimeProtocol
+import com.wangzan101.mika.ui.theme.CallColors
+import com.wangzan101.mika.ui.theme.MikaRadius
+import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.voice.cascade.CallUse
 import com.wangzan101.mika.voice.cascade.CascadeEngine
 import com.wangzan101.mika.voice.cascade.LlmBrain
@@ -102,14 +106,14 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-/** 通话页恒定深色(不随系统主题):底、字、控件。 */
-private val PageBg = Color(0xFF070B16)
-private val PageInk = Color(0xFFF2F5FA)
-private val PageInk2 = Color(0xFF9AA5B5)
-private val PageInk3 = Color(0xFF5A6270)
-private val PageSurface = Color(0xFF151B29)
-private val PageOk = Color(0xFF3CCF7A)
-private val PageBad = Color(0xFFE5483D)
+/** The call page stays dark whatever the system theme ([CallColors]): background, ink, controls. */
+private val PageBg = CallColors.bg
+private val PageInk = CallColors.ink
+private val PageInk2 = CallColors.ink2
+private val PageInk3 = CallColors.ink3
+private val PageSurface = CallColors.surface
+private val PageOk = CallColors.ok
+private val PageBad = CallColors.bad
 
 /**
  * 语音通话全屏页:全屏 Dialog(点外部、返回键都不收起),恒定深色不透明。
@@ -148,10 +152,10 @@ fun VoiceCallOverlay(session: VoiceCallSession, route: VoiceCallRoute, audioRout
         VoiceCallPage(onCollapse = onCollapse) {
             TopStatus(state)
             Box(Modifier.weight(1f).fillMaxWidth()) {
-                VoiceCallBall(shape, level, Modifier.align(Alignment.Center).size(240.dp).testTag("voicecall-ball-${shape.name}"))
+                VoiceCallBall(shape, level, Modifier.align(Alignment.Center).size(MikaSpace.S8 * 30).testTag("voicecall-ball-${shape.name}"))
                 if (state is VoiceCallState.Failed) {
                     Column(
-                        Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp),
+                        Modifier.align(Alignment.BottomCenter).padding(bottom = MikaSpace.S16),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         PageButton(stringResource(R.string.voicecall_retry), Modifier.testTag("voicecall-retry")) { session.retry() }
@@ -181,22 +185,22 @@ fun VoiceCallOverlay(session: VoiceCallSession, route: VoiceCallRoute, audioRout
 private fun VoiceCallPage(onCollapse: () -> Unit, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxSize().background(PageBg)) {
         Row(
-            Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 8.dp, vertical = 4.dp),
+            Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = MikaSpace.S8, vertical = MikaSpace.S4),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                Modifier.size(44.dp).clip(CircleShape)
+                Modifier.size(MikaSize.IconButton).clip(CircleShape)
                     .clickable(onClickLabel = stringResource(R.string.voicecall_collapse), onClick = onCollapse)
                     .testTag("voicecall-collapse"),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     MikaIcons.Chevron, stringResource(R.string.voicecall_collapse),
-                    Modifier.size(22.dp).graphicsLayer { rotationZ = 90f }, tint = PageInk2,
+                    Modifier.size(MikaSize.Icon).graphicsLayer { rotationZ = 90f }, tint = PageInk2,
                 )
             }
             Spacer(Modifier.weight(1f))
-            Spacer(Modifier.width(44.dp))
+            Spacer(Modifier.width(MikaSize.IconButton))
         }
         Column(Modifier.weight(1f).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) { content() }
     }
@@ -219,16 +223,16 @@ private fun TopStatus(state: VoiceCallState) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(clock, Modifier.testTag("voicecall-clock"), style = MikaType.Value, color = PageInk)
         Row(
-            Modifier.padding(top = 4.dp).testTag("voicecall-status"),
+            Modifier.padding(top = MikaSpace.S4).testTag("voicecall-status"),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
         ) {
             val dotColor = when (state) {
                 is VoiceCallState.Active -> PageOk
                 is VoiceCallState.Failed -> PageBad
                 else -> PageInk3
             }
-            Box(Modifier.size(7.dp).background(dotColor, CircleShape))
+            Box(Modifier.size(MikaSpace.S8).background(dotColor, CircleShape))
             Text(
                 voiceCallStatusText(state),
                 style = MikaType.Caption,
@@ -242,7 +246,7 @@ private fun TopStatus(state: VoiceCallState) {
 /** 球下方的状态行滚动区:≤12 行,最新一行在最下面、高亮,顶部淡出遮罩。 */
 @Composable
 private fun StatusLines(lines: List<String>, modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxWidth().padding(horizontal = 32.dp).heightIn(max = 180.dp)) {
+    Box(modifier.fillMaxWidth().padding(horizontal = MikaSpace.S32).heightIn(max = MikaSpace.S4 * 45)) {
         LazyColumn(Modifier.fillMaxWidth(), reverseLayout = true) {
             itemsIndexed(lines.asReversed()) { _, line ->
                 val latest = line == lines.lastOrNull()
@@ -258,7 +262,7 @@ private fun StatusLines(lines: List<String>, modifier: Modifier = Modifier) {
         }
         // 顶部淡出:旧行滚出时隐进底色
         Box(
-            Modifier.fillMaxWidth().height(28.dp).align(Alignment.TopCenter).background(
+            Modifier.fillMaxWidth().height(MikaSize.Tile).align(Alignment.TopCenter).background(
                 Brush.verticalGradient(listOf(PageBg, PageBg.copy(alpha = 0f))),
             ),
         )
@@ -270,9 +274,9 @@ private fun StatusLines(lines: List<String>, modifier: Modifier = Modifier) {
 private fun InputLine(enabled: Boolean, onSend: (String) -> Unit) {
     var text by remember { mutableStateOf("") }
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(24.dp)).background(PageSurface)
-            .padding(start = 16.dp, end = 6.dp, top = 4.dp, bottom = 4.dp)
+        Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8)
+            .clip(RoundedCornerShape(MikaRadius.Sheet)).background(PageSurface)
+            .padding(start = MikaSpace.S16, end = MikaSpace.S8, top = MikaSpace.S4, bottom = MikaSpace.S4)
             .alpha(if (enabled) 1f else 0.45f),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -291,7 +295,7 @@ private fun InputLine(enabled: Boolean, onSend: (String) -> Unit) {
         }
         val canSend = enabled && text.isNotBlank()
         Box(
-            Modifier.size(36.dp).clip(CircleShape)
+            Modifier.size(MikaSpace.S32).clip(CircleShape)
                 .clickable(enabled = canSend, onClickLabel = stringResource(R.string.chat_send)) {
                     onSend(text)
                     text = ""
@@ -299,7 +303,7 @@ private fun InputLine(enabled: Boolean, onSend: (String) -> Unit) {
                 .testTag("voicecall-send"),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(MikaIcons.Up, stringResource(R.string.chat_send), Modifier.size(18.dp), tint = if (canSend) PageInk else PageInk3)
+            Icon(MikaIcons.Up, stringResource(R.string.chat_send), Modifier.size(MikaSize.TileIcon), tint = if (canSend) PageInk else PageInk3)
         }
     }
 }
@@ -308,46 +312,46 @@ private fun InputLine(enabled: Boolean, onSend: (String) -> Unit) {
 @Composable
 private fun BottomBar(speakerOn: Boolean, onSpeaker: () -> Unit, onHangup: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 24.dp, vertical = 14.dp),
+        Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = MikaSpace.S24, vertical = MikaSpace.S12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(48.dp).clip(CircleShape)
+            Modifier.size(MikaSize.TouchTarget).clip(CircleShape)
                 .background(if (speakerOn) NearCallColor else PageSurface)
                 .clickable(onClickLabel = stringResource(R.string.voicecall_speaker), onClick = onSpeaker)
                 .testTag("voicecall-speaker"),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                MikaIcons.Sound, stringResource(R.string.voicecall_speaker), Modifier.size(22.dp),
+                MikaIcons.Sound, stringResource(R.string.voicecall_speaker), Modifier.size(MikaSize.Icon),
                 tint = if (speakerOn) PageBg else PageInk2,
             )
         }
         Spacer(Modifier.weight(1f))
         Box(
-            Modifier.size(64.dp).clip(CircleShape).background(PageBad)
+            Modifier.size(MikaSpace.S8 * 8).clip(CircleShape).background(PageBad)
                 .clickable(onClickLabel = stringResource(R.string.voicecall_hangup), onClick = onHangup)
                 .testTag("voicecall-hangup"),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 MikaIcons.Phone, stringResource(R.string.voicecall_hangup),
-                Modifier.size(28.dp).graphicsLayer { rotationZ = 135f }, tint = Color.White,
+                Modifier.size(MikaSize.Tile).graphicsLayer { rotationZ = 135f }, tint = Color.White,
             )
         }
         Spacer(Modifier.weight(1f))
-        Spacer(Modifier.width(48.dp))
+        Spacer(Modifier.width(MikaSize.TouchTarget))
     }
 }
 
-private val NearCallColor = Color(0xFF8EFAFF)
+private val NearCallColor = CallColors.sphereNear
 
 /** 页内一颗深色按钮(重试、门禁动作)。 */
 @Composable
 private fun PageButton(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
-        modifier.clip(RoundedCornerShape(24.dp)).background(PageSurface).clickable(onClick = onClick)
-            .padding(horizontal = 28.dp, vertical = 10.dp),
+        modifier.clip(RoundedCornerShape(MikaRadius.Sheet)).background(PageSurface).clickable(onClick = onClick)
+            .padding(horizontal = MikaSpace.S24, vertical = MikaSpace.S8),
     ) {
         Text(label, style = MikaType.BodyStrong, color = PageInk)
     }
@@ -383,9 +387,9 @@ fun VoiceCallGate(
         VoiceCallPage(onCollapse = onCollapse) {
             TopStatusPlaceholder()
             Box(Modifier.weight(1f).fillMaxWidth()) {
-                VoiceCallBall(VoiceCallShape.Globe, 0f, Modifier.align(Alignment.Center).size(240.dp).alpha(0.5f))
+                VoiceCallBall(VoiceCallShape.Globe, 0f, Modifier.align(Alignment.Center).size(MikaSpace.S8 * 30).alpha(0.5f))
                 Column(
-                    Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 32.dp, vertical = 20.dp),
+                    Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = MikaSpace.S32, vertical = MikaSpace.S20),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     val title: String
@@ -426,10 +430,10 @@ fun VoiceCallGate(
                     }
                     Text(title, style = MikaType.Title, color = PageInk, textAlign = TextAlign.Center)
                     Text(
-                        body, Modifier.padding(top = 10.dp),
+                        body, Modifier.padding(top = MikaSpace.S8),
                         style = MikaType.Body, color = PageInk2, textAlign = TextAlign.Center,
                     )
-                    PageButton(action, Modifier.padding(top = 18.dp).testTag("voicecall-gate-action"), go)
+                    PageButton(action, Modifier.padding(top = MikaSpace.S16).testTag("voicecall-gate-action"), go)
                 }
             }
         }
@@ -441,7 +445,7 @@ fun VoiceCallGate(
 private fun TopStatusPlaceholder() {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(" ", style = MikaType.Value, color = PageInk)
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(MikaSpace.S4))
         Text(" ", style = MikaType.Caption, color = PageInk2)
     }
 }

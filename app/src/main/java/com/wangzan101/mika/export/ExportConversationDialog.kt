@@ -51,6 +51,8 @@ import com.wangzan101.mika.core.export.RedactionLevel
 import com.wangzan101.mika.core.userscreen.UserScreenMessage
 import com.wangzan101.mika.ui.AttachmentMessage
 import com.wangzan101.mika.ui.ScreenCopy
+import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaSpace
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -175,11 +177,11 @@ internal fun ExportConversationDialog(
         onDismissRequest = { if (!running) onDismiss() },
         title = { Text(stringResource(R.string.export_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                 when {
                     running -> {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            CircularProgressIndicator(Modifier.heightIn(max = 24.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
+                            CircularProgressIndicator(Modifier.heightIn(max = MikaSpace.S24))
                             Text(progressText(progress))
                         }
                     }
@@ -212,18 +214,18 @@ internal fun ExportConversationDialog(
                             Text(
                                 stringResource(R.string.export_selected_count, selected.size, all.size),
                                 style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(start = 8.dp),
+                                modifier = Modifier.padding(start = MikaSpace.S8),
                             )
                         }
                         if (exportPreview == null) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                CircularProgressIndicator(Modifier.size(20.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
+                                CircularProgressIndicator(Modifier.size(MikaSize.TileIcon))
                                 Text(stringResource(R.string.export_preparing))
                             }
                         } else if (all.isEmpty()) {
                             Text(stringResource(R.string.export_no_messages))
                         } else {
-                            LazyColumn(Modifier.fillMaxWidth().heightIn(max = 260.dp)) {
+                            LazyColumn(Modifier.fillMaxWidth().heightIn(max = MikaSpace.S4 * 65)) {
                                 items(all, key = { it.id.value }) { item ->
                                     Row(
                                         Modifier.fillMaxWidth().clickable { selected = toggle(selected, item.id) }.padding(vertical = 2.dp),

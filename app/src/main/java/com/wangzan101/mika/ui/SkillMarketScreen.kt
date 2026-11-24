@@ -13,12 +13,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.core.knowledge.FrontMatter
 import com.wangzan101.mika.skills.MarketEntry
 import com.wangzan101.mika.skills.SkillMarket
 import com.wangzan101.mika.ui.components.*
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import kotlinx.coroutines.CancellationException
@@ -73,13 +73,13 @@ internal fun SkillMarketScreen(onBack: () -> Unit, onImport: (String) -> String?
                         if (preview.error == R.string.market_invalid) { selected = null; refresh++ } else retry++
                     }) { text ->
                         val body = remember(text) { FrontMatter.parse(text).second }
-                        Column(Modifier.padding(16.dp)) {
+                        Column(Modifier.padding(MikaSpace.S16)) {
                             Text(entry.description, style = MikaType.Caption, color = MikaTheme.colors.ink2)
                             // Render section headings without making third-party links or images interactive.
                             for (line in body.lineSequence().filter { it.isNotBlank() }) {
                                 val heading = line.startsWith("## ")
                                 Text(if (heading) line.drop(3) else line,
-                                    Modifier.padding(top = if (heading) 12.dp else 4.dp),
+                                    Modifier.padding(top = if (heading) MikaSpace.S12 else MikaSpace.S4),
                                     style = if (heading) MikaType.BodyStrong else MikaType.Body, color = MikaTheme.colors.ink)
                             }
                         }

@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.settings.Provider
 import com.wangzan101.mika.settings.ProviderStore
@@ -41,6 +40,7 @@ import com.wangzan101.mika.ui.components.StatusPill
 import com.wangzan101.mika.ui.components.TagTone
 import com.wangzan101.mika.ui.components.ValueTone
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.voice.VoicePlayer
@@ -164,18 +164,18 @@ internal fun VoiceOptionList(
                 below = {
                     Column {
                         if (choice.traits.isNotEmpty()) {
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S4), verticalArrangement = Arrangement.spacedBy(MikaSpace.S4)) {
                                 choice.traits.forEach { trait ->
                                     CapabilityTag(voiceTraitLabel(trait), if (trait == VoiceTrait.Live || trait == VoiceTrait.StreamingRead || trait == VoiceTrait.Interruptible) TagTone.Accent else TagTone.Neutral)
                                 }
                             }
                         }
                         when (probe) {
-                            VoiceProbeUi.Idle -> if (choice.verified) Text(stringResource(R.string.voice_catalog_verified), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ok)
-                            VoiceProbeUi.Running -> Text(stringResource(R.string.voice_catalog_testing), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink3)
-                            is VoiceProbeUi.Listening -> Text(probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }, Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink2)
-                            is VoiceProbeUi.Failed -> Text(probe.error.detail, Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.bad)
-                            VoiceProbeUi.Verified -> Text(stringResource(R.string.voice_catalog_verified), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ok)
+                            VoiceProbeUi.Idle -> if (choice.verified) Text(stringResource(R.string.voice_catalog_verified), Modifier.padding(top = MikaSpace.S4), style = MikaType.Hint, color = c.ok)
+                            VoiceProbeUi.Running -> Text(stringResource(R.string.voice_catalog_testing), Modifier.padding(top = MikaSpace.S4), style = MikaType.Hint, color = c.ink3)
+                            is VoiceProbeUi.Listening -> Text(probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }, Modifier.padding(top = MikaSpace.S4), style = MikaType.Hint, color = c.ink2)
+                            is VoiceProbeUi.Failed -> Text(probe.error.detail, Modifier.padding(top = MikaSpace.S4), style = MikaType.Hint, color = c.bad)
+                            VoiceProbeUi.Verified -> Text(stringResource(R.string.voice_catalog_verified), Modifier.padding(top = MikaSpace.S4), style = MikaType.Hint, color = c.ok)
                         }
                     }
                 },
@@ -278,12 +278,12 @@ internal fun VoiceHubSection(
             RowChevron()
         }
     }
-    GroupCard(Modifier.padding(top = 8.dp)) {
+    GroupCard(Modifier.padding(top = MikaSpace.S8)) {
         ListRow(MikaIcons.Key, stringResource(R.string.voice_hub_services),
             stringResource(R.string.voice_hub_services_sub, voiceServiceCount(snapshot, providers)),
             first = true, onClick = onServices, modifier = Modifier.testTag("voice-hub-services")) { RowChevron() }
     }
-    FooterNote(stringResource(R.string.voice_hub_footer), Modifier.padding(top = 6.dp))
+    FooterNote(stringResource(R.string.voice_hub_footer), Modifier.padding(top = MikaSpace.S8))
 }
 
 /**
@@ -303,14 +303,14 @@ fun RealtimeVoiceScreen(store: ProviderStore, onBack: () -> Unit, onOpenCalls: (
     var voicesOpen by rememberSaveable { mutableStateOf(false) }
     val c = MikaTheme.colors
     Page(stringResource(R.string.voice_hub_realtime), onBack) {
-        Text(stringResource(R.string.realtime_lead), Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2)
+        Text(stringResource(R.string.realtime_lead), Modifier.padding(top = MikaSpace.S4, bottom = MikaSpace.S12), style = MikaType.Body, color = c.ink2)
         if (selected == null) {
             GroupCard {
                 ListRow(null, stringResource(R.string.realtime_empty), stringResource(R.string.realtime_empty_note), first = true)
             }
         }
         if (choices.isEmpty()) {
-            FooterNote(stringResource(R.string.realtime_none_available), Modifier.padding(top = 8.dp))
+            FooterNote(stringResource(R.string.realtime_none_available), Modifier.padding(top = MikaSpace.S8))
         } else {
             GroupLabel(stringResource(R.string.voice_choices_label))
             VoiceOptionList(
@@ -351,7 +351,7 @@ fun RealtimeVoiceScreen(store: ProviderStore, onBack: () -> Unit, onOpenCalls: (
             ) { RowChevron() }
         }
         VoiceMoreServices(onOpenServices)
-        FooterNote(stringResource(R.string.realtime_footer), Modifier.padding(top = 8.dp))
+        FooterNote(stringResource(R.string.realtime_footer), Modifier.padding(top = MikaSpace.S8))
     }
 }
 

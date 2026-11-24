@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.settings.VoiceSettings
 import com.wangzan101.mika.ui.components.FooterNote
@@ -29,6 +28,7 @@ import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.SegmentedControl
 import com.wangzan101.mika.ui.components.StatusPill
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.voice.model.CallEngine
@@ -75,7 +75,7 @@ fun CallModeScreen(onBack: () -> Unit, onOpenStt: () -> Unit, onOpenTts: () -> U
     val engine = s.resolvedEngine
     val c = MikaTheme.colors
     Page(stringResource(R.string.voice_hub_call_mode), onBack) {
-        Text(stringResource(R.string.call_mode_lead), Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2)
+        Text(stringResource(R.string.call_mode_lead), Modifier.padding(top = MikaSpace.S4, bottom = MikaSpace.S12), style = MikaType.Body, color = c.ink2)
         GroupCard {
             RadioRow(
                 stringResource(R.string.call_mode_standard), engine == CallEngine.Standard,
@@ -109,7 +109,7 @@ fun CallModeScreen(onBack: () -> Unit, onOpenStt: () -> Unit, onOpenTts: () -> U
                     listOf(stringResource(R.string.call_mode_think_light), stringResource(R.string.call_mode_think_main)),
                     if (s.think == ThinkModel.Light) 0 else 1,
                     { catalog.setCallStyle(think = if (it == 0) ThinkModel.Light else ThinkModel.Main) },
-                    Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp), tags = listOf("call-think-light", "call-think-main"),
+                    Modifier.padding(start = MikaSpace.S16, end = MikaSpace.S16, bottom = MikaSpace.S12), tags = listOf("call-think-light", "call-think-main"),
                 )
                 val speakName = snapshot.nameOf(s.tts) ?: stringResource(R.string.voice_hub_none)
                 ListRow(
@@ -127,7 +127,7 @@ fun CallModeScreen(onBack: () -> Unit, onOpenStt: () -> Unit, onOpenTts: () -> U
                 var dragging by remember(s.silenceMs) { mutableFloatStateOf(s.silenceMs.toFloat()) }
                 ListRow(null, stringResource(R.string.call_mode_silence),
                     stringResource(R.string.call_mode_silence_sub, silenceSeconds(dragging.roundToInt())), first = true)
-                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                Column(Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16)) {
                     Slider(
                         value = dragging,
                         onValueChange = { dragging = (it / 250f).roundToInt() * 250f },
@@ -150,7 +150,7 @@ fun CallModeScreen(onBack: () -> Unit, onOpenStt: () -> Unit, onOpenTts: () -> U
                     RowChevron()
                 }
             }
-            FooterNote(stringResource(R.string.call_mode_realtime_note), Modifier.padding(top = 6.dp))
+            FooterNote(stringResource(R.string.call_mode_realtime_note), Modifier.padding(top = MikaSpace.S8))
         }
     }
 }

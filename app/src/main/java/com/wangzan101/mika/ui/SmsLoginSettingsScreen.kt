@@ -3,7 +3,6 @@ package com.wangzan101.mika.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.wangzan101.mika.core.cap.phone.sms.SmsLoginProfile
@@ -26,6 +25,7 @@ import com.wangzan101.mika.R
 import com.wangzan101.mika.cap.phone.PhoneServices
 import com.wangzan101.mika.ui.components.*
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 
 @Composable
 fun SmsLoginSettingsScreen(onBack: () -> Unit) {
@@ -124,7 +124,7 @@ private fun SmsProfileEditor(initial: SmsLoginProfile?, onCancel: () -> Unit, on
     } }
     var failed by remember { mutableStateOf(false) }
     AlertDialog(onDismissRequest = onCancel, title = { Text(stringResource(R.string.sms_profile_title)) }, text = {
-        Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.heightIn(max = MikaSpace.S8 * 65).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
             Text(stringResource(R.string.sms_profile_help))
             labels.forEach { (key, label) -> OutlinedTextField(values.getValue(key), { values[key] = it.trim().take(250) },
                 label = { Text(stringResource(label)) }, singleLine = true,

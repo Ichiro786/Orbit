@@ -16,6 +16,7 @@ import com.wangzan101.mika.R
 import com.wangzan101.mika.calls.*
 import com.wangzan101.mika.ui.components.*
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.voice.model.VoiceCapability
 import com.wangzan101.mika.voice.model.VoiceCatalogSnapshot
@@ -76,11 +77,11 @@ internal fun CallVoiceProfilesScreen(runtime: CallRuntime, onBack: () -> Unit) {
                         !profile.connectionTested -> R.string.calls_voice_status_untested
                         else -> R.string.calls_voice_status_tested
                     }),
-                    Modifier.padding(horizontal = 16.dp),
+                    Modifier.padding(horizontal = MikaSpace.S16),
                     style = MaterialTheme.typography.bodySmall,
                     color = if (profile.connectionTested) MikaTheme.colors.ok else MikaTheme.colors.ink3,
                 )
-                Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S8), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     if (!selected) TextButton(onClick = { perform { runtime.selectVoiceProfile(profile.id) } }, enabled = !busy,
                         modifier = Modifier.testTag("call-voice-select-${profile.id}")) {
                         Text(stringResource(R.string.calls_voice_select))
@@ -157,8 +158,8 @@ private fun CallVoiceProfileDialog(
         onDismissRequest = { if (!externalBusy) onDismiss() },
         title = { Text(stringResource(if (profile == null) R.string.calls_voice_add else R.string.calls_voice_edit)) },
         text = {
-            Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.heightIn(max = MikaSpace.S8 * 65).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                     CallVoiceProtocol.entries.forEach { choice ->
                         val label = if (choice == CallVoiceProtocol.OPENAI_REALTIME) "OpenAI Realtime" else "Doubao"
                         FilterChip(selected = protocol == choice, enabled = profile == null && !externalBusy,

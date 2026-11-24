@@ -58,7 +58,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wangzan101.mika.core.chatgpt.SignInFailure
 import com.wangzan101.mika.core.model.ApiKeyText
 import com.wangzan101.mika.core.model.GroupStrategy
@@ -129,7 +128,7 @@ internal fun Page(title: String, onBack: () -> Unit, content: @Composable () -> 
     PageBackground {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars).windowInsetsPadding(WindowInsets.ime)) {
             TopBar(title, MikaIcons.Back, onBack, stringResource(R.string.back))
-            Column(Modifier.weight(1f).verticalScroll(scrollState).padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
+            Column(Modifier.weight(1f).verticalScroll(scrollState).padding(start = MikaSpace.S16, end = MikaSpace.S16, bottom = MikaSpace.S24)) {
                 content()
             }
         }
@@ -235,7 +234,7 @@ fun RolePickerContent(ui: ModelSetupUi, role: ModelRole, actions: RolePickerActi
     Page(titleOverride ?: ModelsCopy.roleName(role), onBack) {
         val hint = hintOverride ?: ModelsCopy.roleHint(role)
         if (hint.isNotEmpty()) {
-            Text(hint, Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2)
+            Text(hint, Modifier.padding(top = MikaSpace.S4, bottom = MikaSpace.S12), style = MikaType.Body, color = c.ink2)
         }
         if (ui.groups.isNotEmpty()) {
             GroupLabel(ModelsCopy.GROUPS)
@@ -250,7 +249,7 @@ fun RolePickerContent(ui: ModelSetupUi, role: ModelRole, actions: RolePickerActi
                     )
                 }
             }
-            GroupCard(Modifier.padding(top = 8.dp)) {
+            GroupCard(Modifier.padding(top = MikaSpace.S8)) {
                 ListRow(MikaIcons.Plus, ModelsCopy.GROUPS, first = true, titleColor = c.accent, tone = TileTone.Accent, onClick = actions.manageGroups)
             }
         }
@@ -281,7 +280,7 @@ fun RolePickerContent(ui: ModelSetupUi, role: ModelRole, actions: RolePickerActi
             listing = ui.listing,
         )
         if (providers.isEmpty()) FooterNote(ModelsCopy.ROLE_EMPTY)
-        GroupCard(Modifier.padding(top = 8.dp)) {
+        GroupCard(Modifier.padding(top = MikaSpace.S8)) {
             ListRow(MikaIcons.Plus, ModelsCopy.ADD_PROVIDER, first = true, titleColor = c.accent, tone = TileTone.Accent, onClick = actions.addProvider)
         }
         FooterNote(ModelsCopy.PICKER_NOTE)
@@ -304,8 +303,8 @@ internal fun ModelPickerRows(
     var filter by rememberSaveable { mutableStateOf("") }
     val q = filter.trim()
     if (groups.sumOf { it.second.size } > FILTER_FROM) {
-        GroupLabel(ModelsCopy.PICK_FROM, Modifier.padding(top = 8.dp))
-        Box(Modifier.padding(bottom = 4.dp)) {
+        GroupLabel(ModelsCopy.PICK_FROM, Modifier.padding(top = MikaSpace.S8))
+        Box(Modifier.padding(bottom = MikaSpace.S4)) {
             SearchField(filter, { filter = it }, ModelsCopy.FILTER_HINT, Modifier.testTag("model-filter"))
         }
     }
@@ -451,11 +450,11 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                     Text(
                         if (showKeys) "Hide Keys" else "Show Keys",
                         color = c.accent,
-                        fontSize = 13.sp,
+                        fontSize = MikaType.Caption.fontSize,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier
                             .clickable { showKeys = !showKeys }
-                            .padding(end = 4.dp, top = 8.dp, bottom = 4.dp)
+                            .padding(end = MikaSpace.S4, top = MikaSpace.S8, bottom = MikaSpace.S4)
                             .testTag("toggle-show-keys"),
                     )
                 }
@@ -482,7 +481,7 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                                     style = MikaType.Caption,
                                     modifier = Modifier
                                         .clickable { actions.removeKey(k) }
-                                        .padding(start = 12.dp, top = 2.dp, bottom = 2.dp)
+                                        .padding(start = MikaSpace.S12, top = 2.dp, bottom = 2.dp)
                                         .testTag("remove-key-$i"),
                                 )
                             }
@@ -545,7 +544,7 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
             MikaButton(
                 if (retest == ListState.Running) ModelSetupCopy.TESTING else tr(R.string.models_retest_model, model),
                 { confirmRetest = model },
-                Modifier.fillMaxWidth().padding(bottom = 8.dp).testTag("provider-retest-${model}"),
+                Modifier.fillMaxWidth().padding(bottom = MikaSpace.S8).testTag("provider-retest-${model}"),
                 kind = ButtonKind.Secondary, size = ButtonSize.Medium, enabled = retest != ListState.Running,
             )
             (retest as? ListState.Failed)?.let { FooterNote(it.message, Modifier.testTag("provider-retest-failed"), color = c.bad) }
@@ -602,7 +601,7 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                     Column(Modifier.fillMaxWidth()) {
                         Row(
                             Modifier.fillMaxWidth().keepsKeyboard().background(c.fill, MikaShapes.Button)
-                                .padding(start = 12.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
+                                .padding(start = MikaSpace.S12, end = MikaSpace.S4, top = MikaSpace.S12, bottom = MikaSpace.S12),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(Modifier.weight(1f)) {
@@ -636,7 +635,7 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                                 "✓ Key Pool: ${parsedKeys.size} API keys detected (auto-rotating on 429/timeout)",
                                 style = MikaType.Caption,
                                 color = c.ok,
-                                modifier = Modifier.padding(top = 6.dp),
+                                modifier = Modifier.padding(top = MikaSpace.S8),
                             )
                         } else {
                             ApiKeyNoticeNote(notice, tag = "new-key-notice")
@@ -673,10 +672,10 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                         Text(
                             if (showAddKey) "Hide" else "Show",
                             color = c.accent,
-                            fontSize = 13.sp,
+                            fontSize = MikaType.Caption.fontSize,
                             modifier = Modifier
                                 .clickable { showAddKey = !showAddKey }
-                                .padding(horizontal = 4.dp, vertical = 2.dp),
+                                .padding(horizontal = MikaSpace.S4, vertical = 2.dp),
                         )
                     }
                 }
@@ -687,12 +686,12 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                         Text(
                             "Paste one key, or multiple keys separated by commas or new lines to add them all at once.",
                             style = MikaType.Caption, color = c.ink2,
-                            modifier = Modifier.padding(bottom = 10.dp),
+                            modifier = Modifier.padding(bottom = MikaSpace.S8),
                         )
                         Box(
                             Modifier.fillMaxWidth().keepsKeyboard()
                                 .background(c.fill, MikaShapes.Button)
-                                .padding(horizontal = 12.dp, vertical = 10.dp)
+                                .padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S8)
                         ) {
                             if (newKeyText.isEmpty()) {
                                 Text(
@@ -723,12 +722,12 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                             parsedAdding.size > 1 -> Text(
                                 "${parsedAdding.size} keys detected — all will be added to the rotation pool",
                                 style = MikaType.Caption, color = c.ok,
-                                modifier = Modifier.padding(top = 6.dp),
+                                modifier = Modifier.padding(top = MikaSpace.S8),
                             )
                             newKeyText.isNotBlank() && !blocked -> Text(
                                 "1 key ready to add",
                                 style = MikaType.Caption, color = c.ok,
-                                modifier = Modifier.padding(top = 6.dp),
+                                modifier = Modifier.padding(top = MikaSpace.S8),
                             )
                             else -> ApiKeyNoticeNote(notice, tag = "add-key-notice")
                         }
@@ -931,9 +930,9 @@ private fun UseAsSheet(ui: ModelSetupUi, p: Provider, model: String, actions: Pr
     // 上次在别处保存、试调用的结果不带进来
     LaunchedEffect(p.id, model) { actions.clearPick() }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = c.surface, shape = MikaShapes.SheetTop) {
-        Column(Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 8.dp).testTag("use-as")) {
-            Text(model, Modifier.padding(horizontal = 16.dp), style = ModelIdStyle, color = c.ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(ModelsCopy.useAsSubtitle(ModelsCopy.providerName(p)), Modifier.padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 6.dp), style = MikaType.Caption, color = c.ink3)
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = MikaSpace.S8).testTag("use-as")) {
+            Text(model, Modifier.padding(horizontal = MikaSpace.S16), style = ModelIdStyle, color = c.ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(ModelsCopy.useAsSubtitle(ModelsCopy.providerName(p)), Modifier.padding(start = MikaSpace.S16, end = MikaSpace.S16, top = 2.dp, bottom = MikaSpace.S8), style = MikaType.Caption, color = c.ink3)
             if (chatCapable) {
                 ModelRole.entries.forEachIndexed { i, role ->
                     val on = ui.picked(role, p.id, model)

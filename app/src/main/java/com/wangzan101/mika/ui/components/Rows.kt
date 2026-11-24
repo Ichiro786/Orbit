@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.i18n.tr
+import com.wangzan101.mika.ui.theme.BrandTileBg
 import com.wangzan101.mika.ui.theme.MikaColors
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaShapes
@@ -81,7 +82,7 @@ fun DetailNote(summary: String, detail: String, modifier: Modifier = Modifier) {
         Text(summary, style = MikaType.Hint, color = MikaTheme.colors.ink3)
         if (detail.isNotBlank()) {
             Row(
-                Modifier.clickable { open = !open }.padding(top = 4.dp),
+                Modifier.clickable { open = !open }.padding(top = MikaSpace.S4),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 DirectionalIcon(
@@ -95,7 +96,7 @@ fun DetailNote(summary: String, detail: String, modifier: Modifier = Modifier) {
                 )
             }
             if (open) {
-                Text(detail, Modifier.padding(top = 6.dp), style = MikaType.Hint, color = MikaTheme.colors.ink2)
+                Text(detail, Modifier.padding(top = MikaSpace.S8), style = MikaType.Hint, color = MikaTheme.colors.ink2)
             }
         }
     }
@@ -148,9 +149,6 @@ fun IconTile(icon: ImageVector, tone: TileTone = TileTone.Neutral, tint: Color? 
         Icon(icon, null, Modifier.size(MikaSize.TileIcon), tint = glyph)
     }
 }
-
-/** 品牌 logo 的固定浅色底(两种模式都浅色),让深色品牌标在深色模式下仍可读。 */
-private val BrandTileBg = Color(0xFFF4F4F5)
 
 /** 行与行之间的分隔线,从 [start] 画到右边;分组首行([first])不画。 */
 private fun Modifier.topHairline(first: Boolean, start: Dp, color: Color): Modifier =
@@ -364,9 +362,9 @@ fun InputRow(
         }
         if (trailing != null) Box(Modifier.padding(start = MikaSpace.S8)) { trailing() }
         if (onClear != null && value.isNotEmpty()) {
-            FieldClearButton(clearDescription, onClear, clearModifier.padding(start = 4.dp))
+            FieldClearButton(clearDescription, onClear, clearModifier.padding(start = MikaSpace.S4))
         }
-        if (trailing != null) Box(Modifier.padding(start = 8.dp)) { trailing() }
+        if (trailing != null) Box(Modifier.padding(start = MikaSpace.S8)) { trailing() }
     }
 }
 
@@ -374,11 +372,11 @@ fun InputRow(
 @Composable
 fun FieldClearButton(description: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
-        modifier.size(30.dp).clip(CircleShape)
+        modifier.size(MikaSize.Tile).clip(CircleShape)
             .clickable(role = Role.Button, onClickLabel = description) { onClick() },
         contentAlignment = Alignment.Center,
     ) {
-        Icon(MikaIcons.Close, description, Modifier.size(14.dp), tint = MikaTheme.colors.ink3)
+        Icon(MikaIcons.Close, description, Modifier.size(MikaSize.SmallIcon), tint = MikaTheme.colors.ink3)
     }
 }
 

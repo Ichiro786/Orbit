@@ -38,6 +38,8 @@ import com.wangzan101.mika.ui.components.PageScaffold
 import com.wangzan101.mika.ui.components.RadioRow
 import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.RowValue
+import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.ui.components.SegmentedControl
@@ -94,7 +96,7 @@ internal fun CallVoiceScreen(runtime: CallRuntime, onBack: () -> Unit, onOpenSer
     }
 
     PageScaffold(stringResource(R.string.calls_voice_title), onBack, Modifier.testTag("call-voice")) {
-        Text(stringResource(R.string.calls_voice_phone_lead), Modifier.padding(bottom = 12.dp), style = MikaType.Body, color = MikaTheme.colors.ink2)
+        Text(stringResource(R.string.calls_voice_phone_lead), Modifier.padding(bottom = MikaSpace.S12), style = MikaType.Body, color = MikaTheme.colors.ink2)
         feedback?.let { CallFeedback(it) }
         GroupCard {
             val followBad = s.resolvedEngine == CallEngine.Standard && sharedListen == null
@@ -123,7 +125,7 @@ internal fun CallVoiceScreen(runtime: CallRuntime, onBack: () -> Unit, onOpenSer
                     val picked = if (i == 0) CallEngine.Standard else CallEngine.Realtime
                     if (picked != engine) run { runtime.selectPhoneVoice(picked, s.callStt, s.callTts, s.callTtsVoice) }
                 },
-                Modifier.padding(bottom = 12.dp), tags = listOf("call-engine-standard", "call-engine-realtime"),
+                Modifier.padding(bottom = MikaSpace.S12), tags = listOf("call-engine-standard", "call-engine-realtime"),
             )
             if (engine == CallEngine.Standard) {
                 val listen = s.callStt ?: sharedListen
@@ -147,7 +149,7 @@ internal fun CallVoiceScreen(runtime: CallRuntime, onBack: () -> Unit, onOpenSer
                 val own = s.callTts
                 val model = snapshot.modelOf(own)
                 if (own != null && model != null) {
-                    GroupCard(Modifier.padding(top = 8.dp)) {
+                    GroupCard(Modifier.padding(top = MikaSpace.S8)) {
                         ListRow(null, stringResource(R.string.voice_voice), first = true, onClick = { voicesOpen = true },
                             modifier = Modifier.testTag("call-voice-tts-voice")) {
                             RowValue(if (s.callTtsVoice.isBlank()) stringResource(R.string.voice_voice_default) else VoiceVoices.label(model, s.callTtsVoice))
@@ -205,7 +207,7 @@ private fun RealtimeForCalls(
     val binding = model?.realtime
     if (model != null && binding != null) {
         val voice = if (own != null) s.callSpeaker.ifBlank { binding.speaker } else binding.speaker
-        GroupCard(Modifier.padding(top = 8.dp)) {
+        GroupCard(Modifier.padding(top = MikaSpace.S8)) {
             ListRow(null, stringResource(R.string.voice_voice), first = true, onClick = { setVoicesOpen(true) },
                 modifier = Modifier.testTag("call-voice-speaker")) {
                 RowValue(if (voice.isBlank()) stringResource(R.string.voice_voice_default) else VoiceVoices.label(voice))
@@ -255,7 +257,7 @@ internal fun CallAudioScreen(
 ) {
     val c = MikaTheme.colors
     PageScaffold(stringResource(R.string.calls_audio_title), onBack, Modifier.testTag("call-audio")) {
-        Text(stringResource(R.string.calls_audio_lead), Modifier.padding(bottom = 12.dp), style = MikaType.Body, color = c.ink2)
+        Text(stringResource(R.string.calls_audio_lead), Modifier.padding(bottom = MikaSpace.S12), style = MikaType.Body, color = c.ink2)
         GroupLabel(stringResource(R.string.calls_audio_route))
         GroupCard {
             CallAudioMode.entries.forEachIndexed { i, mode ->
@@ -272,8 +274,8 @@ internal fun CallAudioScreen(
         GroupCard {
             Row(
                 Modifier.fillMaxWidth().toggleable(config.audioVerified, enabled = canVerify, role = Role.Checkbox, onValueChange = onVerify)
-                    .padding(horizontal = 16.dp, vertical = 8.dp).heightIn(min = 48.dp).testTag("call-audio-verified"),
-                horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically,
+                    .padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8).heightIn(min = MikaSize.TouchTarget).testTag("call-audio-verified"),
+                horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12), verticalAlignment = Alignment.CenterVertically,
             ) {
                 Checkbox(config.audioVerified, onCheckedChange = null, enabled = canVerify)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

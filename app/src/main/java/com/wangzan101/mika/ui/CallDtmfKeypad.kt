@@ -19,11 +19,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.wangzan101.mika.R
 import com.wangzan101.mika.calls.CallActionResult
 import com.wangzan101.mika.ui.theme.MikaShapes
+import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import kotlinx.coroutines.CancellationException
@@ -79,12 +80,12 @@ internal fun CallDtmfKeypadDialog(
             Column(
                 Modifier.fillMaxWidth()
                     .heightIn(max = (LocalConfiguration.current.screenHeightDp - 48).coerceAtLeast(160).dp)
-                    .padding(16.dp).testTag("call-dtmf-dialog"),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(MikaSpace.S16).testTag("call-dtmf-dialog"),
+                verticalArrangement = Arrangement.spacedBy(MikaSpace.S8),
             ) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.calls_dtmf_title), Modifier.weight(1f), style = MikaType.Title)
-                    TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = 48.dp).testTag("call-dtmf-close")) {
+                    TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = MikaSize.TouchTarget).testTag("call-dtmf-close")) {
                         Text(stringResource(R.string.calls_dtmf_close))
                     }
                 }
@@ -99,7 +100,7 @@ internal fun CallDtmfKeypadDialog(
                 // Scroll only the keypad body at large font sizes; closing is always reachable.
                 Column(
                     Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).testTag("call-dtmf-body"),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(MikaSpace.S8),
                 ) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(stringResource(R.string.calls_dtmf_batch), Modifier.weight(1f), style = MikaType.Body)
@@ -131,7 +132,7 @@ internal fun CallDtmfKeypadDialog(
                         )
                     }
                     for (row in listOf("123", "456", "789", "*0#")) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                             for (digit in row) {
                                 FilledTonalButton(
                                     onClick = {
@@ -142,8 +143,8 @@ internal fun CallDtmfKeypadDialog(
                                     },
                                     enabled = !blocked,
                                     shape = CircleShape,
-                                    contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp),
-                                    modifier = Modifier.weight(1f).heightIn(min = 56.dp).testTag("call-dtmf-key-$digit"),
+                                    contentPadding = PaddingValues(horizontal = 0.dp, vertical = MikaSpace.S4),
+                                    modifier = Modifier.weight(1f).heightIn(min = MikaSize.TopBar).testTag("call-dtmf-key-$digit"),
                                 ) {
                                     Text(digit.toString(), style = MikaType.LargeTitle, textAlign = TextAlign.Center)
                                 }
@@ -151,15 +152,15 @@ internal fun CallDtmfKeypadDialog(
                         }
                     }
                     if (batch) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                             OutlinedButton(
                                 onClick = { input = input.dropLast(1); feedback = null },
                                 enabled = !blocked && input.isNotEmpty(),
-                                modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("call-dtmf-delete"),
+                                modifier = Modifier.weight(1f).heightIn(min = MikaSize.TouchTarget).testTag("call-dtmf-delete"),
                             ) { Text(stringResource(R.string.calls_dtmf_delete)) }
                             Button(
                                 onClick = { send(input) }, enabled = !blocked && input.isNotEmpty(),
-                                modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("call-dtmf-send"),
+                                modifier = Modifier.weight(1f).heightIn(min = MikaSize.TouchTarget).testTag("call-dtmf-send"),
                             ) { Text(stringResource(R.string.calls_dtmf_send)) }
                         }
                     }

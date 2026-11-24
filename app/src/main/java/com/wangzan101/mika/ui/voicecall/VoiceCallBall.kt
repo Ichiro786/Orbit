@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.wangzan101.mika.ui.theme.CallColors
 import com.wangzan101.mika.ui.theme.MikaTheme
 import kotlin.math.PI
 import kotlin.math.cos
@@ -23,9 +24,9 @@ import kotlin.math.sqrt
 /** 通话球的形态:连接=网,平时=球(安静慢转),听/说=波(随真实电平),办事中=轨道。 */
 enum class VoiceCallShape { Web, Globe, Wave, Orbits }
 
-/** 点阵颜色:近处青白,远处深蓝,按投影深度插值。 */
-private val NearColor = Color(0xFF8EFAFF)
-private val FarColor = Color(0xFF123A72)
+/** Dot colour by projected depth: light accent up close, deep accent at the back (Orbit accent, [CallColors]). */
+private val NearColor = CallColors.sphereNear
+private val FarColor = CallColors.sphereFar
 
 /** 相机距离(单位球半径的倍数):透视近大远小的强度。 */
 private const val CAMERA = 3.4f

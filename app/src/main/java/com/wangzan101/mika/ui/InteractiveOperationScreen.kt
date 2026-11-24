@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.IntSize
 import com.wangzan101.mika.ui.components.BarIconButton
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -31,7 +32,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.core.run.ManualControl
 import com.wangzan101.mika.task.ScreenControl
@@ -115,7 +115,7 @@ internal fun InteractiveOperationScreen(run: ScreenControl, frame: Bitmap?, mode
         }),
         onViewport = { width, height -> viewport = IntSize(width, height) },
         controls = if (!manual) null else ({
-            Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S4, vertical = MikaSpace.S4), verticalAlignment = Alignment.CenterVertically) {
                 BarIconButton(MikaIcons.Back, stringResource(R.string.back), { perform { run.screenBack(w, h) } }, enabled = !busy && !resizing)
                 OutlinedTextField(text, { text = it }, Modifier.weight(1f).keepsKeyboard().testTag("screen-control-text"),
                     enabled = !busy, textStyle = MikaType.Body,

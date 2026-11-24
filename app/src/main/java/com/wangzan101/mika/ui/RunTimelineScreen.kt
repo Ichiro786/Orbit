@@ -66,6 +66,7 @@ import com.wangzan101.mika.ui.components.TileTone
 import com.wangzan101.mika.ui.components.TopBar
 import com.wangzan101.mika.ui.components.ValueTone
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSize
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.ui.theme.MikaRadius
@@ -157,13 +158,13 @@ private fun HeaderGroup(h: TimelineHeader, stepCount: Int, onExport: () -> Unit)
     // 2. 完成标准(有才显示)
     if (h.criteria.isNotEmpty()) {
         GroupCard {
-            Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 13.dp, bottom = 13.dp)) {
+            Column(Modifier.fillMaxWidth().padding(start = MikaSpace.S16, end = MikaSpace.S16, top = MikaSpace.S12, bottom = MikaSpace.S12)) {
                 val ids = h.confirmedIds
                 Text(if (ids == null) stringResource(R.string.timeline_criteria) else
                     stringResource(R.string.chat_confirmed_goals, ids.size, h.criteria.size), style = MikaType.Label, color = c.ink3)
                 h.criteria.forEachIndexed { i, text ->
                     Text(
-                        if (ids != null) "${if (i + 1 in ids) "✓" else "○"}  $text" else if (h.criteria.size > 1) "${i + 1}. $text" else text, Modifier.padding(top = 4.dp),
+                        if (ids != null) "${if (i + 1 in ids) "✓" else "○"}  $text" else if (h.criteria.size > 1) "${i + 1}. $text" else text, Modifier.padding(top = MikaSpace.S4),
                         style = MikaType.Caption, color = c.ink2,
                     )
                 }
@@ -226,13 +227,13 @@ private fun ResultSummaryCard(h: TimelineHeader, stepCount: Int) {
     val title = if (h.running) stringResource(R.string.timeline_running) else h.outcome
     GroupCard {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+            Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12),
         ) {
             val (bg, fg) = h.outcomeTone.colors(c)
-            Box(Modifier.size(36.dp).background(bg, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(icon, null, Modifier.size(20.dp), tint = fg)
+            Box(Modifier.size(MikaSpace.S32).background(bg, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(icon, null, Modifier.size(MikaSize.TileIcon), tint = fg)
             }
             Column(Modifier.weight(1f)) {
                 Text(title, style = MikaType.BodyStrong, color = c.ink)
@@ -243,7 +244,7 @@ private fun ResultSummaryCard(h: TimelineHeader, stepCount: Int) {
             }
         }
         Box(Modifier.fillMaxWidth().height(0.5.dp).background(c.hair))
-        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12)) {
             SummaryStat(stringResource(R.string.timeline_duration), h.duration ?: "—")
             SummaryStat(stringResource(R.string.metrics_steps), stepCount.toString())
             SummaryStat(UsageCopy.UNIT, UsageCopy.tokens(h.tokensUsed))
@@ -278,11 +279,11 @@ private fun TimelineRow(s: TimelineStep, first: Boolean, last: Boolean, vm: RunT
         Modifier.then(if (hasMore) Modifier.clickable { open = !open } else Modifier),
         dotY = 20.dp,
     ) {
-        Column(Modifier.fillMaxWidth().padding(end = 16.dp, top = 11.dp, bottom = 11.dp)) {
+        Column(Modifier.fillMaxWidth().padding(end = MikaSpace.S16, top = MikaSpace.S12, bottom = MikaSpace.S12)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.step_number, s.step), style = MikaType.Label, color = c.ink3)
                 Text(
-                    title, Modifier.weight(1f).padding(start = 8.dp),
+                    title, Modifier.weight(1f).padding(start = MikaSpace.S8),
                     style = MikaType.Body, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
                 s.result?.let { result ->
@@ -292,27 +293,27 @@ private fun TimelineRow(s: TimelineStep, first: Boolean, last: Boolean, vm: RunT
                         else -> c.neutralSoft to c.ink2
                     }
                     Text(
-                        result, Modifier.padding(start = 8.dp).background(bg, MikaShapes.Pill).padding(horizontal = 8.dp, vertical = 2.dp),
+                        result, Modifier.padding(start = MikaSpace.S8).background(bg, MikaShapes.Pill).padding(horizontal = MikaSpace.S8, vertical = 2.dp),
                         style = MikaType.Hint, fontWeight = FontWeight.SemiBold, color = fg, maxLines = 1,
                     )
                 }
-                if (hasMore) Icon(MikaIcons.Chevron, null, Modifier.size(16.dp).padding(start = 2.dp), tint = c.ink3)
+                if (hasMore) Icon(MikaIcons.Chevron, null, Modifier.size(MikaSize.SmallIcon).padding(start = 2.dp), tint = c.ink3)
             }
             Text(RunTimelineViewModel.timingLabel(s.timing), Modifier.padding(top = 2.dp), style = MikaType.Hint, color = c.ink3)
             if (open && hasMore) {
                 if (s.said.isNotEmpty()) {
-                    MarkdownText(s.said, MikaType.Caption.copy(color = c.ink2), Modifier.padding(top = 9.dp))
+                    MarkdownText(s.said, MikaType.Caption.copy(color = c.ink2), Modifier.padding(top = MikaSpace.S8))
                 }
                 s.activities.forEach { a ->
                     val action = if (a.count > 1) trPlural(R.plurals.timeline_viewed_times, a.count) else a.label
                     val effect = ChatCopy.effectLabel(a.effect)
                     Text(
                         listOfNotNull(action, a.target?.takeIf(String::isNotBlank), effect.takeIf(String::isNotBlank)).joinToString(" · "),
-                        Modifier.padding(top = 3.dp), style = MikaType.Caption, color = c.ink2,
+                        Modifier.padding(top = MikaSpace.S4), style = MikaType.Caption, color = c.ink2,
                     )
                 }
                 if (s.tags.isNotEmpty()) {
-                    FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    FlowRow(Modifier.padding(top = MikaSpace.S8), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8), verticalArrangement = Arrangement.spacedBy(MikaSpace.S4)) {
                         s.tags.forEach { TagChip(it) }
                     }
                 }
@@ -331,7 +332,7 @@ private fun TagChip(t: Tag) {
         TagTone.Bad -> c.badSoft to c.bad
     }
     Text(
-        t.text, Modifier.background(bg, MikaShapes.Pill).padding(horizontal = 8.dp, vertical = 2.dp),
+        t.text, Modifier.background(bg, MikaShapes.Pill).padding(horizontal = MikaSpace.S8, vertical = 2.dp),
         style = MikaType.Hint, fontWeight = FontWeight.SemiBold, color = fg,
     )
 }

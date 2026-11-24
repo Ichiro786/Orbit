@@ -27,6 +27,7 @@ import com.wangzan101.mika.calls.CallSim
 import com.wangzan101.mika.calls.CallTaskBrief
 import com.wangzan101.mika.ui.components.*
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSize
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaType
@@ -163,7 +164,7 @@ internal fun CallTaskScreen(
             draft.questions, { draft.questions = it }, enabled = editable,
             label = { Text(stringResource(R.string.calls_task_questions)) },
             placeholder = { Text(stringResource(R.string.calls_task_questions_hint)) },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 8.dp).testTag("call-task-questions"),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16).padding(bottom = MikaSpace.S8).testTag("call-task-questions"),
             minLines = 2, maxLines = 4,
             isError = badQuestions,
             supportingText = if (badQuestions) ({

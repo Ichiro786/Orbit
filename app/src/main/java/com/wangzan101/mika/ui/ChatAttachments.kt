@@ -64,7 +64,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.wangzan101.mika.core.chat.GeneratedPhoto
@@ -339,13 +338,13 @@ internal fun SentAttachments(parsed: AttachmentMessage.Parsed, conversationId: S
 internal fun OutputRefs(answer: String, conversationId: String?, onOpen: (AttachmentMessage.Item) -> Unit) {
     val parsed = remember(answer) { outputRefsParsed(answer) }
     if (!parsed.hasAttachments) return
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
         if (parsed.photos.isNotEmpty()) SentPhotos(parsed.photos, conversationId, OutputRefMaxWidth, onOpen)
         for (f in parsed.files) SentFileCard(f, OutputRefMaxWidth) { onOpen(f) }
     }
 }
 
-private val OutputRefMaxWidth = 320.dp
+private val OutputRefMaxWidth = MikaSpace.S8 * 40
 
 @Composable
 private fun SentPhotos(photos: List<AttachmentMessage.Item>, conversationId: String?, maxWidth: Dp, onOpen: (AttachmentMessage.Item) -> Unit) {
@@ -394,10 +393,10 @@ internal fun GeneratedPhotos(photos: List<GeneratedPhoto>, conversationId: Strin
     val scope = rememberCoroutineScope()
     val c = MikaTheme.colors
     val cols = PhotoGrid.columns(photos.size)
-    val gap = 4.dp
-    val cell = minOf(if (cols == 1) SingleWidth else if (cols == 2) 118.dp else 96.dp, maxWidth)
+    val gap = MikaSpace.S4
+    val cell = minOf(if (cols == 1) SingleWidth else if (cols == 2) MikaSpace.S8 * 15 else MikaSpace.S8 * 12, maxWidth)
     val px = with(LocalDensity.current) { cell.roundToPx() }.coerceAtLeast(64)
-    Column(Modifier.fillMaxWidth().padding(bottom = 10.dp), verticalArrangement = Arrangement.spacedBy(gap)) {
+    Column(Modifier.fillMaxWidth().padding(bottom = MikaSpace.S8), verticalArrangement = Arrangement.spacedBy(gap)) {
         photos.chunked(cols).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
                 row.forEach { p ->

@@ -12,10 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.calls.CallActionResult
 import com.wangzan101.mika.calls.CallHistory
+import com.wangzan101.mika.ui.theme.MikaSpace
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -39,7 +39,7 @@ internal fun CallFollowUpDraft(
     if (draft != null) {
         Text(title, style = MaterialTheme.typography.titleSmall)
         SelectionContainer { Text(draft, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.testTag("call-draft-text")) }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
             if (onSave != null) TextButton(onClick = { text = draft; error = false; editing = true },
                 modifier = Modifier.testTag("call-draft-edit")) { Text(stringResource(R.string.calls_draft_edit)) }
             OutlinedButton(onClick = {
@@ -56,7 +56,7 @@ internal fun CallFollowUpDraft(
     if (editing && onSave != null) AlertDialog(
         onDismissRequest = { if (!saving) editing = false },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                 OutlinedTextField(text, { if (it.length <= CallHistory.MAX_DRAFT_LENGTH) { text = it; error = false } },
                     enabled = !saving, minLines = 3, maxLines = 8,
                     label = { Text(title) },

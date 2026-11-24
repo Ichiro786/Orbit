@@ -34,12 +34,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.chat.ConversationStore
 import com.wangzan101.mika.core.usage.ConversationUsage
 import com.wangzan101.mika.ui.components.GroupLabel
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaRadius
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import kotlinx.coroutines.flow.catch
@@ -58,9 +59,9 @@ internal fun ConversationUsageSheet(id: String?, onDismiss: () -> Unit) {
     val result by updates.collectAsState(initial = null)
     BackHandler(onBack = onDismiss)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = c.surface, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)) {
+        containerColor = c.surface, shape = RoundedCornerShape(topStart = MikaRadius.Xl, topEnd = MikaRadius.Xl)) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding()
-            .padding(start = 20.dp, end = 20.dp, bottom = 20.dp).testTag("conversation-usage-sheet")) {
+            .padding(start = MikaSpace.S20, end = MikaSpace.S20, bottom = MikaSpace.S20).testTag("conversation-usage-sheet")) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.chat_usage_title), Modifier.weight(1f), style = MikaType.Title, color = c.ink)
                 IconButton(onClick = onDismiss, modifier = Modifier.testTag("close-conversation-usage")) {
@@ -70,7 +71,7 @@ internal fun ConversationUsageSheet(id: String?, onDismiss: () -> Unit) {
             val usage = result?.getOrNull()
             when {
                 usage != null -> UsageDetails(usage)
-                result == null -> CircularProgressIndicator(Modifier.padding(top = 12.dp).size(24.dp))
+                result == null -> CircularProgressIndicator(Modifier.padding(top = MikaSpace.S12).size(MikaSpace.S24))
                 else -> Text(stringResource(R.string.usage_allowance_unavailable), color = c.ink2)
             }
         }
@@ -82,14 +83,14 @@ private fun UsageDetails(usage: ConversationUsage) {
     val c = MikaTheme.colors
     val total = "${UsageCopy.compactTokens(usage.input + usage.output)} ${UsageCopy.UNIT}"
     Text(stringResource(if (usage.partial) R.string.chat_conversation_tokens_partial else R.string.chat_conversation_tokens, total),
-        Modifier.padding(top = 16.dp), style = MikaType.BodyStrong, color = c.ink)
+        Modifier.padding(top = MikaSpace.S16), style = MikaType.BodyStrong, color = c.ink)
     CountRow(stringResource(R.string.metrics_input_tokens), UsageCopy.compactTokens(usage.input))
     CountRow(stringResource(R.string.metrics_output_tokens), UsageCopy.compactTokens(usage.output))
     CountRow(stringResource(R.string.chat_cache_rate), usage.cacheRate?.let(UsageCopy::percent) ?: stringResource(R.string.trace_unknown))
     if (usage.cacheRate != null) Text(stringResource(R.string.chat_cache_coverage, UsageCopy.compactTokens(usage.cached),
         UsageCopy.compactTokens(usage.cacheReportedInput)), style = MikaType.Hint, color = c.ink2)
 
-    GroupLabel(stringResource(R.string.chat_request_context), Modifier.padding(top = 12.dp))
+    GroupLabel(stringResource(R.string.chat_request_context), Modifier.padding(top = MikaSpace.S12))
     val snapshot = usage.latest
     if (snapshot == null) {
         Text(stringResource(R.string.chat_no_context), style = MikaType.Caption, color = c.ink2)
@@ -101,7 +102,7 @@ private fun UsageDetails(usage: ConversationUsage) {
         R.string.chat_context_references to snapshot.references, R.string.chat_context_tools to snapshot.toolsAndMedia,
         R.string.chat_context_runtime to snapshot.runtime)
     val colors = c.series + listOf(c.seriesOther, c.ink)
-    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp).height(8.dp).clip(CircleShape)) {
+    Row(Modifier.fillMaxWidth().padding(vertical = MikaSpace.S8).height(MikaSpace.S8).clip(CircleShape)) {
         parts.forEachIndexed { index, (_, amount) ->
             if (amount > 0) Spacer(Modifier.fillMaxHeight().weight(amount.toFloat()).background(colors[index]))
         }
@@ -114,9 +115,9 @@ private fun UsageDetails(usage: ConversationUsage) {
 
 @Composable
 private fun CountRow(label: String, value: String, color: Color? = null) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (color != null) Spacer(Modifier.size(8.dp).background(color, CircleShape))
+    Row(Modifier.fillMaxWidth().padding(vertical = MikaSpace.S4), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
+        if (color != null) Spacer(Modifier.size(MikaSpace.S8).background(color, CircleShape))
         Text(label, Modifier.weight(1f), style = MikaType.Caption, color = MikaTheme.colors.ink2)
         Text(value, style = MikaType.Label, color = MikaTheme.colors.ink)
     }

@@ -35,10 +35,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.core.model.TtsCapabilities
 import com.wangzan101.mika.core.model.TtsRequest
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.voice.VoicePlayer
 import com.wangzan101.mika.voice.model.RealtimeBinding
 import com.wangzan101.mika.voice.model.RealtimeProtocol
@@ -115,15 +115,15 @@ internal fun VoiceCatalogContent(viewModel: VoiceCatalogViewModel, onBack: () ->
         FooterNote(stringResource(R.string.voice_catalog_sub))
 
         viewModel.migrationError?.let { error ->
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(MikaSpace.S8))
             StatusPill(stringResource(R.string.voice_catalog_migration_failed), PillTone.Warn, Modifier.testTag("voice-catalog-migration-error"))
             FooterNote(error.detail)
         }
 
         if (snapshot.error != null) {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(MikaSpace.S12))
             StatusPill(stringResource(R.string.voice_catalog_read_failed), PillTone.Warn, Modifier.testTag("voice-catalog-read-failed"))
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(MikaSpace.S12))
             MikaButton(
                 stringResource(R.string.voice_catalog_repair),
                 onClick = { confirmingRepair = true },
@@ -132,7 +132,7 @@ internal fun VoiceCatalogContent(viewModel: VoiceCatalogViewModel, onBack: () ->
             return@SubPage
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(MikaSpace.S8))
         MikaButton(
             stringResource(R.string.voice_catalog_add),
             onClick = {
@@ -144,7 +144,7 @@ internal fun VoiceCatalogContent(viewModel: VoiceCatalogViewModel, onBack: () ->
 
         val groups = snapshot.models.groupBy { it.serviceId }
         if (snapshot.services.isEmpty() && snapshot.models.isEmpty()) {
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(MikaSpace.S20))
             FooterNote(stringResource(R.string.voice_catalog_empty), Modifier.testTag("voice-catalog-empty"))
         }
 
@@ -229,11 +229,11 @@ private fun ServiceGroup(
     probeState: (VoiceModelRef) -> VoiceProbeUi,
 ) {
     val system = service.id == SttSelectionController.SYSTEM_STT_SERVICE.id
-    GroupCard(Modifier.padding(top = 12.dp)) {
+    GroupCard(Modifier.padding(top = MikaSpace.S12)) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
         ) {
             Text(service.name, Modifier.weight(1f), style = MikaType.Body.copy(fontWeight = FontWeight.SemiBold), color = MikaTheme.colors.ink)
             Text(
@@ -273,7 +273,7 @@ private fun ModelRow(
     val c = MikaTheme.colors
     val ttsSampleText = stringResource(R.string.voice_catalog_tts_sample)
     Column(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp).testTag("voice-model-${model.id}"),
+        Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12).testTag("voice-model-${model.id}"),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -290,7 +290,7 @@ private fun ModelRow(
             }
         }
 
-        FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        FlowRow(Modifier.padding(top = MikaSpace.S8), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8), verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
             model.stt?.let { binding ->
                 CapabilityBadge(
                     ref = VoiceModelRef(model.serviceId, model.id, VoiceCapability.STT),
@@ -332,7 +332,7 @@ private fun ModelRow(
         val allVerified = model.capabilities.isNotEmpty() && model.capabilities.all { capability ->
             snapshot.verified(VoiceModelRef(model.serviceId, model.id, capability))
         }
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(MikaSpace.S8))
         StatusPill(
             stringResource(if (allVerified) R.string.voice_catalog_verified else R.string.voice_catalog_unverified),
             if (allVerified) PillTone.Ok else PillTone.Warn,
@@ -354,7 +354,7 @@ private fun CapabilityBadge(
 ) {
     val c = MikaTheme.colors
     Column(Modifier.testTag(tag)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
             Text(label, style = MikaType.Hint.copy(fontWeight = FontWeight.SemiBold), color = c.ink2)
             Text(protocol, style = MikaType.Hint, color = c.ink3)
             if (ui !is VoiceProbeUi.Running) {
@@ -461,7 +461,7 @@ private fun VoiceCatalogSheet(
     ) {
         Column(
             Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState())
-                .padding(start = 20.dp, end = 20.dp, bottom = 24.dp)
+                .padding(start = MikaSpace.S20, end = MikaSpace.S20, bottom = MikaSpace.S24)
                 .testTag("voice-catalog-sheet"),
         ) {
             Text(
@@ -471,7 +471,7 @@ private fun VoiceCatalogSheet(
 
             if (editing == null) {
                 GroupLabel(stringResource(R.string.voice_catalog_account))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8), verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                     SelectChip(
                         stringResource(R.string.voice_catalog_account_existing), form.accountSource == AccountSource.Existing,
                         { form.accountSource = AccountSource.Existing }, Modifier.testTag("voice-catalog-account-existing"),
@@ -505,7 +505,7 @@ private fun VoiceCatalogSheet(
             SheetField(stringResource(R.string.voice_catalog_display_name), form.displayName, { form.displayName = it }, tag = "voice-catalog-display-name")
 
             GroupLabel(stringResource(R.string.voice_catalog_capabilities))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                 MikaSwitch(form.sttOn, { form.sttOn = it }, Modifier.testTag("voice-catalog-cap-stt"))
                 Text(stringResource(R.string.voice_catalog_cap_stt), style = MikaType.Body, color = c.ink)
             }
@@ -522,7 +522,7 @@ private fun VoiceCatalogSheet(
                 }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                 MikaSwitch(form.ttsOn, { form.ttsOn = it }, Modifier.testTag("voice-catalog-cap-tts"))
                 Text(stringResource(R.string.voice_catalog_cap_tts), style = MikaType.Body, color = c.ink)
             }
@@ -539,7 +539,7 @@ private fun VoiceCatalogSheet(
                 }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                 MikaSwitch(form.realtimeOn, { form.realtimeOn = it }, Modifier.testTag("voice-catalog-cap-rt"))
                 Text(stringResource(R.string.voice_catalog_cap_realtime), style = MikaType.Body, color = c.ink)
             }
@@ -554,16 +554,16 @@ private fun VoiceCatalogSheet(
                 SheetField(stringResource(R.string.voice_catalog_endpoint), form.realtimeEndpoint, { form.realtimeEndpoint = it }, tag = "voice-catalog-rt-endpoint")
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(MikaSpace.S20))
             if (form.error) {
                 Text(
                     stringResource(R.string.voice_catalog_incomplete),
                     style = MikaType.Hint, color = c.bad,
                     modifier = Modifier.testTag("voice-catalog-incomplete"),
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(MikaSpace.S8))
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                 MikaButton(
                     stringResource(R.string.cancel), onDismiss, Modifier.weight(1f),
                     kind = ButtonKind.Secondary, size = com.wangzan101.mika.ui.components.ButtonSize.Large,
@@ -574,7 +574,7 @@ private fun VoiceCatalogSheet(
                     Modifier.weight(1f).testTag("voice-catalog-save-unverified"),
                 )
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(MikaSpace.S8))
             MikaButton(
                 stringResource(R.string.voice_catalog_save_test),
                 { if (save(form, editing, existingService, viewModel, test = true, sampleText = ttsSampleText)) onDismiss() },
@@ -595,7 +595,7 @@ private fun ProtocolBlock(
     tag: String,
 ) {
     GroupLabel(title)
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8), verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
         options.forEach { (option, label) ->
             SelectChip(
                 label,
@@ -690,12 +690,12 @@ private fun SheetField(
     secret: Boolean = false,
 ) {
     val c = MikaTheme.colors
-    Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
+    Column(Modifier.fillMaxWidth().padding(top = MikaSpace.S12)) {
         Text(label, style = MikaType.Hint, color = c.ink3)
         BasicTextField(
             value = value,
             onValueChange = onChange,
-            modifier = Modifier.fillMaxWidth().padding(top = 6.dp).testTag(tag),
+            modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S8).testTag(tag),
             singleLine = true,
             textStyle = MikaType.Body.copy(color = c.ink),
             cursorBrush = SolidColor(c.accent),

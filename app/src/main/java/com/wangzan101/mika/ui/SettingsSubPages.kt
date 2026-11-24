@@ -72,7 +72,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wangzan101.mika.capsule.CapsuleCardScale
 import com.wangzan101.mika.capsule.CapsuleIdleOpacity
 import com.wangzan101.mika.capsule.CapsuleMode
@@ -213,10 +212,10 @@ fun PhoneOpsScreen(
         if (status.sdkInt >= Prerequisites.MIN_SDK) {
             GroupLabel(stringResource(R.string.phone_transport_title))
             GroupCard {
-                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
+                Column(Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12)) {
                     FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
+                        verticalArrangement = Arrangement.spacedBy(MikaSpace.S8),
                     ) {
                         val options = listOf(
                             ShellTransport.Auto to stringResource(R.string.phone_transport_auto),
@@ -287,7 +286,7 @@ fun PhoneOpsScreen(
             DetailNote(
                 PhoneSetupCopy.usageSummary(status.helperRestart),
                 PhoneSetupCopy.usageNote(status.helperRestart),
-                Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                Modifier.padding(start = MikaSpace.S16, end = MikaSpace.S16, bottom = MikaSpace.S12),
             )
         }
     }
@@ -593,7 +592,7 @@ private fun TriggerRunLimitDialog(current: Int?, onPick: (Int?) -> Unit, onDismi
         title = { Text(stringResource(R.string.settings_trigger_run_limit)) },
         text = {
             Column {
-                Text(stringResource(R.string.settings_trigger_run_limit_sub), Modifier.padding(bottom = 8.dp))
+                Text(stringResource(R.string.settings_trigger_run_limit_sub), Modifier.padding(bottom = MikaSpace.S8))
                 RadioRow(stringResource(R.string.settings_step_limit_off), selected = current == null, onClick = { onPick(null) }, first = true)
                 FeatureFlags.TRIGGER_RUN_MINUTES.forEach { m ->
                     RadioRow(trPlural(R.plurals.settings_trigger_run_minutes_n, m), selected = current == m, onClick = { onPick(m) })
@@ -613,7 +612,7 @@ private fun SandboxBudgetDialog(current: Int, onPick: (Int) -> Unit, onDismiss: 
         title = { Text(stringResource(R.string.settings_sandbox_budget)) },
         text = {
             Column {
-                Text(stringResource(R.string.settings_sandbox_budget_sub), Modifier.padding(bottom = 8.dp))
+                Text(stringResource(R.string.settings_sandbox_budget_sub), Modifier.padding(bottom = MikaSpace.S8))
                 FeatureFlags.SANDBOX_BUDGET_MINUTES.forEachIndexed { i, m ->
                     RadioRow(trPlural(R.plurals.settings_sandbox_budget_minutes_n, m), selected = current == m, onClick = { onPick(m) }, first = i == 0)
                 }

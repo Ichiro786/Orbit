@@ -9,6 +9,7 @@ import com.wangzan101.mika.R
 import com.wangzan101.mika.core.chatgpt.ChatGptAuth
 import com.wangzan101.mika.core.oauth.OpenRouterAuth
 import com.wangzan101.mika.MikaApp
+import com.wangzan101.mika.ui.theme.MikaSize
 import com.wangzan101.mika.voice.SystemSpeech
 import com.wangzan101.mika.settings.ChatGptSignIns
 import com.wangzan101.mika.i18n.tr
@@ -66,7 +67,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wangzan101.mika.core.model.ApiKeyText
 import com.wangzan101.mika.core.model.ModelRole
 import com.wangzan101.mika.settings.ModelContextSettings
@@ -535,7 +535,7 @@ fun ModelSetupContent(
                         ImageModelSection(ui, actions.openImage)
                         VoiceCatalogSection(actions.openVoiceCatalog)
                     }
-                    GroupCard(Modifier.padding(top = 8.dp)) {
+                    GroupCard(Modifier.padding(top = MikaSpace.S8)) {
                         ListRow(MikaIcons.Leaf, ModelsCopy.GROUPS, first = true, onClick = actions.openGroups) { RowChevron() }
                     }
                     actions.openDecision?.let { openDecision ->
@@ -618,7 +618,7 @@ internal fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions, stand
     var showDetails by remember { mutableStateOf(false) }
     if (!standalone) {
         Text(
-            ModelsCopy.ADD_PROVIDER, Modifier.padding(top = 16.dp, bottom = 8.dp),
+            ModelsCopy.ADD_PROVIDER, Modifier.padding(top = MikaSpace.S16, bottom = MikaSpace.S8),
             style = MikaType.Body, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
         )
     }
@@ -651,19 +651,19 @@ internal fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions, stand
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 10.dp, bottom = 4.dp)
+                    .padding(horizontal = MikaSpace.S16)
+                    .padding(top = MikaSpace.S8, bottom = MikaSpace.S4)
             ) {
                 Text(
                     stringResource(R.string.model_setup_account_id),
                     style = MikaType.Body, color = c.ink,
-                    modifier = Modifier.padding(bottom = 6.dp),
+                    modifier = Modifier.padding(bottom = MikaSpace.S8),
                 )
                 Box(
                     Modifier
                         .fillMaxWidth()
                         .background(c.fill, MikaShapes.Button)
-                        .padding(horizontal = 14.dp, vertical = 12.dp)
+                        .padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S12)
                 ) {
                     if (f.accountId.isEmpty()) {
                         Text(
@@ -708,12 +708,12 @@ internal fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions, stand
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = MikaSpace.S16)
                 .padding(top = if (!f.urlEditable) 0.dp else 0.dp, bottom = 2.dp)
         ) {
             if (!f.urlEditable) Hairline(start = 0.dp)
             Row(
-                Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp),
+                Modifier.fillMaxWidth().padding(top = MikaSpace.S12, bottom = MikaSpace.S4),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -723,8 +723,8 @@ internal fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions, stand
                 )
                 Text(
                     if (showKey) stringResource(R.string.hide) else stringResource(R.string.show),
-                    Modifier.clickable { showKey = !showKey }.padding(start = 8.dp),
-                    fontSize = 13.sp, color = c.accent,
+                    Modifier.clickable { showKey = !showKey }.padding(start = MikaSpace.S8),
+                    fontSize = MikaType.Caption.fontSize, color = c.accent,
                 )
             }
             // Large text area for single or multi-key paste
@@ -732,13 +732,13 @@ internal fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions, stand
                 Modifier
                     .fillMaxWidth()
                     .background(c.fill, MikaShapes.Button)
-                    .padding(horizontal = 14.dp, vertical = 12.dp)
+                    .padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S12)
             ) {
                 if (f.apiKey.isEmpty()) {
                     Text(
                         if (f.keyRequired) ModelSetupCopy.KEY_POOL_HINT
                         else ModelSetupCopy.KEY_OPTIONAL,
-                        style = MikaType.Body, color = c.ink3, lineHeight = 20.sp,
+                        style = MikaType.Body, color = c.ink3, lineHeight = MikaType.Callout.lineHeight,
                     )
                 }
                 androidx.compose.foundation.text.BasicTextField(
@@ -763,22 +763,22 @@ internal fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions, stand
             when {
                 poolActive -> Text(
                     "${parsedKeys.size} keys detected — pool will auto-rotate on rate-limit or timeout",
-                    Modifier.padding(top = 6.dp).testTag("setup-key-notice"),
+                    Modifier.padding(top = MikaSpace.S8).testTag("setup-key-notice"),
                     style = MikaType.Caption, color = c.ok,
                 )
                 f.keyNotice == com.wangzan101.mika.core.model.ApiKeyText.Notice.IllegalCharacters -> Text(
                     ModelSetupCopy.KEY_ILLEGAL,
-                    Modifier.padding(top = 6.dp).testTag("setup-key-notice-illegal"),
+                    Modifier.padding(top = MikaSpace.S8).testTag("setup-key-notice-illegal"),
                     style = MikaType.Caption, color = c.bad,
                 )
                 f.keyNotice == com.wangzan101.mika.core.model.ApiKeyText.Notice.InvisibleRemoved -> Text(
                     ModelSetupCopy.KEY_INVISIBLE_REMOVED,
-                    Modifier.padding(top = 6.dp).testTag("setup-key-notice"),
+                    Modifier.padding(top = MikaSpace.S8).testTag("setup-key-notice"),
                     style = MikaType.Caption, color = c.ink2,
                 )
                 f.apiKey.isNotBlank() -> Text(
                     "1 key ready",
-                    Modifier.padding(top = 6.dp),
+                    Modifier.padding(top = MikaSpace.S8),
                     style = MikaType.Caption, color = c.ok,
                 )
             }
@@ -787,11 +787,11 @@ internal fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions, stand
                 val context = LocalContext.current
                 Text(
                     ModelSetupCopy.KEY_WEBSITE,
-                    Modifier.padding(top = 6.dp).clickable { openInBrowser(context, url) }.testTag("setup-key-website"),
+                    Modifier.padding(top = MikaSpace.S8).clickable { openInBrowser(context, url) }.testTag("setup-key-website"),
                     style = MikaType.Caption, color = c.accent,
                 )
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(MikaSpace.S8))
         }
         if (f.showModel) {
             InputRow(
@@ -1046,13 +1046,13 @@ private fun FallbackSection(
             Modifier
                 .fillMaxWidth()
                 .clickable { expanded = !expanded }
-                .padding(horizontal = 16.dp, vertical = 13.dp),
+                .padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12),
         ) {
             Box(
                 Modifier
-                    .size(36.dp)
+                    .size(MikaSpace.S32)
                     .background(if (hasAny) c.accent.copy(alpha = 0.12f) else c.neutralSoft, MikaShapes.Tile),
                 contentAlignment = Alignment.Center,
             ) {
@@ -1060,13 +1060,13 @@ private fun FallbackSection(
                     ModelsCopy.FALLBACK_ICON,
                     contentDescription = null,
                     tint = if (hasAny) c.accent else c.ink3,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(MikaSize.TileIcon),
                 )
             }
             Column(Modifier.weight(1f)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
                 ) {
                     Text(
                         stringResource(R.string.model_fallback_chain_title, roleLabel),
@@ -1080,7 +1080,7 @@ private fun FallbackSection(
                         Box(
                             Modifier
                                 .background(c.accent.copy(alpha = 0.12f), MikaShapes.Pill)
-                                .padding(horizontal = 7.dp, vertical = 2.dp),
+                                .padding(horizontal = MikaSpace.S8, vertical = 2.dp),
                         ) {
                             Text(
                                 stringResource(R.string.model_fallback_active_count, fallbacks.size),
@@ -1116,7 +1116,7 @@ private fun FallbackSection(
                 contentDescription = if (expanded) "Collapse" else "Expand",
                 tint = c.ink3,
                 modifier = Modifier
-                    .size(16.dp)
+                    .size(MikaSize.SmallIcon)
                     .rotate(if (expanded) 90f else 0f),
             )
         }
@@ -1126,8 +1126,8 @@ private fun FallbackSection(
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
-                    .padding(bottom = 12.dp)
+                    .padding(horizontal = MikaSpace.S12)
+                    .padding(bottom = MikaSpace.S12)
                     .background(c.fill, MikaShapes.Card)
                     .border(0.5.dp, c.edge, MikaShapes.Card)
                     .clip(MikaShapes.Card),
@@ -1137,13 +1137,13 @@ private fun FallbackSection(
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 11.dp),
+                            .padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S12),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12),
                     ) {
                         Box(
                             Modifier
-                                .size(28.dp)
+                                .size(MikaSize.Tile)
                                 .background(c.accent.copy(alpha = 0.14f), MikaShapes.Tile),
                             contentAlignment = Alignment.Center,
                         ) {
@@ -1181,20 +1181,20 @@ private fun FallbackSection(
                 }
 
                 fallbacks.forEachIndexed { slot, configId ->
-                    Hairline(start = 14.dp)
+                    Hairline(start = MikaSpace.S12)
                     val cfg = ui.configs.firstOrNull { it.id == configId }
                     Row(
                         Modifier
                             .fillMaxWidth()
                             .clickable { onPickFallback(role, slot) }
                             .testTag("role-fallback-${role.name.lowercase()}-$slot")
-                            .padding(horizontal = 14.dp, vertical = 11.dp),
+                            .padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S12),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12),
                     ) {
                         Box(
                             Modifier
-                                .size(28.dp)
+                                .size(MikaSize.Tile)
                                 .background(c.surface, MikaShapes.Tile),
                             contentAlignment = Alignment.Center,
                         ) {
@@ -1230,7 +1230,7 @@ private fun FallbackSection(
                         }
                         Box(
                             Modifier
-                                .size(32.dp)
+                                .size(MikaSpace.S32)
                                 .clip(MikaShapes.Pill)
                                 .clickable { removingSlot = slot },
                             contentAlignment = Alignment.Center,
@@ -1239,30 +1239,30 @@ private fun FallbackSection(
                                 MikaIcons.Close,
                                 contentDescription = "Remove backup",
                                 tint = c.ink3,
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(MikaSize.SmallIcon),
                             )
                         }
                     }
                 }
 
                 if (fallbacks.size < maxBackups) {
-                    Hairline(start = 14.dp)
+                    Hairline(start = MikaSpace.S12)
                     Row(
                         Modifier
                             .fillMaxWidth()
                             .clickable { onPickFallback(role, fallbacks.size) }
                             .testTag("role-fallback-${role.name.lowercase()}-${fallbacks.size}")
-                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                            .padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S12),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12),
                     ) {
                         Box(
                             Modifier
-                                .size(28.dp)
+                                .size(MikaSize.Tile)
                                 .background(c.accent.copy(alpha = 0.08f), MikaShapes.Tile),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(MikaIcons.Plus, contentDescription = null, tint = c.accent, modifier = Modifier.size(15.dp))
+                            Icon(MikaIcons.Plus, contentDescription = null, tint = c.accent, modifier = Modifier.size(MikaSize.SmallIcon))
                         }
                         Text(
                             if (fallbacks.isEmpty()) stringResource(R.string.model_fallback_add_first)

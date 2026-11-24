@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.calls.CallConfig
 import com.wangzan101.mika.calls.CallRuntimeState
@@ -31,6 +30,7 @@ import com.wangzan101.mika.ui.components.MikaCard
 import com.wangzan101.mika.ui.components.TileTone
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaShapes
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 
@@ -72,13 +72,13 @@ private fun CallSetupStep.title(): Int = when (this) {
 internal fun CallReadyCard(missing: List<CallSetupStep>, config: CallConfig, standby: Boolean, onOpen: () -> Unit) {
     val c = MikaTheme.colors
     val done = missing.isEmpty()
-    MikaCard(Modifier.padding(bottom = 10.dp).testTag("call-ready-card")) {
+    MikaCard(Modifier.padding(bottom = MikaSpace.S8).testTag("call-ready-card")) {
         Row(
-            Modifier.fillMaxWidth().background(if (done) c.surface else c.warnSoft).padding(horizontal = 16.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically,
+            Modifier.fillMaxWidth().background(if (done) c.surface else c.warnSoft).padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12),
+            horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12), verticalAlignment = Alignment.CenterVertically,
         ) {
             if (done) IconTile(MikaIcons.Check, TileTone.Ok)
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MikaSpace.S4)) {
                 Text(
                     if (done) stringResource(R.string.calls_ready_title) else stringResource(R.string.calls_ready_missing, missing.size),
                     style = MikaType.Title, color = if (done) c.ink else c.warn,
@@ -112,7 +112,7 @@ internal fun CallChecklistPage(
 ) {
     val checks = device.readiness
     Page(stringResource(R.string.calls_checklist_title), onBack) {
-        Text(stringResource(R.string.calls_checklist_lead), Modifier.padding(top = 4.dp, bottom = 12.dp),
+        Text(stringResource(R.string.calls_checklist_lead), Modifier.padding(top = MikaSpace.S4, bottom = MikaSpace.S12),
             style = MikaType.Body, color = MikaTheme.colors.ink2)
         GroupCard(Modifier.testTag("call-checklist")) {
             CallSetupStep.entries.forEachIndexed { index, step ->
@@ -158,7 +158,7 @@ internal fun CallChecklistPage(
                 }
             }
         }
-        FooterNote(stringResource(R.string.calls_checklist_note), Modifier.padding(top = 6.dp))
+        FooterNote(stringResource(R.string.calls_checklist_note), Modifier.padding(top = MikaSpace.S8))
         if (config.enabled) {
             GroupLabel(stringResource(R.string.calls_background_settings))
             GroupCard {
@@ -181,12 +181,12 @@ internal fun CallVoiceStageRow(stage: CallVoiceStage, modifier: Modifier = Modif
     val c = MikaTheme.colors
     val now = stringResource(R.string.calls_stage_now, stringResource(stage.label()))
     Row(modifier.testTag("call-voice-stage").semantics(mergeDescendants = true) { contentDescription = now },
-        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
         CallVoiceStage.entries.forEach { s ->
             val lit = s == stage
             Text(
                 stringResource(s.label()),
-                Modifier.background(if (lit) c.okSoft else c.fill, MikaShapes.Pill).padding(horizontal = 10.dp, vertical = 3.dp)
+                Modifier.background(if (lit) c.okSoft else c.fill, MikaShapes.Pill).padding(horizontal = MikaSpace.S8, vertical = MikaSpace.S4)
                     .then(if (lit) Modifier.testTag("call-voice-stage-now") else Modifier),
                 style = MikaType.Caption, color = if (lit) c.ok else c.ink3,
             )

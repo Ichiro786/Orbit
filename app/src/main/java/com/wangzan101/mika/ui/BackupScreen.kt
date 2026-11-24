@@ -18,7 +18,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.BuildConfig
 import com.wangzan101.mika.R
 import com.wangzan101.mika.backup.BackupEngine
@@ -33,6 +32,7 @@ import com.wangzan101.mika.ui.components.PageScaffold
 import com.wangzan101.mika.ui.components.StateCard
 import com.wangzan101.mika.ui.components.TileTone
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import java.io.ByteArrayInputStream
@@ -151,9 +151,9 @@ fun BackupScreen(onBack: () -> Unit) {
 
         GroupLabel(stringResource(R.string.backup_included_label))
         Text(stringResource(R.string.backup_included_body), style = MikaType.Caption, color = MikaTheme.colors.ink2)
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(MikaSpace.S4))
         Text(stringResource(R.string.backup_excluded_body), style = MikaType.Caption, color = MikaTheme.colors.ink2)
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(MikaSpace.S12))
 
         GroupCard {
             ListRow(
@@ -172,12 +172,12 @@ fun BackupScreen(onBack: () -> Unit) {
         }
 
         status?.let {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(MikaSpace.S12))
             Text(it, style = MikaType.Caption, color = MikaTheme.colors.ink2)
         }
         Text(
             stringResource(R.string.backup_restart_note),
-            Modifier.padding(top = 12.dp),
+            Modifier.padding(top = MikaSpace.S12),
             style = MikaType.Hint, color = MikaTheme.colors.ink3,
         )
     }
@@ -212,7 +212,7 @@ fun BackupScreen(onBack: () -> Unit) {
             text = {
                 Column {
                     Text(context.getString(R.string.backup_imported_body, manifest.entries.size))
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(MikaSpace.S8))
                     Text(stringResource(R.string.backup_after_import_body))
                 }
             },

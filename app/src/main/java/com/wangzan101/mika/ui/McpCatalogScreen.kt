@@ -46,6 +46,7 @@ import com.wangzan101.mika.ui.components.TileTone
 import com.wangzan101.mika.ui.components.TopBar
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaRadius
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 
 /**
@@ -140,11 +141,11 @@ fun McpCatalogScreen(
     PageBackground {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars).windowInsetsPadding(WindowInsets.ime)) {
             TopBar(stringResource(R.string.mcp_catalog_title), MikaIcons.Back, onBack, stringResource(R.string.back))
-            Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp)) {
+            Box(Modifier.padding(start = MikaSpace.S16, end = MikaSpace.S16, top = MikaSpace.S4)) {
                 SearchField(query, { query = it }, stringResource(R.string.mcp_catalog_search_hint), Modifier.testTag("mcp-catalog-search"))
             }
             CategoryChips(category) { category = it }
-            GroupCard(Modifier.padding(top = 12.dp)) {
+            GroupCard(Modifier.padding(top = MikaSpace.S12)) {
                 ListRow(
                     MikaIcons.Link, stringResource(R.string.mcp_catalog_custom), first = true,
                     titleColor = c.accent, tone = TileTone.Accent, onClick = onCustomServer,
@@ -153,7 +154,7 @@ fun McpCatalogScreen(
             }
             LazyColumn(
                 Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
+                contentPadding = PaddingValues(start = MikaSpace.S16, end = MikaSpace.S16, bottom = MikaSpace.S24),
             ) {
                 if (filtered.isEmpty()) {
                     item {
@@ -188,9 +189,9 @@ fun McpCatalogScreen(
 @Composable
 private fun CategoryChips(selected: String, onSelect: (String) -> Unit) {
     FlowRow(
-        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
-        verticalArrangement = Arrangement.spacedBy(7.dp),
+        Modifier.fillMaxWidth().padding(start = MikaSpace.S16, end = MikaSpace.S16, top = MikaSpace.S8),
+        horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
+        verticalArrangement = Arrangement.spacedBy(MikaSpace.S8),
     ) {
         SelectChip(stringResource(R.string.mcp_category_all), selected == McpCategory.ALL, { onSelect(McpCategory.ALL) }, small = true)
         McpCategory.order.forEach { cat ->

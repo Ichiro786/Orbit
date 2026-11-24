@@ -29,6 +29,7 @@ import android.provider.Settings
 import com.wangzan101.mika.calls.CallPolicy
 import com.wangzan101.mika.ui.components.*
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSize
 import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
@@ -83,8 +84,8 @@ internal fun CallNumberRuleEditor(config: CallConfig, personal: Boolean, onDismi
                     }) { Text(stringResource(R.string.calls_save)) }
                 })
                 if (saveFailed) FooterNote(stringResource(R.string.calls_action_failed), color = MaterialTheme.colorScheme.error)
-                LazyColumn(contentPadding = PaddingValues(horizontal = MikaSpace.Page, vertical = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LazyColumn(contentPadding = PaddingValues(horizontal = MikaSpace.Page, vertical = MikaSpace.S8),
+                    verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                     if (personal) item { FooterNote(stringResource(R.string.calls_bypass_note)) }
                     else item {
                         GroupCard {
@@ -96,7 +97,7 @@ internal fun CallNumberRuleEditor(config: CallConfig, personal: Boolean, onDismi
                                 subtitle = if (strangers) stringResource(R.string.calls_strangers_note) else null)
                             if (strangers) permission?.actionLabel?.let { label ->
                                 TextButton(onClick = permission.action, enabled = !busy,
-                                    modifier = Modifier.padding(start = 50.dp)) { Text(stringResource(label)) }
+                                    modifier = Modifier.padding(start = MikaSpace.S8 * 6)) { Text(stringResource(label)) }
                             }
                             RadioRow(stringResource(R.string.calls_only_types), showTypes,
                                 { mode = IncomingScope.TYPES }, enabled = !busy && draft.valid,
@@ -114,8 +115,8 @@ internal fun CallNumberRuleEditor(config: CallConfig, personal: Boolean, onDismi
                                 val checked = type in types
                                 Row(Modifier.fillMaxWidth().toggleable(checked, !busy, Role.Checkbox) {
                                     types = if (it) types + type else types - type
-                                }.heightIn(min = 48.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                }.heightIn(min = MikaSize.TouchTarget).padding(horizontal = MikaSpace.S16), verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
                                     Text(stringResource(type.title), Modifier.weight(1f), style = MikaType.Body)
                                     Checkbox(checked, onCheckedChange = null, enabled = !busy)
                                 }
@@ -125,7 +126,7 @@ internal fun CallNumberRuleEditor(config: CallConfig, personal: Boolean, onDismi
                     if (!personal) item {
                         val delayLabel = stringResource(R.string.calls_rule_delay_summary, seconds)
                         GroupCard {
-                            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                            Column(Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8)) {
                                 Text(delayLabel, style = MikaType.Body)
                                 Slider(value = seconds.toFloat(), onValueChange = { seconds = it.roundToInt() },
                                     valueRange = min.toFloat()..max.toFloat(), steps = max - min - 1, enabled = !busy,
@@ -190,8 +191,8 @@ internal fun CallNumberRuleEditor(config: CallConfig, personal: Boolean, onDismi
                                     Row(Modifier.fillMaxWidth().toggleable(checked, enabled, Role.Checkbox) {
                                         text = draft.toggle(contact.number)
                                         saveFailed = false
-                                    }.heightIn(min = 52.dp).padding(horizontal = 16.dp, vertical = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    }.heightIn(min = MikaSize.RowMin).padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8),
+                                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
                                         Column(Modifier.weight(1f)) {
                                             if (contact.name.isNotBlank() && contact.name != contact.number)
                                                 Text(contact.name, style = MaterialTheme.typography.bodyMedium)

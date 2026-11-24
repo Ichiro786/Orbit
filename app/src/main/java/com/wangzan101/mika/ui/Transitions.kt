@@ -38,8 +38,12 @@ internal fun AnimatedContentTransitionScope<Route>.tabTransition(reduceMotion: B
 }
 
 /** Pages: a shared X-axis slide and fade; [forward] is a push, otherwise a step back. */
-internal fun AnimatedContentTransitionScope<Route>.pageTransition(forward: Boolean, reduceMotion: Boolean): ContentTransform {
-    if (reduceMotion) return still()
+internal fun AnimatedContentTransitionScope<Route>.pageTransition(forward: Boolean, reduceMotion: Boolean): ContentTransform =
+    sharedAxis(forward, reduceMotion)
+
+/** The page slide for any stack of pages (routes, or the sub-pages of one screen). */
+internal fun <T> AnimatedContentTransitionScope<T>.sharedAxis(forward: Boolean, reduceMotion: Boolean): ContentTransform {
+    if (reduceMotion) return (EnterTransition.None togetherWith ExitTransition.None).using(SizeTransform(clip = false))
     val dir = if (forward) 1 else -1
     return (fadeIn(motion.effectsDefault()) + slideInHorizontally(motion.offset()) { dir * (it * 0.08f).toInt() })
         .togetherWith(fadeOut(motion.effectsFast()) + slideOutHorizontally(motion.offset()) { -dir * (it * 0.08f).toInt() })

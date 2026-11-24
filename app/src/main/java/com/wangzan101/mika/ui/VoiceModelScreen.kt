@@ -15,7 +15,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.core.model.TtsRequest
 import com.wangzan101.mika.i18n.tr
@@ -24,6 +23,7 @@ import com.wangzan101.mika.settings.TtsProtocol
 import com.wangzan101.mika.settings.VoiceChoice
 import com.wangzan101.mika.settings.normalizeVoiceSpeed
 import com.wangzan101.mika.settings.VoiceSettings
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.voice.model.VoiceCapability
 import com.wangzan101.mika.voice.model.VoiceModelEnvironment
 import com.wangzan101.mika.voice.model.VoiceModelError
@@ -183,7 +183,7 @@ internal fun VoiceModelContent(store: ProviderStore, settings: VoiceSettings, on
                 }
             },
             enabled = choice != null,
-            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S16),
         )
         playback.let { p ->
             val line = when (p) {
@@ -192,10 +192,10 @@ internal fun VoiceModelContent(store: ProviderStore, settings: VoiceSettings, on
                 is VoicePlayback.Error -> tr(R.string.voice_play_failed, p.message)
                 VoicePlayback.Idle -> null
             }
-            line?.let { FooterNote(it, Modifier.padding(top = 8.dp)) }
+            line?.let { FooterNote(it, Modifier.padding(top = MikaSpace.S8)) }
         }
-        test?.let { FooterNote(it, Modifier.padding(top = 8.dp)) }
-        FooterNote(tr(R.string.voice_footer), Modifier.padding(top = 10.dp))
+        test?.let { FooterNote(it, Modifier.padding(top = MikaSpace.S8)) }
+        FooterNote(tr(R.string.voice_footer), Modifier.padding(top = MikaSpace.S8))
     }
 }
 
@@ -349,7 +349,7 @@ private fun MigratedVoiceModelContent(
                 }
             },
             enabled = selectedModel != null,
-            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S16),
         )
         playback.let { p ->
             val line = when (p) {
@@ -358,9 +358,9 @@ private fun MigratedVoiceModelContent(
                 is VoicePlayback.Error -> tr(R.string.voice_play_failed, p.message)
                 VoicePlayback.Idle -> null
             }
-            line?.let { FooterNote(it, Modifier.padding(top = 8.dp)) }
+            line?.let { FooterNote(it, Modifier.padding(top = MikaSpace.S8)) }
         }
-        test?.let { FooterNote(it, Modifier.padding(top = 8.dp)) }
-        FooterNote(tr(R.string.voice_footer), Modifier.padding(top = 10.dp))
+        test?.let { FooterNote(it, Modifier.padding(top = MikaSpace.S8)) }
+        FooterNote(tr(R.string.voice_footer), Modifier.padding(top = MikaSpace.S8))
     }
 }

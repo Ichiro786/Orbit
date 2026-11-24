@@ -27,8 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.core.model.GroupLimits
 import com.wangzan101.mika.core.model.GroupMember
@@ -51,6 +49,7 @@ import com.wangzan101.mika.ui.components.RowValue
 import com.wangzan101.mika.ui.components.TileTone
 import com.wangzan101.mika.ui.components.ValueTone
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import kotlinx.coroutines.launch
@@ -89,7 +88,7 @@ fun ModelGroupsScreen(
 ) {
     val c = MikaTheme.colors
     Page(ModelsCopy.GROUPS, onBack) {
-        Text(ModelsCopy.groupLead, Modifier.padding(top = 4.dp, bottom = 12.dp), fontSize = 14.5.sp, lineHeight = 22.sp, color = c.ink2)
+        Text(ModelsCopy.groupLead, Modifier.padding(top = MikaSpace.S4, bottom = MikaSpace.S12), fontSize = MikaType.Callout.fontSize, lineHeight = MikaType.Body.lineHeight, color = c.ink2)
         if (ui.groups.isEmpty()) {
             FooterNote(ModelsCopy.groupEmpty)
         } else {
@@ -101,7 +100,7 @@ fun ModelGroupsScreen(
                     }
                     val roles = androidx.compose.runtime.remember(g.id, ui.roles) { ModelsCopy.groupRoles(ui.roles, g.id) }
                     if (roles.isNotEmpty()) {
-                        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 10.dp)) {
+                        Row(Modifier.fillMaxWidth().padding(start = MikaSpace.S16, end = MikaSpace.S16, bottom = MikaSpace.S8)) {
                             Text(roles, style = MikaType.Caption, color = c.ink3)
                         }
                     }
@@ -109,7 +108,7 @@ fun ModelGroupsScreen(
                 }
             }
         }
-        GroupCard(Modifier.padding(top = 8.dp)) {
+        GroupCard(Modifier.padding(top = MikaSpace.S8)) {
             ListRow(MikaIcons.Plus, ModelsCopy.NEW_GROUP, first = true, titleColor = c.accent, tone = TileTone.Accent, onClick = onNew)
         }
         FooterNote(ModelsCopy.groupFooter)
@@ -159,21 +158,21 @@ fun ModelGroupEditorScreen(
 
     Page(if (existing == null) ModelsCopy.NEW_GROUP else ModelsCopy.editGroup(name.ifBlank { existing.name }), onBack) {
         InputRow(ModelsCopy.GROUP_NAME, name, { name = it; error = null }, ModelsCopy.GROUP_NAME_HINT, first = true)
-        GroupLabel(ModelsCopy.GROUP_STRATEGY, Modifier.padding(top = 8.dp))
+        GroupLabel(ModelsCopy.GROUP_STRATEGY, Modifier.padding(top = MikaSpace.S8))
         GroupCard {
             // 费用档位还没有编辑界面,v1 先不露出 cost-first;文件和核心已经能读
             GroupStrategy.entries.filter { it != GroupStrategy.CostFirst }.forEachIndexed { i, s ->
                 RadioRow(ModelsCopy.strategyTitle(s), selected = strategy == s.wire, onClick = { strategy = s.wire }, first = i == 0, subtitle = ModelsCopy.strategyNote(s))
             }
         }
-        GroupCard(Modifier.padding(top = 8.dp)) {
+        GroupCard(Modifier.padding(top = MikaSpace.S8)) {
             ListRow(null, ModelsCopy.GROUP_STICKY, first = true) {
                 MikaSwitch(sticky, { sticky = it })
             }
         }
         FooterNote(ModelsCopy.GROUP_STICKY_NOTE)
 
-        GroupLabel(ModelsCopy.GROUP_MEMBERS, Modifier.padding(top = 8.dp))
+        GroupLabel(ModelsCopy.GROUP_MEMBERS, Modifier.padding(top = MikaSpace.S8))
         if (members.isEmpty()) FooterNote(ModelsCopy.GROUP_NO_MEMBERS)
         GroupCard {
             members.forEachIndexed { i, m ->
@@ -183,7 +182,7 @@ fun ModelGroupEditorScreen(
                     RowValue(p?.name.orEmpty())
                     MikaSwitch(m.enabled, { on -> members = members.toMutableList().also { it[i] = m.copy(enabled = on) } })
                 }
-                Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(Modifier.fillMaxWidth().padding(start = MikaSpace.S16, end = MikaSpace.S8, bottom = MikaSpace.S8), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S4)) {
                     Text(ModelsCopy.groupPriority(i + 1), style = MikaType.Caption, color = c.ink3, modifier = Modifier.weight(1f))
                     TextButton(onClick = { members = members.swapped(i, i - 1) }, enabled = i > 0, modifier = Modifier.testTag("group-up-$i")) { Text(ModelsCopy.GROUP_UP) }
                     TextButton(onClick = { members = members.swapped(i, i + 1) }, enabled = i < members.lastIndex, modifier = Modifier.testTag("group-down-$i")) { Text(ModelsCopy.GROUP_DOWN) }
@@ -196,7 +195,7 @@ fun ModelGroupEditorScreen(
                 }
             }
         }
-        GroupCard(Modifier.padding(top = 8.dp)) {
+        GroupCard(Modifier.padding(top = MikaSpace.S8)) {
             ListRow(MikaIcons.Plus, ModelsCopy.GROUP_ADD_MEMBER, first = true, titleColor = c.accent, tone = TileTone.Accent, onClick = { adding = true })
         }
         if (!validMain && members.isNotEmpty()) FooterNote(ModelsCopy.GROUP_MAIN_NEEDS_TOOLS, color = c.bad)
@@ -215,11 +214,11 @@ fun ModelGroupEditorScreen(
                     if (ok) onBack() else error = ModelsCopy.GROUP_SAVE_FAILED
                 }
             },
-            Modifier.fillMaxWidth().padding(top = 8.dp).testTag("group-save"),
+            Modifier.fillMaxWidth().padding(top = MikaSpace.S8).testTag("group-save"),
             kind = ButtonKind.Primary, size = ButtonSize.Medium, enabled = canSave,
         )
         if (existing != null) {
-            GroupCard(Modifier.padding(top = 8.dp)) {
+            GroupCard(Modifier.padding(top = MikaSpace.S8)) {
                 ListRow(MikaIcons.Trash, ModelsCopy.GROUP_DELETE, titleColor = c.bad, tone = TileTone.Bad, first = true, onClick = { confirmDelete = true })
             }
         }
@@ -276,7 +275,7 @@ private fun AddMemberDialog(
         onDismissRequest = onDismiss,
         title = { Text(ModelsCopy.GROUP_ADD_MEMBER) },
         text = {
-            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+            Column(Modifier.heightIn(max = MikaSpace.S4 * 105).verticalScroll(rememberScrollState())) {
                 if (ui.providers.isEmpty()) FooterNote(ModelsCopy.ROLE_EMPTY)
                 for (p in ui.providers) {
                     GroupLabel(ModelsCopy.providerName(p))
@@ -284,11 +283,11 @@ private fun AddMemberDialog(
                         val used = existing.any { m -> ui.configOf(m.configId)?.let { it.providerId == p.id && it.model == o.id } == true }
                         if (used) continue
                         Row(
-                            Modifier.fillMaxWidth().clickable { onAdd(p.id, o.id) }.padding(vertical = 10.dp, horizontal = 4.dp),
+                            Modifier.fillMaxWidth().clickable { onAdd(p.id, o.id) }.padding(vertical = MikaSpace.S8, horizontal = MikaSpace.S4),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(o.id, style = MikaType.Body.copy(fontFamily = FontFamily.Monospace), color = c.ink, modifier = Modifier.weight(1f))
-                            Text(ModelsCopy.ADD, color = c.accent, fontSize = 13.sp)
+                            Text(ModelsCopy.ADD, color = c.accent, fontSize = MikaType.Caption.fontSize)
                         }
                     }
                 }

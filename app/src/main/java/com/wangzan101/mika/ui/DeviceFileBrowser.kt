@@ -83,6 +83,8 @@ import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.keepsKeyboard
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaShapes
+import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.ui.theme.MikaRadius
@@ -333,9 +335,9 @@ internal fun DeviceFileBrowserScreen(
                 }
                 if (truncated) {
                     Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+                        Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S4)
                             .clip(MikaShapes.Tile).background(c.warnSoft)
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                            .padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S8),
                     ) {
                         Text(
                             stringResource(R.string.device_browser_truncated),
@@ -343,14 +345,14 @@ internal fun DeviceFileBrowserScreen(
                         )
                     }
                 }
-                Box(Modifier.fillMaxWidth().padding(top = 4.dp).height(0.5.dp).background(c.hair))
+                Box(Modifier.fillMaxWidth().padding(top = MikaSpace.S4).height(0.5.dp).background(c.hair))
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     when {
                         error -> {
                             Column(
-                                Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 32.dp),
+                                Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S24, vertical = MikaSpace.S32),
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(MikaSpace.S12),
                             ) {
                                 Text(
                                     stringResource(R.string.device_browser_retry),
@@ -368,11 +370,11 @@ internal fun DeviceFileBrowserScreen(
                         }
                         loading && entries.isEmpty() -> {
                             Column(
-                                Modifier.fillMaxWidth().padding(vertical = 40.dp),
+                                Modifier.fillMaxWidth().padding(vertical = MikaSpace.S8 * 5),
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(MikaSpace.S8),
                             ) {
-                                CircularProgressIndicator(Modifier.size(26.dp), color = c.accent, strokeWidth = 2.5.dp)
+                                CircularProgressIndicator(Modifier.size(MikaSpace.S24), color = c.accent, strokeWidth = 2.dp)
                                 EmptyNote(stringResource(R.string.file_library_loading))
                             }
                         }
@@ -382,7 +384,7 @@ internal fun DeviceFileBrowserScreen(
                         else -> {
                             LazyColumn(
                                 Modifier.fillMaxSize().testTag("device-browser-list"),
-                                contentPadding = PaddingValues(start = 6.dp, end = 6.dp, top = 4.dp, bottom = 8.dp),
+                                contentPadding = PaddingValues(start = MikaSpace.S8, end = MikaSpace.S8, top = MikaSpace.S4, bottom = MikaSpace.S8),
                             ) {
                                 itemsIndexed(entries, key = { _, item -> item.path }) { index, entry ->
                                     val isSelected = !entry.isDirectory && entry.path in selected
@@ -415,7 +417,7 @@ internal fun DeviceFileBrowserScreen(
                                 if (cursor != null && !loading) {
                                     item(key = "load-more") {
                                         Box(
-                                            Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                                            Modifier.fillMaxWidth().padding(vertical = MikaSpace.S12),
                                             contentAlignment = Alignment.Center,
                                         ) {
                                             MikaButton(
@@ -431,10 +433,10 @@ internal fun DeviceFileBrowserScreen(
                                 if (loading) {
                                     item(key = "loading-more") {
                                         Box(
-                                            Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                                            Modifier.fillMaxWidth().padding(vertical = MikaSpace.S16),
                                             contentAlignment = Alignment.Center,
                                         ) {
-                                            CircularProgressIndicator(Modifier.size(24.dp), color = c.accent, strokeWidth = 2.dp)
+                                            CircularProgressIndicator(Modifier.size(MikaSpace.S24), color = c.accent, strokeWidth = 2.dp)
                                         }
                                     }
                                 }
@@ -462,29 +464,29 @@ private fun DeviceBrowserTopBar(
     val c = MikaTheme.colors
     Row(
         Modifier.fillMaxWidth()
-            .heightIn(min = 60.dp).padding(start = 4.dp, end = 12.dp),
+            .heightIn(min = MikaSize.TopBar).padding(start = MikaSpace.S4, end = MikaSpace.S12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         BarIconButton(MikaIcons.Back, stringResource(R.string.back), onBack)
         Text(
             stringResource(R.string.device_browser_title),
-            Modifier.weight(1f).padding(start = 4.dp, end = 8.dp),
+            Modifier.weight(1f).padding(start = MikaSpace.S4, end = MikaSpace.S8),
             style = LibraryTitleStyle, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis,
         )
         Row(
-            Modifier.widthIn(max = 180.dp)
+            Modifier.widthIn(max = MikaSpace.S4 * 45)
                 .clip(MikaShapes.Chip)
                 .background(if (showHistory) c.accentSoft else c.fill)
                 .clickable(role = Role.Button, onClick = onToggleHistory)
                 .testTag("device-browser-history-toggle")
-                .padding(horizontal = 12.dp, vertical = 9.dp),
+                .padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S8),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
         ) {
             Icon(
                 if (showHistory) MikaIcons.Folder else MikaIcons.Clock,
                 null,
-                Modifier.size(17.dp),
+                Modifier.size(MikaSize.SmallIcon),
                 tint = if (showHistory) c.accent else c.ink2,
             )
             Text(
@@ -512,7 +514,7 @@ private fun DeviceBreadcrumbBar(
     Row(
         Modifier.fillMaxWidth()
             .horizontalScroll(scrollState)
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8)
             .testTag("device-browser-breadcrumbs"),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -549,12 +551,12 @@ private fun BreadcrumbChip(
         Modifier.clip(shape)
             .then(if (current) Modifier.background(c.accentSoft) else Modifier)
             .then(if (enabled) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
-            .padding(horizontal = if (current) 10.dp else 8.dp, vertical = 5.dp),
+            .padding(horizontal = if (current) MikaSpace.S8 else MikaSpace.S8, vertical = MikaSpace.S4),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        horizontalArrangement = Arrangement.spacedBy(MikaSpace.S4),
     ) {
         if (current) {
-            Icon(MikaIcons.Folder, null, Modifier.size(14.dp), tint = c.accent)
+            Icon(MikaIcons.Folder, null, Modifier.size(MikaSize.SmallIcon), tint = c.accent)
         }
         Text(
             text = label,
@@ -571,7 +573,7 @@ private fun BreadcrumbSeparator() {
     DirectionalIcon(
         MikaIcons.Chevron,
         null,
-        Modifier.size(12.dp).padding(horizontal = 1.dp),
+        Modifier.size(MikaSpace.S12).padding(horizontal = 1.dp),
         tint = MikaTheme.colors.ink3,
     )
 }
@@ -587,17 +589,17 @@ private fun DeviceSearchBar(
 ) {
     val c = MikaTheme.colors
     Row(
-        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 6.dp),
+        Modifier.fillMaxWidth().padding(start = MikaSpace.S16, end = MikaSpace.S16, top = MikaSpace.S4, bottom = MikaSpace.S8),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
     ) {
         Row(
-            Modifier.weight(1f).height(40.dp).keepsKeyboard()
-                .background(c.fill, MikaShapes.Button).padding(start = 12.dp, end = 6.dp),
+            Modifier.weight(1f).height(MikaSize.IconButton).keepsKeyboard()
+                .background(c.fill, MikaShapes.Button).padding(start = MikaSpace.S12, end = MikaSpace.S8),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
         ) {
-            Icon(MikaIcons.Search, null, Modifier.size(18.dp), tint = c.ink3)
+            Icon(MikaIcons.Search, null, Modifier.size(MikaSize.TileIcon), tint = c.ink3)
             Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                 if (query.isEmpty()) {
                     Text(
@@ -660,7 +662,7 @@ private fun DeviceEntryRow(
     val shape = MikaShapes.Chip
     Column(Modifier.fillMaxWidth()) {
         if (divider && !selected) {
-            Box(Modifier.fillMaxWidth().padding(start = 70.dp, end = 4.dp).height(0.5.dp).background(c.hair))
+            Box(Modifier.fillMaxWidth().padding(start = MikaSpace.S8 * 9, end = MikaSpace.S4).height(0.5.dp).background(c.hair))
         }
         Row(
             Modifier.fillMaxWidth().clip(shape)
@@ -670,7 +672,7 @@ private fun DeviceEntryRow(
                     else Modifier.toggleable(value = selected, enabled = enabled, role = Role.Checkbox, onValueChange = { onClick() }),
                 )
                 .testTag("device-browser-row")
-                .padding(start = 10.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
+                .padding(start = MikaSpace.S8, end = MikaSpace.S4, top = MikaSpace.S8, bottom = MikaSpace.S8),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (entry.isDirectory) {
@@ -678,7 +680,7 @@ private fun DeviceEntryRow(
             } else {
                 FileTypeTile(entry.name)
             }
-            Column(Modifier.weight(1f).padding(start = 12.dp, end = 4.dp)) {
+            Column(Modifier.weight(1f).padding(start = MikaSpace.S12, end = MikaSpace.S4)) {
                 Text(
                     entry.name,
                     style = MikaType.BodyStrong, color = c.ink, maxLines = 2, overflow = TextOverflow.Ellipsis,
@@ -686,7 +688,7 @@ private fun DeviceEntryRow(
                 if (!subtitle.isNullOrEmpty()) {
                     Text(
                         subtitle,
-                        Modifier.padding(top = 3.dp),
+                        Modifier.padding(top = MikaSpace.S4),
                         style = MikaType.Hint, color = c.ink3, maxLines = 2, overflow = TextOverflow.Ellipsis,
                     )
                 }
@@ -699,16 +701,16 @@ private fun DeviceEntryRow(
                 }
             }
             if (entry.isDirectory) {
-                Box(Modifier.width(40.dp).height(48.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.width(MikaSize.IconButton).height(MikaSize.TouchTarget), contentAlignment = Alignment.Center) {
                     RowChevron()
                 }
             } else {
-                Box(Modifier.size(width = 48.dp, height = 48.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(width = MikaSize.TouchTarget, height = MikaSize.TouchTarget), contentAlignment = Alignment.Center) {
                     Checkbox(
                         checked = selected,
                         onCheckedChange = null,
                         enabled = enabled,
-                        modifier = Modifier.size(23.dp).testTag("device-browser-check"),
+                        modifier = Modifier.size(MikaSize.Icon).testTag("device-browser-check"),
                         colors = CheckboxDefaults.colors(
                             checkedColor = c.accent,
                             uncheckedColor = c.ink3,
@@ -727,10 +729,10 @@ private fun DeviceEntryRow(
 private fun FolderTile() {
     val c = MikaTheme.colors
     Box(
-        Modifier.size(width = 48.dp, height = 54.dp).clip(MikaShapes.Chip).background(c.fill),
+        Modifier.size(width = MikaSize.TouchTarget, height = MikaSize.RowMin).clip(MikaShapes.Chip).background(c.fill),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(MikaIcons.Folder, null, Modifier.size(24.dp), tint = c.ink)
+        Icon(MikaIcons.Folder, null, Modifier.size(MikaSpace.S24), tint = c.ink)
     }
 }
 
@@ -744,7 +746,7 @@ private fun DeviceImportHistoryBody(
     Column(modifier) {
         Text(
             stringResource(R.string.device_browser_history_hint),
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8),
             style = MikaType.Caption, color = c.ink3,
         )
         Box(Modifier.fillMaxWidth().height(0.5.dp).background(c.hair))
@@ -753,7 +755,7 @@ private fun DeviceImportHistoryBody(
         } else {
             LazyColumn(
                 Modifier.weight(1f).fillMaxWidth().testTag("device-browser-history-list"),
-                contentPadding = PaddingValues(start = 6.dp, end = 6.dp, top = 4.dp, bottom = 12.dp),
+                contentPadding = PaddingValues(start = MikaSpace.S8, end = MikaSpace.S8, top = MikaSpace.S4, bottom = MikaSpace.S12),
             ) {
                 itemsIndexed(records, key = { _, record -> record.id }) { index, record ->
                     val name = record.sourcePath.substringAfterLast('/')
@@ -763,16 +765,16 @@ private fun DeviceImportHistoryBody(
                     ).joinToString(" · ")
                     Column(Modifier.fillMaxWidth()) {
                         if (index > 0) {
-                            Box(Modifier.fillMaxWidth().padding(start = 70.dp, end = 4.dp).height(0.5.dp).background(c.hair))
+                            Box(Modifier.fillMaxWidth().padding(start = MikaSpace.S8 * 9, end = MikaSpace.S4).height(0.5.dp).background(c.hair))
                         }
                         Row(
-                            Modifier.fillMaxWidth().padding(start = 10.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
+                            Modifier.fillMaxWidth().padding(start = MikaSpace.S8, end = MikaSpace.S12, top = MikaSpace.S8, bottom = MikaSpace.S8),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             FileTypeTile(name)
-                            Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                            Column(Modifier.weight(1f).padding(start = MikaSpace.S12)) {
                                 Text(name, style = MikaType.BodyStrong, color = c.ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                Text(meta, Modifier.padding(top = 3.dp), style = MikaType.Hint, color = c.ink3, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(meta, Modifier.padding(top = MikaSpace.S4), style = MikaType.Hint, color = c.ink3, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Text(
                                     record.workspacePath,
                                     Modifier.padding(top = 2.dp),
@@ -799,35 +801,35 @@ private fun DeviceBrowserBottomBar(
     Column(Modifier.fillMaxWidth()) {
         Box(Modifier.fillMaxWidth().height(0.5.dp).background(c.hair))
         Row(
-            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            Modifier.fillMaxWidth().padding(start = MikaSpace.S16, end = MikaSpace.S16, top = MikaSpace.S12, bottom = MikaSpace.S8),
+            horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                Modifier.height(48.dp).clip(MikaShapes.Button).background(c.fill)
+                Modifier.height(MikaSize.TouchTarget).clip(MikaShapes.Button).background(c.fill)
                     .clickable(role = Role.Button, onClick = onCancel)
                     .testTag("device-browser-cancel")
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = MikaSpace.S20),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(stringResource(R.string.device_browser_cancel), style = MikaType.BodyStrong, color = c.ink)
             }
             Row(
-                Modifier.weight(1f).height(48.dp).clip(MikaShapes.Button)
+                Modifier.weight(1f).height(MikaSize.TouchTarget).clip(MikaShapes.Button)
                     .background(if (canAdd) c.accent else c.accent.copy(alpha = 0.35f))
                     .clickable(enabled = canAdd, role = Role.Button, onClick = onAdd)
                     .testTag("device-browser-add")
-                    .padding(horizontal = 14.dp),
+                    .padding(horizontal = MikaSpace.S12),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
             ) {
                 Icon(
-                    MikaIcons.ListPlus, null, Modifier.size(18.dp),
+                    MikaIcons.ListPlus, null, Modifier.size(MikaSize.TileIcon),
                     tint = if (canAdd) c.onAccent else c.onAccent.copy(alpha = 0.6f),
                 )
                 Text(
                     stringResource(R.string.device_browser_add, selectedCount),
-                    Modifier.padding(start = 7.dp),
+                    Modifier.padding(start = MikaSpace.S8),
                     style = MikaType.BodyStrong,
                     color = if (canAdd) c.onAccent else c.onAccent.copy(alpha = 0.6f),
                     maxLines = 1,

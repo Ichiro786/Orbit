@@ -39,12 +39,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import com.wangzan101.mika.R
 import com.wangzan101.mika.about.MikaLinks
 import com.wangzan101.mika.ui.theme.LightColors
 import com.wangzan101.mika.ui.theme.LocalMikaColors
+import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.ui.theme.MikaRadius
 import com.wangzan101.mika.ui.theme.MikaShapes
@@ -64,23 +65,23 @@ fun ShareCardContent(goal: String, answer: String, logo: ImageBitmap, modifier: 
     val ink = LightColors.ink
     val ink2 = LightColors.ink2
     val ink3 = LightColors.ink3
-    Column(modifier.background(LightColors.surface).padding(24.dp)) {
+    Column(modifier.background(LightColors.surface).padding(MikaSpace.S24)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(logo, null, Modifier.size(40.dp).clip(MikaShapes.Chip), contentScale = ContentScale.Crop)
-            Spacer(Modifier.width(10.dp))
+            Image(logo, null, Modifier.size(MikaSize.IconButton).clip(MikaShapes.Chip), contentScale = ContentScale.Crop)
+            Spacer(Modifier.width(MikaSpace.S8))
             Text(stringResource(R.string.app_name), style = MikaType.Title.copy(fontWeight = FontWeight.Bold), color = ink)
         }
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(MikaSpace.S20))
         Text(stringResource(R.string.share_card_question), style = MikaType.Hint.copy(fontWeight = FontWeight.SemiBold), color = LightColors.accent)
-        Spacer(Modifier.height(3.dp))
+        Spacer(Modifier.height(MikaSpace.S4))
         Text(goal, style = MikaType.BodyStrong, color = ink)
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(MikaSpace.S16))
         Text(stringResource(R.string.share_card_answer), style = MikaType.Hint.copy(fontWeight = FontWeight.SemiBold), color = ink3)
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(MikaSpace.S8))
         MarkdownText(answer, MikaType.Body.copy(color = ink2))
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(MikaSpace.S20))
         Box(Modifier.fillMaxWidth().height(1.dp).background(LightColors.hair))
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(MikaSpace.S12))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.share_card_made_by), style = MikaType.Hint, color = ink3, modifier = Modifier.weight(1f))
             Text(MikaLinks.REPO_LABEL, style = MikaType.Hint.copy(fontWeight = FontWeight.SemiBold), color = ink2)
@@ -104,7 +105,7 @@ fun ShareCardHost(request: ShareRequest?, onDone: () -> Unit) {
         Box(
             Modifier
                 .offset(y = (-20000).dp)
-                .width(360.dp)
+                .width(MikaSpace.S8 * 45)
                 .drawWithContent {
                     graphicsLayer.record { this@drawWithContent.drawContent() }
                     drawLayer(graphicsLayer)

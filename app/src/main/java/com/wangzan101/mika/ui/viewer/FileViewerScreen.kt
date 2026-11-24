@@ -94,7 +94,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.wangzan101.mika.R
 import com.wangzan101.mika.ui.FindHighlight
@@ -110,6 +109,7 @@ import com.wangzan101.mika.ui.components.TopBar
 import com.wangzan101.mika.ui.theme.MikaColors
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaShapes
+import com.wangzan101.mika.ui.theme.MikaSize
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import kotlinx.coroutines.CoroutineScope
@@ -136,7 +136,7 @@ private const val IMAGE_MAX_SIDE = 4096
 private const val LINES_PER_CHUNK = 200
 
 /** 跳到命中处时上面留一点空,好看见上下文。 */
-private val FindTopMargin = 8.dp
+private val FindTopMargin = MikaSpace.S8
 
 private val MonoText = MikaType.Hint.copy(fontFamily = FontFamily.Monospace)
 
@@ -269,22 +269,22 @@ private fun ViewerFindBar(find: FindState, onQuery: (String) -> Unit, onClose: (
         onQuery(text)
     }
     Row(
-        Modifier.fillMaxWidth().background(c.surface).padding(horizontal = 8.dp, vertical = 6.dp).testTag("viewer-find"),
+        Modifier.fillMaxWidth().background(c.surface).padding(horizontal = MikaSpace.S8, vertical = MikaSpace.S8).testTag("viewer-find"),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(MikaSpace.S4),
     ) {
         Row(
-            Modifier.weight(1f).height(40.dp).background(c.fill, MikaShapes.Pill).padding(horizontal = 12.dp),
+            Modifier.weight(1f).height(MikaSize.IconButton).background(c.fill, MikaShapes.Pill).padding(horizontal = MikaSpace.S12),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(MikaIcons.Search, null, Modifier.size(16.dp), tint = c.ink3)
+            Icon(MikaIcons.Search, null, Modifier.size(MikaSize.SmallIcon), tint = c.ink3)
             Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                 if (text.isEmpty()) {
                     Text(stringResource(R.string.viewer_find_hint), style = MikaType.Body, color = c.ink3, maxLines = 1)
                 }
                 BasicTextField(
                     text, { text = it },
-                    Modifier.fillMaxWidth().padding(horizontal = 8.dp).focusRequester(focus).testTag("viewer-find-input"),
+                    Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S8).focusRequester(focus).testTag("viewer-find-input"),
                     singleLine = true,
                     textStyle = MikaType.Body.copy(color = c.ink),
                     cursorBrush = SolidColor(c.accent),
@@ -314,9 +314,9 @@ private fun ViewerFindBar(find: FindState, onQuery: (String) -> Unit, onClose: (
 @Composable
 private fun FindAction(icon: ImageVector, label: String, tag: String, onClick: () -> Unit) {
     Box(
-        Modifier.size(36.dp).clip(CircleShape).clickable(role = Role.Button, onClickLabel = label, onClick = onClick).testTag(tag),
+        Modifier.size(MikaSpace.S32).clip(CircleShape).clickable(role = Role.Button, onClickLabel = label, onClick = onClick).testTag(tag),
         contentAlignment = Alignment.Center,
-    ) { Icon(icon, label, Modifier.size(17.dp), tint = MikaTheme.colors.ink3) }
+    ) { Icon(icon, label, Modifier.size(MikaSize.SmallIcon), tint = MikaTheme.colors.ink3) }
 }
 
 /** 命中处的底色:当前那一处用实色,其余淡一点。 */
@@ -350,10 +350,10 @@ private fun MarkdownView(l: Loaded.Text, find: FindState) {
             LazyColumn(
                 Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars).testTag("viewer.markdown"),
                 state = list,
-                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(start = MikaSpace.S20, end = MikaSpace.S20, top = MikaSpace.S16, bottom = MikaSpace.S24),
+                verticalArrangement = Arrangement.spacedBy(MikaSpace.S8),
             ) {
-                if (l.truncated) item { TruncatedNote(Modifier.padding(bottom = 4.dp)) }
+                if (l.truncated) item { TruncatedNote(Modifier.padding(bottom = MikaSpace.S4)) }
                 itemsIndexed(blocks) { _, block -> MarkdownBlock(block, MikaType.Body) }
             }
         }
@@ -391,9 +391,9 @@ private fun PlainTextView(l: Loaded.Text, find: FindState) {
         LazyColumn(
             Modifier.fillMaxSize().testTag("viewer.text"),
             state = list,
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
+            contentPadding = PaddingValues(start = MikaSpace.S16, end = MikaSpace.S16, top = MikaSpace.S12, bottom = MikaSpace.S24),
         ) {
-            if (l.truncated) item { TruncatedNote(Modifier.padding(bottom = 12.dp)) }
+            if (l.truncated) item { TruncatedNote(Modifier.padding(bottom = MikaSpace.S12)) }
             itemsIndexed(chunks) { index, chunk ->
                 val focused = current?.takeIf { it.chunk == index }?.range
                 val ranges = finds.byChunk[index].orEmpty()

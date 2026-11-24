@@ -45,6 +45,7 @@ import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.SegmentedControl
 import com.wangzan101.mika.ui.components.TopBar
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import kotlinx.coroutines.launch
@@ -134,29 +135,29 @@ fun McpCustomServerScreen(
     PageBackground {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars).windowInsetsPadding(WindowInsets.ime)) {
             TopBar(if (initial == null) stringResource(R.string.mcp_catalog_custom_server) else name.ifBlank { initial.name }, MikaIcons.Back, onBack, stringResource(R.string.back))
-            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
-                GroupCard(Modifier.padding(top = 8.dp)) {
-                    OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.mcp_servers_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp))
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = MikaSpace.S16)) {
+                GroupCard(Modifier.padding(top = MikaSpace.S8)) {
+                    OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.mcp_servers_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12))
                     SegmentedControl(
                         options = transportLabels,
                         selected = transportIds.indexOf(transport).coerceAtLeast(0),
                         onSelect = { transport = transportIds[it] },
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = MikaSpace.S16),
                     )
                     if (transport == "stdio") {
                         OutlinedTextField(
                             command, { command = it }, label = { Text(stringResource(R.string.mcp_servers_command)) },
-                            singleLine = true, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                            singleLine = true, modifier = Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8),
                         )
                         FooterNote(stringResource(R.string.mcp_servers_stdio_help), Modifier.padding(top = 0.dp))
                     } else {
-                        OutlinedTextField(url, { url = it }, label = { Text(stringResource(R.string.mcp_servers_url)) }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp))
+                        OutlinedTextField(url, { url = it }, label = { Text(stringResource(R.string.mcp_servers_url)) }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8))
                         ToggleRow(stringResource(R.string.mcp_servers_use_oauth), oauth) { oauth = it }
                         if (!oauth) {
                             OutlinedTextField(
                                 token, { token = it }, label = { Text(stringResource(R.string.mcp_servers_token)) },
                                 singleLine = true, visualTransformation = PasswordVisualTransformation(),
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8),
                             )
                         }
                         ToggleRow(stringResource(R.string.mcp_servers_allow_local_http), allowLocal) { allowLocal = it }
@@ -166,7 +167,7 @@ fun McpCustomServerScreen(
                 GroupLabel(stringResource(R.string.mcp_custom_headers))
                 GroupCard {
                     headers.forEachIndexed { i, (hname, hvalue) ->
-                        Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+                        Column(Modifier.padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8)) {
                             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 OutlinedTextField(
                                     hname, { v -> headers = headers.toMutableList().also { it[i] = it[i].copy(first = v) } },
@@ -178,12 +179,12 @@ fun McpCustomServerScreen(
                             OutlinedTextField(
                                 hvalue, { v -> headers = headers.toMutableList().also { it[i] = it[i].copy(second = v) } },
                                 label = { Text(stringResource(R.string.mcp_custom_header_value)) },
-                                singleLine = true, modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                                singleLine = true, modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S8),
                             )
                         }
                     }
                     if (headers.isEmpty()) FooterNote(stringResource(R.string.mcp_servers_help_text))
-                    Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Row(Modifier.padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8)) {
                         MikaButton(stringResource(R.string.mcp_custom_add_header), { headers = headers + ("" to "") }, kind = ButtonKind.Tonal, size = com.wangzan101.mika.ui.components.ButtonSize.Small)
                     }
                 }
@@ -192,7 +193,7 @@ fun McpCustomServerScreen(
                     OutlinedTextField(
                         allowlist, { allowlist = it },
                         label = { Text(stringResource(R.string.mcp_servers_allowlist)) },
-                        singleLine = true, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                        singleLine = true, modifier = Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12),
                     )
                     ToggleRow(stringResource(R.string.mcp_servers_trust_annotations), trustAnnotations) { trustAnnotations = it }
                 }
@@ -206,9 +207,9 @@ fun McpCustomServerScreen(
                     }
                 }
 
-                error?.let { Text(it, Modifier.padding(top = 6.dp), style = MikaType.Caption, color = c.bad) }
-                if (testing) Text(stringResource(R.string.mcp_servers_testing), Modifier.padding(top = 6.dp), style = MikaType.Caption, color = c.ink3)
-                if (signingIn) Text(stringResource(R.string.mcp_servers_signing_in), Modifier.padding(top = 6.dp), style = MikaType.Caption, color = c.ink3)
+                error?.let { Text(it, Modifier.padding(top = MikaSpace.S8), style = MikaType.Caption, color = c.bad) }
+                if (testing) Text(stringResource(R.string.mcp_servers_testing), Modifier.padding(top = MikaSpace.S8), style = MikaType.Caption, color = c.ink3)
+                if (signingIn) Text(stringResource(R.string.mcp_servers_signing_in), Modifier.padding(top = MikaSpace.S8), style = MikaType.Caption, color = c.ink3)
 
                 if (oauth && transport != "stdio") {
                     TextButton({
@@ -231,7 +232,7 @@ fun McpCustomServerScreen(
                     }) { Text(signInLabel) }
                 }
 
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(Modifier.fillMaxWidth().padding(top = MikaSpace.S8), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
                     MikaButton(stringResource(R.string.mcp_servers_save_test), {
                         val saved = save() ?: return@MikaButton
                         testing = true
@@ -258,14 +259,14 @@ private fun NumberField(label: String, value: String, onChange: (String) -> Unit
     OutlinedTextField(
         value, onChange, label = { Text(label) }, singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8),
     )
 }
 
 @Composable
 private fun ToggleRow(title: String, checked: Boolean, onChecked: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
         Checkbox(checked, onCheckedChange = onChecked)
-        Text(title, Modifier.padding(start = 4.dp))
+        Text(title, Modifier.padding(start = MikaSpace.S4))
     }
 }

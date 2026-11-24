@@ -20,12 +20,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.cap.phone.a11y.launchableApps
 import com.wangzan101.mika.core.cap.phone.OperatingPace
 import com.wangzan101.mika.settings.FeatureFlags
 import com.wangzan101.mika.ui.components.*
+import com.wangzan101.mika.ui.theme.MikaSpace
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -126,13 +126,13 @@ private fun AppPacePickerDialog(
                 OutlinedTextField(
                     search, { search = it }, singleLine = true,
                     label = { Text(stringResource(R.string.settings_pace_per_app_search)) },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = MikaSpace.S8),
                 )
-                Column(Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState())) {
+                Column(Modifier.heightIn(max = MikaSpace.S8 * 45).verticalScroll(rememberScrollState())) {
                     if (candidates.isEmpty()) FooterNote(stringResource(R.string.settings_pace_per_app_none))
                     candidates.forEach { (pkg, label) ->
                         Row(
-                            Modifier.fillMaxWidth().padding(top = 8.dp),
+                            Modifier.fillMaxWidth().padding(top = MikaSpace.S8),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column(Modifier.weight(1f)) { Text(label); FooterNote(pkg) }

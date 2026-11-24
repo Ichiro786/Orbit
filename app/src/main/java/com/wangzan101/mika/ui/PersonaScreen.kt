@@ -28,7 +28,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.core.agent.TokenEstimate
 import com.wangzan101.mika.core.prompt.PersonaPrompt
@@ -55,6 +54,7 @@ import com.wangzan101.mika.ui.components.SheetAction
 import com.wangzan101.mika.ui.components.StatusPill
 import com.wangzan101.mika.ui.components.keepsKeyboard
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 
@@ -148,11 +148,11 @@ private fun PersonaPage(store: PersonaStore, onBack: () -> Unit, onManage: () ->
         GroupLabel(stringResource(R.string.persona_prompt))
         // 卡片本身就是输入框的外形:里面是不带描边的输入区(同卡片里的输入行),不再套一层直角的框
         GroupCard {
-            Box(Modifier.fillMaxWidth().heightIn(min = 132.dp).padding(horizontal = 16.dp, vertical = 14.dp)) {
+            Box(Modifier.fillMaxWidth().heightIn(min = MikaSpace.S4 * 33).padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12)) {
                 if (prompt.isEmpty()) Text(stringResource(R.string.persona_prompt_hint), style = MikaType.Body, color = c.ink3)
                 BasicTextField(
                     prompt, { prompt = it },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 104.dp).keepsKeyboard().testTag("persona-prompt"),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = MikaSpace.S8 * 13).keepsKeyboard().testTag("persona-prompt"),
                     textStyle = MikaType.Body.copy(color = c.ink, textDirection = TextDirection.Content),
                     cursorBrush = SolidColor(c.accent),
                 )
@@ -172,7 +172,7 @@ private fun PersonaPage(store: PersonaStore, onBack: () -> Unit, onManage: () ->
                 if (saved.isSuccess) onBack() else Toast.makeText(context, saveFailed, Toast.LENGTH_SHORT).show()
             },
             size = ButtonSize.Medium, enabled = dirty && !tooLong && nicknameOk,
-            modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 12.dp).testTag("persona-save"),
+            modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S12, bottom = MikaSpace.S12).testTag("persona-save"),
         )
 
         GroupCard {
@@ -189,7 +189,7 @@ private fun PersonaPage(store: PersonaStore, onBack: () -> Unit, onManage: () ->
             title = { Text(stringResource(open.title)) },
             text = {
                 Column {
-                    open.about?.let { Text(stringResource(it), Modifier.padding(bottom = 8.dp)) }
+                    open.about?.let { Text(stringResource(it), Modifier.padding(bottom = MikaSpace.S8)) }
                     open.choices.forEachIndexed { i, label ->
                         RadioRow(
                             title = stringResource(label), selected = i == open.selected,
@@ -276,9 +276,9 @@ private fun ManagePersonas(store: PersonaStore, onBack: () -> Unit) {
                     onClick = { preview = !preview }, modifier = Modifier.testTag("persona-preview"),
                 ) { RowChevron() }
                 if (preview) {
-                    Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp)) {
+                    Column(Modifier.padding(start = MikaSpace.S16, end = MikaSpace.S16, bottom = MikaSpace.S12)) {
                         Text(stringResource(R.string.persona_preview_note), style = MikaType.Hint, color = MikaTheme.colors.ink3)
-                        Text(previewText(layer, PersonaPrompt.content(active.prompt, active.style)), Modifier.padding(top = 8.dp), style = MikaType.Caption)
+                        Text(previewText(layer, PersonaPrompt.content(active.prompt, active.style)), Modifier.padding(top = MikaSpace.S8), style = MikaType.Caption)
                     }
                 }
             }
@@ -355,7 +355,7 @@ private fun NameDialog(initial: String, note: String?, title: String, onSave: (S
                     label = { Text(stringResource(R.string.persona_name)) },
                     isError = touched && problem != null,
                     supportingText = if (touched && problem != null) ({ Text(problem) }) else null,
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("persona-name"),
+                    modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S8).testTag("persona-name"),
                 )
             }
         },

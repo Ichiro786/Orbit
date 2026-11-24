@@ -14,12 +14,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.wangzan101.mika.calls.*
 import com.wangzan101.mika.calls.briefing.*
+import com.wangzan101.mika.ui.theme.MikaSpace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -66,8 +66,8 @@ internal fun rememberCallVoiceBriefing(
             onDismissRequest = { cancel(); open = false },
             title = { Text(stringResource(R.string.calls_voice_briefing_start)) },
             text = {
-                Column(Modifier.fillMaxWidth().heightIn(max = 400.dp).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.fillMaxWidth().heightIn(max = MikaSpace.S8 * 50).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
                     Text(label)
                     Text(stringResource(when {
                         starting || voice.activity == VoiceBriefingActivity.CONNECTING -> R.string.calls_connecting

@@ -1,7 +1,6 @@
 package com.wangzan101.mika.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -23,11 +22,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaMotion
 import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 
 /**
@@ -41,15 +40,16 @@ fun ScrollToBottomButton(
     backdrop: GlassBackdrop? = null,
     reduceMotion: Boolean = MikaTheme.reduceMotion,
     buttonSize: Dp = MikaSize.IconButton,
-    iconSize: Dp = 20.dp,
+    iconSize: Dp = MikaSpace.S20,
     tag: String = "scroll-to-bottom",
 ) {
     val c = MikaTheme.colors
+    val motion = MikaMotion.specs(reduceMotion)
     AnimatedVisibility(
         visible = visible,
         modifier = modifier,
-        enter = if (reduceMotion) fadeIn(tween(150)) else fadeIn(tween(180)) + scaleIn(tween(180, easing = MikaMotion.Decelerate), initialScale = 0.85f),
-        exit = if (reduceMotion) fadeOut(tween(120)) else fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.85f),
+        enter = if (reduceMotion) fadeIn(motion.effectsFast()) else fadeIn(motion.effectsDefault()) + scaleIn(motion.spatialFast(), initialScale = 0.85f),
+        exit = if (reduceMotion) fadeOut(motion.effectsFast()) else fadeOut(motion.effectsFast()) + scaleOut(motion.spatialFast(), targetScale = 0.85f),
     ) {
         val label = stringResource(R.string.chat_scroll_to_bottom)
         GlassSurface(
@@ -91,8 +91,8 @@ internal suspend fun scrollListToBottom(listState: LazyListState, density: Densi
     if (initialEnd - lastVisibleIndex > PRE_JUMP_ITEM_GAP) {
         listState.scrollToItem((initialEnd - PRE_JUMP_KEEP_ITEMS).coerceAtLeast(0))
     }
-    val minSpeedPx = with(density) { 420.dp.toPx() }
-    val maxSpeedPx = with(density) { 9000.dp.toPx() }
+    val minSpeedPx = 420f * density.density
+    val maxSpeedPx = 9000f * density.density
     listState.scroll {
         var lastNanos = withFrameNanos { it }
         var elapsed = 0f

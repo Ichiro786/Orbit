@@ -18,6 +18,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.wangzan101.mika.R
 import com.wangzan101.mika.settings.TaskTemplate
 import com.wangzan101.mika.ui.components.MikaDialog
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 
 /** Filling a task is local draft editing. The stored template and execution service stay untouched. */
@@ -36,7 +37,7 @@ internal fun TaskFillDialog(title: String, prompt: String, onDismiss: () -> Unit
                     OutlinedTextField(
                         values[index], { text -> values = values.toMutableList().also { it[index] = text } },
                         label = { Text(field) }, maxLines = 4,
-                        modifier = Modifier.fillMaxWidth().padding(top = if (index == 0) 0.dp else 8.dp)
+                        modifier = Modifier.fillMaxWidth().padding(top = if (index == 0) 0.dp else MikaSpace.S8)
                             .testTag("task-fill-$index"),
                     )
                 }

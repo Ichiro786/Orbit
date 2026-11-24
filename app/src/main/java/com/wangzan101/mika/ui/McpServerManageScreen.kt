@@ -26,7 +26,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.i18n.AppLanguage
 import com.wangzan101.mika.settings.McpServerConfig
@@ -43,6 +42,7 @@ import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.TileTone
 import com.wangzan101.mika.ui.components.TopBar
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import kotlinx.coroutines.launch
@@ -90,8 +90,8 @@ fun McpServerManageScreen(
     PageBackground {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars).windowInsetsPadding(WindowInsets.ime)) {
             TopBar(current.name, MikaIcons.Back, onBack, stringResource(R.string.back))
-            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
-                GroupCard(Modifier.padding(top = 8.dp)) {
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = MikaSpace.S16)) {
+                GroupCard(Modifier.padding(top = MikaSpace.S8)) {
                     ListRow(
                         logo ?: MikaIcons.Link, statusTitle, subtitle = address, first = true,
                         tone = if (state?.ok == true) TileTone.Ok else TileTone.Neutral,
@@ -197,9 +197,9 @@ fun McpServerManageScreen(
                         )
                     }
                 }
-                if (testing) Text(stringResource(R.string.mcp_servers_testing), Modifier.padding(top = 8.dp), style = MikaType.Caption, color = c.ink3)
-                if (signingIn) Text(stringResource(R.string.mcp_servers_signing_in), Modifier.padding(top = 8.dp), style = MikaType.Caption, color = c.ink3)
-                message?.let { Text(it, Modifier.padding(top = 8.dp), style = MikaType.Caption, color = c.bad) }
+                if (testing) Text(stringResource(R.string.mcp_servers_testing), Modifier.padding(top = MikaSpace.S8), style = MikaType.Caption, color = c.ink3)
+                if (signingIn) Text(stringResource(R.string.mcp_servers_signing_in), Modifier.padding(top = MikaSpace.S8), style = MikaType.Caption, color = c.ink3)
+                message?.let { Text(it, Modifier.padding(top = MikaSpace.S8), style = MikaType.Caption, color = c.bad) }
             }
         }
     }

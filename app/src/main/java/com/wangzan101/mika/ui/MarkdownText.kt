@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.wangzan101.mika.ui.theme.MikaSize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.conflate
@@ -255,7 +256,7 @@ private fun Block(b: MdBlock, style: TextStyle, depth: Int) {
         }
         is MdBlock.Heading -> Text(
             remember(b.text, find) { b.text.withFind(find) },
-            Modifier.padding(top = if (LocalReportStyle.current) 12.dp else 2.dp),
+            Modifier.padding(top = if (LocalReportStyle.current) MikaSpace.S12 else 2.dp),
             style = style.copy(
                 fontSize = when (b.level) { 1 -> 19.sp; 2 -> 17.5.sp; 3 -> 16.sp; else -> style.fontSize },
                 lineHeight = when (b.level) { 1 -> 25.sp; 2 -> 23.sp; else -> style.lineHeight },
@@ -273,9 +274,9 @@ private fun Block(b: MdBlock, style: TextStyle, depth: Int) {
             b.items.forEachIndexed { i, item ->
                 val reportItem = LocalReportStyle.current && depth == 0
                 Row(Modifier.then(if (reportItem) Modifier.fillMaxWidth().clip(MikaShapes.Button)
-                    .background(MikaTheme.colors.bg).padding(14.dp) else Modifier)) {
+                    .background(MikaTheme.colors.bg).padding(MikaSpace.S12) else Modifier)) {
                     val marker = if (b.start != null) "${b.start + i}." else if (depth % 2 == 0) "•" else "◦"
-                    Text(marker, Modifier.widthIn(min = 18.dp).padding(end = MikaSpace.S8), style = style.copy(color = if (reportItem) MikaTheme.colors.accent else MikaTheme.colors.ink2))
+                    Text(marker, Modifier.widthIn(min = MikaSize.TileIcon).padding(end = MikaSpace.S8), style = style.copy(color = if (reportItem) MikaTheme.colors.accent else MikaTheme.colors.ink2))
                     MarkdownBlocks(item, style, depth = depth + 1, gap = if (b.tight) 3 else 8)
                 }
             }
@@ -293,7 +294,7 @@ private fun TableBlock(t: MdBlock.Table, style: TextStyle) {
     val cols = t.header.size
     if (cols == 0) return
     // 单元格按左对齐:表格列宽本来就是定的,两端对齐只会把短句也拉满
-    val cellStyle = style.copy(fontSize = 13.sp, lineHeight = 19.sp, textAlign = TextAlign.Start)
+    val cellStyle = style.copy(fontSize = MikaType.Caption.fontSize, lineHeight = MikaType.Caption.lineHeight, textAlign = TextAlign.Start)
     val rows = listOf(t.header) + t.rows
     Box(Modifier.then(if (report) Modifier.clip(MikaShapes.Card).background(MikaTheme.colors.surface) else Modifier)
         .horizontalScroll(rememberScrollState())) {
@@ -380,13 +381,13 @@ private fun CodeBlock(b: MdBlock.Code, style: TextStyle) {
         // 包进 SelectionContainer(如「选择文字」模式或个人助理回答)时,顶栏标签和按钮不参与拖选。
         DisableSelection {
             Row(
-                Modifier.fillMaxWidth().padding(start = 11.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
+                Modifier.fillMaxWidth().padding(start = MikaSpace.S12, end = MikaSpace.S8, top = MikaSpace.S4, bottom = MikaSpace.S4),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (language.isNotEmpty()) {
                     Text(
                         text = language,
-                        modifier = Modifier.weight(1f).padding(end = 8.dp).testTag("code-block-language"),
+                        modifier = Modifier.weight(1f).padding(end = MikaSpace.S8).testTag("code-block-language"),
                         style = MikaType.Hint.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Medium),
                         color = c.ink2,
                         maxLines = 1,
@@ -410,19 +411,19 @@ private fun CodeBlock(b: MdBlock.Code, style: TextStyle) {
                                 copyVersion++
                             },
                         )
-                        .padding(horizontal = 6.dp, vertical = 4.dp)
+                        .padding(horizontal = MikaSpace.S8, vertical = MikaSpace.S4)
                         .testTag("code-block-copy"),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MikaSpace.S4),
                 ) {
-                    Icon(if (copied) MikaIcons.Check else MikaIcons.Copy, contentDescription = null, modifier = Modifier.size(14.dp), tint = tint)
+                    Icon(if (copied) MikaIcons.Check else MikaIcons.Copy, contentDescription = null, modifier = Modifier.size(MikaSize.SmallIcon), tint = tint)
                     Text(label, style = MikaType.Hint.copy(fontWeight = FontWeight.Medium), color = tint, maxLines = 1)
                 }
             }
         }
         Box(Modifier.fillMaxWidth().height(0.5.dp).background(c.hair))
-        Box(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 11.dp, vertical = 9.dp)) {
-            Text(remember(b.code, find) { b.code.withFind(find) }, style = style.copy(fontFamily = FontFamily.Monospace, fontSize = 13.sp, lineHeight = 19.sp), softWrap = false)
+        Box(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S8)) {
+            Text(remember(b.code, find) { b.code.withFind(find) }, style = style.copy(fontFamily = FontFamily.Monospace, fontSize = MikaType.Caption.fontSize, lineHeight = MikaType.Caption.lineHeight), softWrap = false)
         }
     }
 }

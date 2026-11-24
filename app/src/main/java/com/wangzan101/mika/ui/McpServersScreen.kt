@@ -15,7 +15,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.settings.McpServerConfig
 import com.wangzan101.mika.settings.McpServerStore
@@ -99,7 +98,7 @@ private fun McpServerList(
             GroupCard {
                 ListRow(MikaIcons.Link, stringResource(R.string.mcp_servers_empty), stringResource(R.string.mcp_servers_empty_sub), first = true)
             }
-            Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(Modifier.padding(top = MikaSpace.S12), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
                 MikaButton(stringResource(R.string.mcp_catalog_browse), onBrowseCatalog, Modifier.weight(1f), size = ButtonSize.Medium)
                 MikaButton(
                     stringResource(R.string.mcp_catalog_custom_server), onCustomServer, Modifier.weight(1f),
@@ -127,7 +126,7 @@ private fun McpServerList(
                     }
                 }
             }
-            Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(Modifier.padding(top = MikaSpace.S12), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
                 MikaButton(stringResource(R.string.mcp_servers_add), onBrowseCatalog, size = ButtonSize.Small)
                 MikaButton(
                     stringResource(if (refreshing) R.string.mcp_servers_testing else R.string.mcp_servers_refresh_all),
@@ -144,6 +143,6 @@ private fun McpServerList(
             }
         }
         GroupLabel(stringResource(R.string.mcp_servers_help))
-        Text(stringResource(R.string.mcp_servers_help_text), Modifier.padding(horizontal = 16.dp))
+        Text(stringResource(R.string.mcp_servers_help_text), Modifier.padding(horizontal = MikaSpace.S16))
     }
 }

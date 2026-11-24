@@ -31,7 +31,6 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.wangzan101.mika.R
 import com.wangzan101.mika.about.UpdateMirror
@@ -51,6 +50,7 @@ import com.wangzan101.mika.ui.components.rememberReorderableRowsState
 import com.wangzan101.mika.ui.components.PageScaffold
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import kotlinx.coroutines.Dispatchers
@@ -70,7 +70,7 @@ fun UpdateMirrorsScreen(store: UpdateMirrorStore, onBack: () -> Unit) {
     }
     if (!ready) {
         PageScaffold(stringResource(R.string.about_mirror_sources), onBack) {
-            CircularProgressIndicator(Modifier.padding(16.dp).size(24.dp), color = MikaTheme.colors.accent)
+            CircularProgressIndicator(Modifier.padding(MikaSpace.S16).size(MikaSpace.S24), color = MikaTheme.colors.accent)
         }
         return
     }
@@ -121,7 +121,7 @@ fun UpdateMirrorsScreen(store: UpdateMirrorStore, onBack: () -> Unit) {
             FooterNote(stringResource(R.string.about_mirrors_unreadable), color = c.bad)
             MikaButton(
                 stringResource(R.string.about_mirrors_reset), { resetting = true },
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp), kind = ButtonKind.Tonal,
+                Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16), kind = ButtonKind.Tonal,
             )
         } else {
             GroupCard {
@@ -167,7 +167,7 @@ fun UpdateMirrorsScreen(store: UpdateMirrorStore, onBack: () -> Unit) {
             if (mirrors.size > 1) FooterNote(stringResource(R.string.recommendations_drag_hint))
             MikaButton(
                 stringResource(R.string.about_mirrors_reset), { resetting = true },
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), kind = ButtonKind.Tonal,
+                Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S4), kind = ButtonKind.Tonal,
             )
         }
     }
@@ -265,25 +265,25 @@ private fun MirrorDialog(store: UpdateMirrorStore, initial: UpdateMirror?, onDis
                     singleLine = true,
                     isError = prefix.isNotBlank() && !prefixOk,
                     enabled = !saving,
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S8),
                 )
                 if (prefix.isNotBlank() && !prefixOk) {
                     Text(
                         stringResource(R.string.about_mirrors_invalid_prefix),
-                        Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.bad,
+                        Modifier.padding(top = MikaSpace.S4), style = MikaType.Hint, color = c.bad,
                     )
                 }
                 error?.let {
-                    Text(mirrorError(it), Modifier.padding(top = 8.dp), style = MikaType.Hint, color = c.bad)
+                    Text(mirrorError(it), Modifier.padding(top = MikaSpace.S8), style = MikaType.Hint, color = c.bad)
                 }
-                Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().padding(top = MikaSpace.S4), verticalAlignment = Alignment.CenterVertically) {
                     TextButton({ test() }, enabled = prefixOk && !testing && !saving, modifier = Modifier.testTag("mirror-test")) {
                         Text(stringResource(if (testing) R.string.about_mirrors_testing else R.string.about_mirrors_test))
                     }
                     testResult?.let { ok ->
                         Text(
                             stringResource(if (ok) R.string.about_mirrors_test_ok else R.string.about_mirrors_test_fail),
-                            Modifier.padding(start = 4.dp), style = MikaType.Hint,
+                            Modifier.padding(start = MikaSpace.S4), style = MikaType.Hint,
                             color = if (ok) c.ok else c.ink3,
                         )
                     }

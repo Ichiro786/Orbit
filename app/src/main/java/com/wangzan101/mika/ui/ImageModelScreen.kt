@@ -13,8 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.i18n.tr
 import com.wangzan101.mika.settings.ImageChoice
@@ -30,9 +28,11 @@ import com.wangzan101.mika.ui.components.ListRow
 import com.wangzan101.mika.ui.components.MikaButton
 import com.wangzan101.mika.ui.components.MikaSwitch
 import com.wangzan101.mika.ui.components.RadioRow
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.core.model.ImageAspect
 import com.wangzan101.mika.core.model.ImageRequest
+import com.wangzan101.mika.ui.theme.MikaType
 import kotlinx.coroutines.launch
 
 /**
@@ -53,7 +53,7 @@ fun ImageModelScreen(store: ProviderStore, onBack: () -> Unit) {
     val choice = state.choice?.takeIf { selected -> eligibleProviders.any { it.id == selected.providerId } }
 
     Page(tr(R.string.role_image), onBack) {
-        Text(tr(R.string.image_hint), Modifier.padding(top = 4.dp, bottom = 12.dp), fontSize = 14.5.sp, lineHeight = 22.sp, color = c.ink2)
+        Text(tr(R.string.image_hint), Modifier.padding(top = MikaSpace.S4, bottom = MikaSpace.S12), fontSize = MikaType.Callout.fontSize, lineHeight = MikaType.Body.lineHeight, color = c.ink2)
         GroupCard {
             ListRow(
                 null, tr(R.string.image_enable), tr(R.string.image_enable_note), first = true,
@@ -61,7 +61,7 @@ fun ImageModelScreen(store: ProviderStore, onBack: () -> Unit) {
             )
         }
 
-        GroupLabel(tr(R.string.image_provider), Modifier.padding(top = 12.dp))
+        GroupLabel(tr(R.string.image_provider), Modifier.padding(top = MikaSpace.S12))
         if (eligibleProviders.isEmpty()) {
             FooterNote(tr(R.string.image_no_providers))
         } else {
@@ -111,7 +111,7 @@ fun ImageModelScreen(store: ProviderStore, onBack: () -> Unit) {
             }
         }
 
-        GroupLabel(tr(R.string.image_limits), Modifier.padding(top = 12.dp))
+        GroupLabel(tr(R.string.image_limits), Modifier.padding(top = MikaSpace.S12))
         GroupCard {
             InputRow(
                 tr(R.string.image_max_per_task), state.maxPerTask.toString(),
@@ -149,9 +149,9 @@ fun ImageModelScreen(store: ProviderStore, onBack: () -> Unit) {
                 }
             },
             enabled = choice != null && model.isNotBlank(),
-            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S16),
         )
-        test?.let { FooterNote(it, Modifier.padding(top = 8.dp)) }
-        FooterNote(tr(R.string.image_footer), Modifier.padding(top = 10.dp))
+        test?.let { FooterNote(it, Modifier.padding(top = MikaSpace.S8)) }
+        FooterNote(tr(R.string.image_footer), Modifier.padding(top = MikaSpace.S8))
     }
 }

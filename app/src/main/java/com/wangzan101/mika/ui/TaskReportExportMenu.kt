@@ -26,11 +26,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.wangzan101.mika.R
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.ui.theme.MikaRadius
@@ -176,7 +176,7 @@ private fun ShareChoice(label: Int, tag: String, onClick: () -> Unit) {
     Text(
         stringResource(label),
         Modifier.fillMaxWidth().testTag(tag).clip(MikaShapes.Chip)
-            .clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 14.dp),
+            .clickable(onClick = onClick).padding(horizontal = MikaSpace.S8, vertical = MikaSpace.S12),
         style = MikaType.Body, color = MikaTheme.colors.ink,
     )
 }

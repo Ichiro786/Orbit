@@ -13,6 +13,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import com.wangzan101.mika.ui.components.MikaDialog
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.voice.model.VoiceListRefresh
 import com.wangzan101.mika.voice.model.VoiceModelLists
 import com.wangzan101.mika.voice.model.VoiceModelOrigin
@@ -32,7 +33,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.settings.Provider
 import com.wangzan101.mika.settings.ProviderStore
@@ -170,7 +170,7 @@ private fun ServiceList(
     }
     val unconnected = VoiceVendors.all.filter { vendor -> own.none { vendor.owns(it.id) } }
     Page(stringResource(R.string.voice_hub_services), onBack) {
-        Text(stringResource(R.string.voice_vendors_lead), Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2)
+        Text(stringResource(R.string.voice_vendors_lead), Modifier.padding(top = MikaSpace.S4, bottom = MikaSpace.S12), style = MikaType.Body, color = c.ink2)
         GroupLabel(stringResource(R.string.voice_vendors_connected))
         GroupCard {
             ListRow(
@@ -215,7 +215,7 @@ private fun ServiceList(
             ListRow(null, stringResource(R.string.voice_add_custom), stringResource(R.string.voice_add_custom_sub),
                 onClick = onOpenCustom, modifier = Modifier.testTag("voice-service-add")) { RowChevron() }
         }
-        FooterNote(stringResource(R.string.voice_services_footer), Modifier.padding(top = 6.dp))
+        FooterNote(stringResource(R.string.voice_services_footer), Modifier.padding(top = MikaSpace.S8))
     }
 }
 
@@ -256,7 +256,7 @@ private fun VendorDetail(
         if (vendor?.lister != null && listedThisRun.add(service.id)) refresh()
     }
     Page(service.name, onBack) {
-        GroupCard(Modifier.padding(top = 8.dp)) {
+        GroupCard(Modifier.padding(top = MikaSpace.S8)) {
             ListRow(MikaIcons.Key, service.name, stringResource(R.string.voice_vendor_key_saved), first = true) {
                 MikaButton(stringResource(R.string.voice_vendor_change_key), onClick = onChangeKey,
                     kind = ButtonKind.Secondary, size = ButtonSize.Small, modifier = Modifier.testTag("vendor-change-key"))
@@ -421,7 +421,7 @@ private fun VendorForm(vendor: VoiceVendor, onBack: () -> Unit, onSave: (VoicePr
     var error by remember { mutableStateOf<String?>(null) }
     val optional = stringResource(R.string.voice_field_optional)
     Page(vendor.name, onBack) {
-        Text(modelCountLine(vendor.preview), Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2)
+        Text(modelCountLine(vendor.preview), Modifier.padding(top = MikaSpace.S4, bottom = MikaSpace.S12), style = MikaType.Body, color = c.ink2)
         GroupLabel(stringResource(R.string.voice_vendor_fields))
         val text = vendor.fields.filter { it.choices.isEmpty() }
         GroupCard {
@@ -429,7 +429,7 @@ private fun VendorForm(vendor: VoiceVendor, onBack: () -> Unit, onSave: (VoicePr
                 InputRow(
                     vendorFieldLabel(field.key), values[field.key].orEmpty(), { values[field.key] = it },
                     if (field.optional) optional else if (field.key == VoiceVendors.F_REGION) "eastasia" else "",
-                    first = index == 0, secret = field.secret, labelWidth = 104.dp,
+                    first = index == 0, secret = field.secret, labelWidth = MikaSpace.S8 * 13,
                     modifier = Modifier.testTag("vendor-field-${field.key}"),
                 )
             }
@@ -438,11 +438,11 @@ private fun VendorForm(vendor: VoiceVendor, onBack: () -> Unit, onSave: (VoicePr
             GroupLabel(vendorFieldLabel(field.key))
             SegmentedControl(
                 field.choices.map { regionLabel(it) }, field.choices.indexOf(values[field.key]).coerceAtLeast(0),
-                { values[field.key] = field.choices[it] }, Modifier.padding(bottom = 12.dp),
+                { values[field.key] = field.choices[it] }, Modifier.padding(bottom = MikaSpace.S12),
             )
         }
         if (vendor.id == VoicePresets.VOLC_SERVICE) FooterNote(stringResource(R.string.voice_volc_auth_note))
-        error?.let { Text(it, Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MikaType.Hint, color = c.bad) }
+        error?.let { Text(it, Modifier.padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S4), style = MikaType.Hint, color = c.bad) }
         MikaButton(
             stringResource(R.string.voice_save_and_test),
             onClick = {
@@ -452,9 +452,9 @@ private fun VendorForm(vendor: VoiceVendor, onBack: () -> Unit, onSave: (VoicePr
                     error = e.detail
                 }
             },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("vendor-save"),
+            modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S8).testTag("vendor-save"),
         )
-        FooterNote(stringResource(R.string.voice_vendor_form_note), Modifier.padding(top = 8.dp))
+        FooterNote(stringResource(R.string.voice_vendor_form_note), Modifier.padding(top = MikaSpace.S8))
     }
 }
 
@@ -483,7 +483,7 @@ private fun PresetForm(kind: PresetKind, onBack: () -> Unit, onSave: (VoicePrese
                     PresetKind.SelfHosted -> R.string.voice_selfhosted_lead
                 },
             ),
-            Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2,
+            Modifier.padding(top = MikaSpace.S4, bottom = MikaSpace.S12), style = MikaType.Body, color = c.ink2,
         )
         when (kind) {
             PresetKind.Compatible -> {
@@ -506,7 +506,7 @@ private fun PresetForm(kind: PresetKind, onBack: () -> Unit, onSave: (VoicePrese
                 }
             }
         }
-        error?.let { Text(it, Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MikaType.Hint, color = c.bad) }
+        error?.let { Text(it, Modifier.padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S4), style = MikaType.Hint, color = c.bad) }
         MikaButton(
             stringResource(R.string.voice_save_and_test),
             onClick = {
@@ -520,9 +520,9 @@ private fun PresetForm(kind: PresetKind, onBack: () -> Unit, onSave: (VoicePrese
                     error = e.detail
                 }
             },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("preset-save"),
+            modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S8).testTag("preset-save"),
         )
-        FooterNote(stringResource(R.string.voice_preset_cred_note), Modifier.padding(top = 8.dp))
+        FooterNote(stringResource(R.string.voice_preset_cred_note), Modifier.padding(top = MikaSpace.S8))
     }
 }
 
@@ -536,7 +536,7 @@ private fun PresetResult(
     val probes by viewModel.probes.collectAsState()
     val sample = stringResource(R.string.voice_try_sample)
     Page(stringResource(R.string.voice_result_title), onDone) {
-        Text(stringResource(R.string.voice_result_lead), Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2)
+        Text(stringResource(R.string.voice_result_lead), Modifier.padding(top = MikaSpace.S4, bottom = MikaSpace.S12), style = MikaType.Body, color = c.ink2)
         GroupCard {
             refs.forEachIndexed { index, ref ->
                 val model = snapshot.modelOf(ref) ?: return@forEachIndexed
@@ -566,7 +566,7 @@ private fun PresetResult(
                         enabled = probe !is VoiceProbeUi.Running && probe !is VoiceProbeUi.Listening,
                     )
                 }
-                Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth().padding(start = MikaSpace.S16, end = MikaSpace.S16, bottom = MikaSpace.S12), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                     val line = when (probe) {
                         VoiceProbeUi.Idle -> null
                         VoiceProbeUi.Running -> stringResource(R.string.voice_catalog_testing)
@@ -575,7 +575,7 @@ private fun PresetResult(
                         VoiceProbeUi.Verified -> stringResource(R.string.voice_catalog_verified)
                     }
                     Text(
-                        line.orEmpty(), Modifier.weight(1f).padding(top = 6.dp), style = MikaType.Hint,
+                        line.orEmpty(), Modifier.weight(1f).padding(top = MikaSpace.S8), style = MikaType.Hint,
                         color = if (probe is VoiceProbeUi.Failed) c.bad else if (probe == VoiceProbeUi.Verified) c.ok else c.ink3,
                     )
                     MikaButton(
@@ -601,6 +601,6 @@ private fun PresetResult(
             }
         }
         MikaButton(stringResource(R.string.voice_result_done), onClick = onDone, kind = ButtonKind.Secondary,
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+            modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S8))
     }
 }

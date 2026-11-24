@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.core.decision.DecisionConfig
 import com.wangzan101.mika.core.decision.DecisionModel
@@ -38,6 +37,7 @@ import com.wangzan101.mika.ui.components.MikaSwitch
 import com.wangzan101.mika.ui.components.PageScaffold
 import com.wangzan101.mika.ui.components.SelectChip
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -182,8 +182,8 @@ fun JevSettingsContent(
         }
         FooterNote(stringResource(R.string.jev_privacy), Modifier.testTag("jev-privacy"))
         GroupLabel(stringResource(R.string.jev_provider))
-        FlowRow(Modifier.fillMaxWidth().padding(bottom = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(Modifier.fillMaxWidth().padding(bottom = MikaSpace.S12),
+            horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8), verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
             JevPreset.entries.forEach { p ->
                 val label = when (p) {
                     JevPreset.Google -> "Google"
@@ -215,10 +215,10 @@ fun JevSettingsContent(
         }
         FooterNote(stringResource(R.string.jev_apply_note))
         MikaButton(stringResource(R.string.save), onSave, Modifier.fillMaxWidth().testTag("jev-save"), enabled = canSave && !busy)
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(MikaSpace.S8))
         MikaButton(stringResource(R.string.jev_test), onTest,
             Modifier.fillMaxWidth().testTag("jev-test"), kind = ButtonKind.Secondary, enabled = canTest && !busy)
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(MikaSpace.S8))
         FooterNote(stringResource(R.string.jev_test_note))
         notice?.let { FooterNote(stringResource(it), Modifier.testTag("jev-result"),
             color = if (it == R.string.jev_test_failed || it == R.string.jev_save_failed) MikaTheme.colors.warn else MikaTheme.colors.ok) }

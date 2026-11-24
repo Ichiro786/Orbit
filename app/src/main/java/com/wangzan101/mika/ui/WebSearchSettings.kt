@@ -217,7 +217,7 @@ fun WebSearchDialog(initial: WebSearchConfig, onDismiss: () -> Unit, onSave: (We
                 if (shows(WebSearchProvider.Problem.UnsupportedProvider)) {
                     Text(
                         WebSearchCopy.problem(provider, WebSearchProvider.Problem.UnsupportedProvider, grounding),
-                        modifier = Modifier.padding(top = 4.dp).testTag("web-search-error"),
+                        modifier = Modifier.padding(top = MikaSpace.S4).testTag("web-search-error"),
                         style = MikaType.Hint,
                         color = MikaTheme.colors.bad,
                     )

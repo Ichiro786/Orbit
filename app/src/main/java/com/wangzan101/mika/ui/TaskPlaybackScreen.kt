@@ -3,10 +3,12 @@ package com.wangzan101.mika.ui
 import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaSpace
+import com.wangzan101.mika.ui.theme.motion
 import kotlin.math.abs
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -98,7 +100,7 @@ fun TaskPlaybackScreen(vm: TaskReportViewModel, initialScreenshotId: Int?, onBac
             TopBar(stringResource(R.string.playback_title), MikaIcons.Back, onBack, stringResource(R.string.back))
             val r = report
             if (r == null || frames.isEmpty()) {
-                if (loaded) EmptyNote(stringResource(if (r == null) R.string.timeline_expired else if (r.missingFrames > 0) R.string.playback_missing else R.string.playback_empty), Modifier.padding(24.dp))
+                if (loaded) EmptyNote(stringResource(if (r == null) R.string.timeline_expired else if (r.missingFrames > 0) R.string.playback_missing else R.string.playback_empty), Modifier.padding(MikaSpace.S24))
             } else {
                 val frame = frames[current]
                 val step = r.playback[frame.stepIndex]
@@ -107,7 +109,7 @@ fun TaskPlaybackScreen(vm: TaskReportViewModel, initialScreenshotId: Int?, onBac
                 val stageScroll = rememberLazyListState()
                 LaunchedEffect(stage) { stageScroll.animateScrollToItem(r.stages.indexOf(stage).coerceAtLeast(0)) }
                 val controls: @Composable () -> Unit = {
-                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(MikaRadius.Bubble)).background(c.surface).padding(horizontal = 12.dp, vertical = 8.dp)) {
+                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(MikaRadius.Bubble)).background(c.surface).padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S8)) {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Text(when {
                                 finalResult -> stringResource(R.string.report_final_page)
@@ -118,9 +120,9 @@ fun TaskPlaybackScreen(vm: TaskReportViewModel, initialScreenshotId: Int?, onBac
                         }
                         val progressLabel = stringResource(R.string.playback_progress)
                         Slider(current.toFloat(), { seek(it.toInt()) }, valueRange = 0f..frames.lastIndex.coerceAtLeast(1).toFloat(), enabled = frames.size > 1,
-                            modifier = Modifier.fillMaxWidth().height(28.dp).semantics { contentDescription = progressLabel },
+                            modifier = Modifier.fillMaxWidth().height(MikaSize.Tile).semantics { contentDescription = progressLabel },
                             colors = SliderDefaults.colors(activeTrackColor = c.accent, inactiveTrackColor = c.fill, thumbColor = c.accent))
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S4)) {
                             TextButton({ seek(current - 1) }, enabled = current > 0, modifier = Modifier.weight(1f), contentPadding = PaddingValues(2.dp)) {
                                 Text(stringResource(R.string.playback_previous), style = MikaType.Caption, maxLines = 1)
                             }
@@ -130,15 +132,15 @@ fun TaskPlaybackScreen(vm: TaskReportViewModel, initialScreenshotId: Int?, onBac
                             TextButton({ seek(current + 1) }, enabled = current < frames.lastIndex, modifier = Modifier.weight(1f), contentPadding = PaddingValues(2.dp)) {
                                 Text(stringResource(R.string.playback_next), style = MikaType.Caption, maxLines = 1)
                             }
-                            TextButton({ speedIndex = (speedIndex + 1) % speeds.size }, contentPadding = PaddingValues(2.dp), modifier = Modifier.width(42.dp)) {
+                            TextButton({ speedIndex = (speedIndex + 1) % speeds.size }, contentPadding = PaddingValues(2.dp), modifier = Modifier.width(MikaSize.IconButton)) {
                                 Text(listOf("0.5×", "1×", "2×")[speedIndex], style = MikaType.Caption)
                             }
                         }
                         step.failure?.let { Text(it, style = MikaType.Hint, color = c.bad) }
-                        if (r.stages.isNotEmpty()) LazyRow(Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 2.dp), state = stageScroll, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (r.stages.isNotEmpty()) LazyRow(Modifier.fillMaxWidth().padding(top = MikaSpace.S4, bottom = 2.dp), state = stageScroll, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                             itemsIndexed(r.stages) { i, s ->
-                                Text("${i + 1} · ${s.title}", Modifier.widthIn(max = 180.dp).clip(MikaShapes.Tile)
-                                    .background(if (s == stage) c.accentSoft else c.bg).clickable { seek(TaskReportViewModel.framePosition(frames, s.screenshotId, s.stepIndex)) }.padding(9.dp, 7.dp),
+                                Text("${i + 1} · ${s.title}", Modifier.widthIn(max = MikaSpace.S4 * 45).clip(MikaShapes.Tile)
+                                    .background(if (s == stage) c.accentSoft else c.bg).clickable { seek(TaskReportViewModel.framePosition(frames, s.screenshotId, s.stepIndex)) }.padding(MikaSpace.S8, MikaSpace.S8),
                                     style = MikaType.Hint, color = if (s == stage) c.accent else c.ink2, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
@@ -151,11 +153,11 @@ fun TaskPlaybackScreen(vm: TaskReportViewModel, initialScreenshotId: Int?, onBac
                         AnimatedPlaybackImage(vm, frame, Modifier.fillMaxSize()) { ready = current }
                     }
                 }
-                BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 6.dp)) {
-                    if (maxWidth > maxHeight) Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().navigationBarsPadding().padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S8)) {
+                    if (maxWidth > maxHeight) Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12), verticalAlignment = Alignment.CenterVertically) {
                         picture(Modifier.weight(1f).fillMaxHeight())
-                        Column(Modifier.width(300.dp)) { controls() }
-                    } else Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(Modifier.width(MikaSpace.S4 * 75)) { controls() }
+                    } else Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                         picture(Modifier.weight(1f).fillMaxWidth())
                         Text(stringResource(when {
                             finalResult -> R.string.report_final_page
@@ -173,7 +175,7 @@ fun TaskPlaybackScreen(vm: TaskReportViewModel, initialScreenshotId: Int?, onBac
                     }
                 }
                 if (fullscreen) Dialog(onDismissRequest = { fullscreen = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-                    Column(Modifier.fillMaxSize().background(c.bg).systemBarsPadding().padding(12.dp)) {
+                    Column(Modifier.fillMaxSize().background(c.bg).systemBarsPadding().padding(MikaSpace.S12)) {
                         TextButton({ fullscreen = false }, Modifier.align(Alignment.End)) { Text(stringResource(R.string.report_close)) }
                         AnimatedPlaybackImage(vm, frame, Modifier.weight(1f).fillMaxWidth().testTag("playback-fullscreen").playbackGestures(
                             onTap = {}, onDrag = { playing = false }, onSwipe = { seek(current + it) }
@@ -193,7 +195,7 @@ internal fun replaySwipeDirection(dx: Float, dy: Float, threshold: Float): Int {
 
 @Composable
 private fun Modifier.playbackGestures(onTap: () -> Unit, onDrag: () -> Unit, onSwipe: (Int) -> Unit): Modifier {
-    val threshold = with(LocalDensity.current) { 48.dp.toPx() }
+    val threshold = with(LocalDensity.current) { (MikaSpace.S8 * 6).toPx() }
     val drag by rememberUpdatedState(onDrag)
     val swipe by rememberUpdatedState(onSwipe)
     return pointerInput(threshold) {
@@ -219,7 +221,7 @@ private fun AnimatedPlaybackImage(vm: TaskReportViewModel, frame: ReplayFrame, m
         ready()
     }
     // 已解码的图片及其自身标记一起交叉淡入，手动/自动走同一路径，不闪空、不串标记。
-    Crossfade(displayed, modifier, animationSpec = tween(TaskReportViewModel.TRANSITION_MS), label = "replay-frame") { loaded ->
+    Crossfade(displayed, modifier, animationSpec = MikaTheme.motion.effectsSlow(), label = "replay-frame") { loaded ->
         if (loaded?.bitmap != null) Box(Modifier.fillMaxSize().testTag("playback-frame-${loaded.frame.frame.screenshotId}")) {
             FittedPlaybackImage(loaded.bitmap, loaded.frame.mark, Modifier.fillMaxSize())
         }
@@ -249,13 +251,13 @@ private fun FittedPlaybackImage(bitmap: ImageBitmap, mark: PlaybackMark?, modifi
                     fun point(x: Int, y: Int) = Offset(x / 999f * size.width, y / 999f * size.height)
                     val start = point(m.x, m.y)
                     if (m.kind == "tap") {
-                        drawCircle(c.bad.copy(alpha = .18f), 11.dp.toPx(), start)
-                        drawCircle(c.bad, 9.dp.toPx(), start, style = Stroke(2.dp.toPx()))
+                        drawCircle(c.bad.copy(alpha = .18f), MikaSpace.S12.toPx(), start)
+                        drawCircle(c.bad, MikaSpace.S8.toPx(), start, style = Stroke(2.dp.toPx()))
                     } else {
                         val end = point(m.endX!!, m.endY!!)
-                        drawLine(c.bad, start, end, 2.5.dp.toPx())
+                        drawLine(c.bad, start, end, MikaSpace.S4.toPx())
                         val angle = atan2(end.y - start.y, end.x - start.x)
-                        val length = 9.dp.toPx()
+                        val length = MikaSpace.S8.toPx()
                         val path = Path().apply {
                             moveTo(end.x, end.y)
                             lineTo(end.x - length * cos(angle - .5f), end.y - length * sin(angle - .5f))

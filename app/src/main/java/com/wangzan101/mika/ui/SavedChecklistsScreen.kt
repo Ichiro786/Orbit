@@ -12,11 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.chat.*
 import com.wangzan101.mika.ui.components.*
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -61,7 +61,7 @@ internal fun SavedChecklistsScreen(
             FooterNote(stringResource(R.string.checklist_read_failed), color = MikaTheme.colors.bad)
             MikaButton(stringResource(R.string.retry), { scope.launch { withContext(Dispatchers.IO) { store.load() } } })
         } else if (!loaded) {
-            CircularProgressIndicator(Modifier.padding(16.dp))
+            CircularProgressIndicator(Modifier.padding(MikaSpace.S16))
         } else if (selected == null) {
             GroupCard {
                 ListRow(MikaIcons.Plus, stringResource(R.string.checklist_new), first = true, onClick = {
@@ -87,12 +87,12 @@ internal fun SavedChecklistsScreen(
             FooterNote(stringResource(R.string.checklist_history_limit, SavedChecklistStore.MAX_REVISIONS))
         } else {
             val current = selected.current
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                 MikaButton(stringResource(R.string.checklist_reuse), { action = current to false }, modifier = Modifier.weight(1f).testTag("checklist-reuse"))
                 MikaButton(stringResource(R.string.checklist_update), { action = current to true }, modifier = Modifier.weight(1f).testTag("checklist-update"), kind = ButtonKind.Secondary)
             }
             SelectionContainer {
-                Text(current.body, Modifier.fillMaxWidth().padding(vertical = 16.dp).testTag("checklist-body"), color = MikaTheme.colors.ink)
+                Text(current.body, Modifier.fillMaxWidth().padding(vertical = MikaSpace.S16).testTag("checklist-body"), color = MikaTheme.colors.ink)
             }
             GroupCard {
                 ListRow(MikaIcons.Edit, stringResource(R.string.checklist_edit), first = true, onClick = {
@@ -147,8 +147,8 @@ private fun ChecklistEditor(store: SavedChecklistStore, initial: ChecklistEdit, 
                 OutlinedTextField(title, { title = it; error = null }, label = { Text(stringResource(R.string.recommendations_title_label)) },
                     singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth().testTag("checklist-title"))
                 OutlinedTextField(body, { body = it; error = null }, label = { Text(stringResource(R.string.checklist_content)) },
-                    minLines = 5, maxLines = 10, enabled = !busy, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("checklist-input"))
-                error?.let { Text(checklistError(it), color = MikaTheme.colors.bad, modifier = Modifier.padding(top = 8.dp)) }
+                    minLines = 5, maxLines = 10, enabled = !busy, modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S8).testTag("checklist-input"))
+                error?.let { Text(checklistError(it), color = MikaTheme.colors.bad, modifier = Modifier.padding(top = MikaSpace.S8)) }
             }
         },
         confirmButton = { TextButton({

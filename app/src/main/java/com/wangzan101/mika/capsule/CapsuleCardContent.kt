@@ -97,7 +97,6 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wangzan101.mika.confirm.ConfirmationCopy
 import com.wangzan101.mika.core.userscreen.CapturedScreen
 import com.wangzan101.mika.ui.MarkdownText
@@ -843,7 +842,7 @@ private fun TeachShelf(onTeach: () -> Unit, onVoiceChat: () -> Unit) {
     val collapseLabel = tr(R.string.teach_shelf_collapse)
     val action = if (open) collapseLabel else expandLabel
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        if (open) Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+        if (open) Row(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S20)) {
             TextLink(name, onClick = onTeach)
             TextLink(tr(R.string.voicecall_menu), onClick = onVoiceChat)
         }
@@ -985,11 +984,11 @@ internal fun ThreadList(thread: ChatThread, conversationId: String?, actions: Ca
                     }
                 }
             },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 4.dp, bottom = 6.dp),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = MikaSpace.S4, bottom = MikaSpace.S8),
             backdrop = backdrop,
             reduceMotion = reduceMotion,
             buttonSize = KeySize,
-            iconSize = 18.dp,
+            iconSize = MikaSize.TileIcon,
             tag = "capsule-scroll-to-bottom",
         )
     }

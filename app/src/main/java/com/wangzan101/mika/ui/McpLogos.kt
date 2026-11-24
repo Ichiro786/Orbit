@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathParser
-import androidx.compose.ui.unit.dp
+import com.wangzan101.mika.ui.theme.MikaSpace
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -29,7 +29,7 @@ class McpLogos private constructor(private val logos: Map<String, McpLogoData>) 
 
     private fun vector(data: McpLogoData): ImageVector =
         ImageVector.Builder(
-            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            defaultWidth = MikaSpace.S24, defaultHeight = MikaSpace.S24,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
             addPath(pathData = PathParser().parsePathString(data.d).toNodes(), fill = SolidColor(parseColor(data.color)))
@@ -54,6 +54,7 @@ class McpLogos private constructor(private val logos: Map<String, McpLogoData>) 
             McpLogos(emptyMap())
         }
 
-        private fun parseColor(c: String): Color = Color(0xFF000000L or c.removePrefix("#").toLong(16))
+        private const val OPAQUE = 0xFF000000L
+        private fun parseColor(c: String): Color = Color(c.removePrefix("#").toLong(16) or OPAQUE)
     }
 }

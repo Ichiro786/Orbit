@@ -54,7 +54,6 @@ class TaskReportViewModel(private val store: RunStore, val runId: String) {
 
     companion object {
         const val FRAME_DURATION_MS = 2_400L
-        const val TRANSITION_MS = 360
 
         internal fun playbackSteps(events: List<RunEvent>): List<PlaybackStep> {
             val recorded = events.filterIsInstance<RunEvent.TaskPlayback>()

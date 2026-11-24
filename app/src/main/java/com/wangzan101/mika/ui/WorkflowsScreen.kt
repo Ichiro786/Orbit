@@ -12,10 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.ui.components.*
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.workflow.*
 import kotlinx.coroutines.Dispatchers
@@ -69,12 +69,12 @@ internal fun WorkflowsScreen(runtime: WorkflowRuntime, onBack: () -> Unit, onOpe
     PageScaffold(run?.template?.title ?: template?.title ?: stringResource(R.string.workflows_title), back) {
         if (error != null) FooterNote(workflowError(error!!), color = MikaTheme.colors.bad)
         if (!loaded) {
-            if (error == null) CircularProgressIndicator(Modifier.padding(16.dp))
+            if (error == null) CircularProgressIndicator(Modifier.padding(MikaSpace.S16))
             else MikaButton(stringResource(R.string.retry), { perform { runtime.store.load() } })
         } else if (run != null) {
             Text(stringResource(phaseLabel(run.phase)), style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.testTag("workflow-phase"))
-            Text(stringResource(R.string.workflow_progress, run.completed, run.template.steps.size), Modifier.padding(vertical = 8.dp))
+            Text(stringResource(R.string.workflow_progress, run.completed, run.template.steps.size), Modifier.padding(vertical = MikaSpace.S8))
             if (saveError) {
                 FooterNote(stringResource(R.string.workflow_result_save_failed), color = MikaTheme.colors.bad)
                 MikaButton(stringResource(R.string.retry), { perform { runtime.retrySave() } }, enabled = !busy)
@@ -97,11 +97,11 @@ internal fun WorkflowsScreen(runtime: WorkflowRuntime, onBack: () -> Unit, onOpe
                     TextButton({ retrying = run }, enabled = !busy, modifier = Modifier.testTag("workflow-retry")) { Text(stringResource(R.string.workflow_retry_step)) }
                 }
                 WorkflowPhase.Completed -> {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                         MikaButton(stringResource(R.string.chat_copy), { copyMessage(context, run.result) }, modifier = Modifier.weight(1f))
                         if (onUseResult != null) MikaButton(stringResource(R.string.workflow_use_result), { onUseResult(run.result) }, kind = ButtonKind.Secondary, modifier = Modifier.weight(1f).testTag("workflow-use-result"))
                     }
-                    SelectionContainer { Text(run.result, Modifier.padding(vertical = 16.dp).testTag("workflow-final-result")) }
+                    SelectionContainer { Text(run.result, Modifier.padding(vertical = MikaSpace.S16).testTag("workflow-final-result")) }
                     data.templates.find { it.id == run.template.id }?.let { current ->
                         TextButton({ starting = current }, enabled = !busy) { Text(stringResource(R.string.workflow_run_again)) }
                     }
@@ -212,7 +212,7 @@ internal fun WorkflowsScreen(runtime: WorkflowRuntime, onBack: () -> Unit, onOpe
                     modifier = Modifier.fillMaxWidth().testTag("workflow-step-title-$index"))
                 OutlinedTextField(step.instruction, { value -> change(steps.map { if (it.id == step.id) it.copy(instruction = value) else it }) },
                     label = { Text(stringResource(R.string.workflow_instruction)) }, minLines = 2, maxLines = 5, enabled = !busy,
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("workflow-step-instruction-$index"))
+                    modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S8).testTag("workflow-step-instruction-$index"))
                 Row {
                     TextButton({ change(steps.toMutableList().apply { add(index - 1, removeAt(index)) }) }, enabled = !busy && index > 0) { Text(stringResource(R.string.workflow_move_up)) }
                     TextButton({ change(steps.toMutableList().apply { add(index + 1, removeAt(index)) }) }, enabled = !busy && index < steps.lastIndex) { Text(stringResource(R.string.workflow_move_down)) }

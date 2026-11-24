@@ -43,6 +43,8 @@ import com.wangzan101.mika.core.proactive.TriageVerdict
 import com.wangzan101.mika.core.usage.ProactiveBudget
 import com.wangzan101.mika.core.shell.BuiltinShellStatus
 import com.wangzan101.mika.ui.TokenBudgetDialog
+import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.tokenBudgetNumber
 import com.wangzan101.mika.ui.components.EmptyNote
 import com.wangzan101.mika.ui.components.FooterNote
@@ -190,7 +192,7 @@ fun ProactiveScreen(onBack: () -> Unit) {
                         (grantMessage ?: R.string.proactive_helper_unavailable.takeIf { !helperUsable })?.let { stringResource(it) },
                         onClick = if (helperUsable && !granting) ({ confirmGrant = true }) else null,
                     ) {
-                        if (granting) CircularProgressIndicator(Modifier.size(20.dp).testTag("proactive-helper-grant-busy"), strokeWidth = 2.dp)
+                        if (granting) CircularProgressIndicator(Modifier.size(MikaSize.TileIcon).testTag("proactive-helper-grant-busy"), strokeWidth = 2.dp)
                     }
                 }
                 gate == TriageGate.NoModel -> ListRow(null, stringResource(R.string.proactive_triage_no_model))
@@ -263,7 +265,7 @@ fun ProactiveScreen(onBack: () -> Unit) {
         if (level != LearnLevel.Conservative) DetailNote(
             stringResource(R.string.proactive_learn_level_summary),
             stringResource(R.string.proactive_learn_level_note),
-            Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+            Modifier.padding(start = MikaSpace.S16, end = MikaSpace.S16, bottom = MikaSpace.S12),
         )
 
         // ---- 读哪些 App:选了的列在这里,每个是低 / 中 / 高;「选择更多」展开全部 App ----
@@ -282,7 +284,7 @@ fun ProactiveScreen(onBack: () -> Unit) {
         }
         if (addingApps) {
             SearchField(search, { search = it }, stringResource(R.string.appaccess_search), Modifier.testTag("proactive-search"))
-            GroupCard(Modifier.padding(top = 8.dp)) {
+            GroupCard(Modifier.padding(top = MikaSpace.S8)) {
                 apps.filter { (pkg, name) -> pkg !in allowed && (pkg.contains(search, true) || name.contains(search, true)) }
                     .forEachIndexed { i, (pkg, name) -> ListRow(null, name, pkg, first = i == 0, onClick = { pickApp = pkg }) }
             }
@@ -401,7 +403,7 @@ fun ProactiveScreen(onBack: () -> Unit) {
                             subtitle = stringResource(levelDesc(l)), first = l == LearnLevel.entries.first(),
                         )
                     }
-                    Text(stringResource(R.string.proactive_learn_level_note), Modifier.padding(top = 10.dp))
+                    Text(stringResource(R.string.proactive_learn_level_note), Modifier.padding(top = MikaSpace.S8))
                 }
             },
             confirmButton = { TextButton({ pickLevel = false }) { Text(stringResource(R.string.cancel)) } },
@@ -584,7 +586,7 @@ private fun Diagnostics(
         val latest = inbox.records.asReversed().take(20)
         if (latest.isEmpty()) EmptyNote(stringResource(R.string.proactive_inbox_empty))
         latest.forEach { r ->
-            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8)) {
                 Text(
                     "${label(r.packageName)} · ${timeFormat.format(java.util.Date(r.postedAtMs))}",
                     style = MikaType.Hint, color = MikaTheme.colors.ink3,

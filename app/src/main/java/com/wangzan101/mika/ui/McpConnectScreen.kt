@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.core.cap.mcp.McpPreset
 import com.wangzan101.mika.core.cap.mcp.McpPresetField
@@ -42,6 +41,7 @@ import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.TileTone
 import com.wangzan101.mika.ui.components.TopBar
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 
@@ -100,9 +100,9 @@ private fun ConnectForm(
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars).windowInsetsPadding(WindowInsets.ime)) {
             TopBar(preset.name, MikaIcons.Back, onBack, stringResource(R.string.back))
             Column(
-                Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+                Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = MikaSpace.S16),
             ) {
-                GroupCard(Modifier.padding(top = 8.dp)) {
+                GroupCard(Modifier.padding(top = MikaSpace.S8)) {
                     ListRow(
                         McpCategory.icon(category), authLabel, subtitle = preset.summary.resolve(langTag), first = true,
                     )
@@ -140,7 +140,7 @@ private fun ConnectForm(
                         else -> R.string.mcp_connect_connect
                     },
                 )
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(Modifier.fillMaxWidth().padding(top = MikaSpace.S8), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
                     if (connecting) {
                         MikaButton(stringResource(R.string.mcp_connect_cancel), { connector.cancel() }, Modifier.weight(1f), kind = ButtonKind.Secondary)
                     } else {
@@ -159,11 +159,11 @@ private fun ConnectForm(
                 }
                 if (connecting) {
                     Text(
-                        stringResource(R.string.mcp_connect_connecting), Modifier.padding(top = 8.dp),
+                        stringResource(R.string.mcp_connect_connecting), Modifier.padding(top = MikaSpace.S8),
                         style = MikaType.Caption, color = c.ink3,
                     )
                 } else if (form.error != null) {
-                    Text(form.error, Modifier.padding(top = 8.dp), style = MikaType.Caption, color = c.bad)
+                    Text(form.error, Modifier.padding(top = MikaSpace.S8), style = MikaType.Caption, color = c.bad)
                 }
 
                 GroupLabel(stringResource(R.string.mcp_connect_about))
@@ -192,9 +192,9 @@ private fun ConnectSuccess(tools: List<String>, onDone: () -> Unit, onBack: () -
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars)) {
             TopBar(stringResource(R.string.mcp_connect_success_title), MikaIcons.Back, onBack, stringResource(R.string.back))
             Column(
-                Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+                Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = MikaSpace.S16),
             ) {
-                GroupCard(Modifier.padding(top = 8.dp)) {
+                GroupCard(Modifier.padding(top = MikaSpace.S8)) {
                     ListRow(
                         MikaIcons.Check, stringResource(R.string.mcp_connect_success_title),
                         subtitle = stringResource(R.string.mcp_connect_success_tools, tools.size), first = true, tone = TileTone.Ok,
@@ -207,7 +207,7 @@ private fun ConnectSuccess(tools: List<String>, onDone: () -> Unit, onBack: () -
                     ) { RowChevron() }
                     if (showTools) tools.forEach { tool -> ListRow(null, tool) }
                 }
-                MikaButton(stringResource(R.string.mcp_connect_done), onDone, Modifier.fillMaxWidth().padding(top = 12.dp))
+                MikaButton(stringResource(R.string.mcp_connect_done), onDone, Modifier.fillMaxWidth().padding(top = MikaSpace.S12))
             }
         }
     }
