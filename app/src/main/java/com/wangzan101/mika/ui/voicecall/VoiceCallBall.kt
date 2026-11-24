@@ -24,12 +24,14 @@ import kotlin.math.sqrt
 /** 通话球的形态:连接=网,平时=球(安静慢转),听/说=波(随真实电平),办事中=轨道。 */
 enum class VoiceCallShape { Web, Globe, Wave, Orbits }
 
-/** Dot colour by projected depth: light accent up close, deep accent at the back (Orbit accent, [CallColors]). */
+/** Default dot colours by projected depth: light accent up close, deep accent at the back ([CallColors]). */
 private val NearColor = CallColors.sphereNear
 private val FarColor = CallColors.sphereFar
 
 /** 相机距离(单位球半径的倍数):透视近大远小的强度。 */
 private const val CAMERA = 3.4f
+
+private const val DEFAULT_DOT_RADIUS = 0.023f
 
 /** 电平过了多少球就从环换成波。 */
 const val VOICE_WAVE_LEVEL = 0.04f
@@ -42,7 +44,16 @@ const val VOICE_WAVE_LEVEL = 0.04f
  * 只随电平起伏(不自己摆)。
  */
 @Composable
-fun VoiceCallBall(shape: VoiceCallShape, level: Float, modifier: Modifier = Modifier, dotCount: Int = 340) {
+fun VoiceCallBall(
+    shape: VoiceCallShape,
+    level: Float,
+    modifier: Modifier = Modifier,
+    dotCount: Int = 340,
+    /** 点的半径(相对球半径);小尺寸的球要放大点才看得清。 */
+    dotRadius: Float = DEFAULT_DOT_RADIUS,
+    near: Color = NearColor,
+    far: Color = FarColor,
+) {
     val reduceMotion = MikaTheme.reduceMotion
     val ball = remember(dotCount) { DotBall(dotCount) }
     var timeNanos by remember { mutableLongStateOf(0L) }
@@ -56,7 +67,7 @@ fun VoiceCallBall(shape: VoiceCallShape, level: Float, modifier: Modifier = Modi
         }
     }
     Canvas(modifier) {
-        ball.draw(this, shape, level, if (reduceMotion) 0f else timeNanos / 1e9f, reduceMotion)
+        ball.draw(this, shape, level, if (reduceMotion) 0f else timeNanos / 1e9f, reduceMotion, dotRadius, near, far)
     }
 }
 
@@ -113,7 +124,16 @@ private class DotBall(count: Int) {
     private val orbitTiltY = floatArrayOf(0f, 0.7f, -0.5f)
     private val orbitSpeed = floatArrayOf(0.9f, -0.7f, 1.15f)
 
-    fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, shape: VoiceCallShape, level: Float, t: Float, static: Boolean) {
+    fun draw(
+        scope: androidx.compose.ui.graphics.drawscope.DrawScope,
+        shape: VoiceCallShape,
+        level: Float,
+        t: Float,
+        static: Boolean,
+        dotRadius: Float,
+        near: Color,
+        far: Color,
+    ) {
         val radius = scope.size.minDimension / 2f
         val cx = scope.size.width / 2f
         val cy = scope.size.height / 2f
@@ -167,7 +187,7 @@ private class DotBall(count: Int) {
             val persp = CAMERA / (CAMERA - rz)
             sx[i] = cx + rx * radius * persp * BALL_SCALE * breath
             sy[i] = cy + ry * radius * persp * BALL_SCALE * breath
-            sr[i] = radius * DOT_RADIUS * persp
+            sr[i] = radius * dotRadius * persp
             sd[i] = ((rz + 1.3f) / 2.6f).coerceIn(0f, 1f)
             sz[i] = rz
         }
@@ -190,7 +210,7 @@ private class DotBall(count: Int) {
                 val b = webPairs[2 * p + 1]
                 val depth = (sd[a] + sd[b]) / 2f
                 scope.drawLine(
-                    lerp(FarColor, NearColor, depth),
+                    lerp(far, near, depth),
                     androidx.compose.ui.geometry.Offset(sx[a], sy[a]),
                     androidx.compose.ui.geometry.Offset(sx[b], sy[b]),
                     strokeWidth = radius * 0.006f,
@@ -203,7 +223,7 @@ private class DotBall(count: Int) {
             val depth = sd[i]
             var alpha = 0.38f + 0.62f * depth
             if (webW > 0.01f) alpha *= 1f - webW * (0.3f + 0.3f * sin(t * 2.4f - dots[i].y * 5f))
-            scope.drawCircle(lerp(FarColor, NearColor, depth), sr[i], androidx.compose.ui.geometry.Offset(sx[i], sy[i]), alpha = alpha)
+            scope.drawCircle(lerp(far, near, depth), sr[i], androidx.compose.ui.geometry.Offset(sx[i], sy[i]), alpha = alpha)
         }
     }
 
@@ -213,6 +233,5 @@ private class DotBall(count: Int) {
         const val WAVE_AMP = 0.26f
         const val TILT_X = 0.32f
         const val BALL_SCALE = 0.82f
-        const val DOT_RADIUS = 0.023f
     }
 }

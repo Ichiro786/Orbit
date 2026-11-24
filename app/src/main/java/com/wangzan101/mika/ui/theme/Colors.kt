@@ -172,15 +172,8 @@ fun accentTone(accent: ThemeAccent, dark: Boolean): Pair<Color, Color> = when (a
 /** 没有包在 [MikaTheme] 里时(比如界面测试)按浅色。 */
 val LocalMikaColors = staticCompositionLocalOf { LightColors }
 
-/** The in-app voice call page stays dark in both modes: Orbit's dark palette, with the call sphere lit in Orbit's accent. */
+/** The voice call sphere's default dot colours, from Orbit's accent; the call page itself follows the theme. */
 object CallColors {
-    val bg = DarkColors.bg
-    val surface = DarkColors.surface
-    val ink = DarkColors.ink
-    val ink2 = DarkColors.ink2
-    val ink3 = DarkColors.ink3
-    val ok = DarkColors.ok
-    val bad = DarkColors.bad
     /** Sphere dots nearest the viewer. */
     val sphereNear = lerp(DarkColors.accent, Color.White, 0.55f)
     /** Sphere dots at the back. */
