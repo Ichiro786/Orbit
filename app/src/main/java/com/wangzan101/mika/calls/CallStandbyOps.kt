@@ -1,0 +1,189 @@
+package com.wangzan101.mika.calls
+
+import android.app.KeyguardManager
+import android.os.PowerManager
+import android.os.UserManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.UUID
+import com.wangzan101.mika.calls.CallRuntime.Companion.STANDBY_START_MS
+
+// 电话运行时:后台待命前台服务与自动接听暂停
+/** Initial authorization comes only from this explicit action in the unlocked phone UI. */
+suspend fun CallRuntime.startBackgroundStandby(): CallActionResult = onMain {
+    val config = settings.state.value
+    if (!interactiveForeground() || !userUnlocked()) return@onMain fail("Unlock the phone and start background standby on the Calls page")
+    if (!CallStandbyPolicy.optedIn(config, userUnlocked())) return@onMain fail("Turn on auto-answer and finish call setup first")
+    autoAnswerBlocker(config)?.let { return@onMain fail(it) }
+    if (!CallStandbyService.notificationsAvailable(app, create = true)) return@onMain fail("Allow background standby notifications")
+    if (isIncomingStandbyRunning()) return@onMain ok("Background standby started")
+    if (standbyStarting) return@onMain fail("Android is starting background standby")
+    if (!settings.authorizeBackgroundStandby()) return@onMain fail("Could not save background answering authorization; try again")
+    if (!requestCallForegroundService(incoming = true)) return@onMain fail(standbyStartError ?: "Background standby did not start")
+    state.first { !it.backgroundStandbyStarting }
+    if (isIncomingStandbyRunning()) ok("Background standby started") else fail(standbyStartError ?: "Background standby did not start")
+}
+
+internal fun CallRuntime.requestCallForegroundService(incoming: Boolean): Boolean {
+    if (standbyStarting) return !incoming || standbyIncomingRequested
+    standbyIncomingRequested = incoming
+    standbyStarting = true
+    standbyStartError = null
+    val startId = UUID.randomUUID().toString()
+    standbyStartId = startId
+    publish()
+    if (runCatching {
+        val intent = CallStandbyService.startIntent(app, startId)
+        if (standbyService != null) app.startService(intent) else app.startForegroundService(intent)
+    }.getOrNull() == null) {
+        onStandbyStartFailed("Android did not allow background standby to start; retry in the app")
+        return false
+    }
+    // This deadline belongs to the runtime, even if the initiating screen is dismissed.
+    standbyStartTimeout = scope.launch {
+        delay(STANDBY_START_MS)
+        if (standbyStarting) {
+            standbyStartTimeout = null
+            onStandbyStartFailed("Android has not confirmed background standby started; try again")
+        }
+    }
+    return true
+}
+
+internal fun CallRuntime.isStandbyOptedIn(): Boolean = CallStandbyPolicy.optedIn(settings.state.value, userUnlocked())
+
+internal fun CallRuntime.hasAuthorizedIncomingStandby(): Boolean = isStandbyOptedIn() && settings.state.value.backgroundStandbyAuthorized
+
+internal fun CallRuntime.isIncomingStandbyRunning(): Boolean = standbyService?.stickyAutoAnswer == true && hasAuthorizedIncomingStandby()
+
+internal fun CallRuntime.hasOutgoingForegroundWork(): Boolean = CallStandbyPolicy.foregroundOutgoing(
+    userUnlocked(), settings.state.value.enabled, lockedDial != null, work?.direction,
+)
+
+internal fun CallRuntime.isStandbyStartRequested(requestId: String?): Boolean = standbyStarting && requestId != null && requestId == standbyStartId
+
+internal fun CallRuntime.isIncomingStandbyStartRequested(): Boolean = standbyIncomingRequested
+
+internal fun CallRuntime.onStandbyStarted(service: CallStandbyService) {
+    standbyStartTimeout?.cancel()
+    standbyStartTimeout = null
+    standbyService = service
+    standbyStarting = false
+    standbyIncomingRequested = false
+    standbyStartId = null
+    standbyStartError = null
+    standbyRunning.value = true
+    publish()
+}
+
+internal fun CallRuntime.onStandbyStartFailed(reason: String) {
+    standbyStartTimeout?.cancel()
+    standbyStartTimeout = null
+    standbyStarting = false
+    standbyIncomingRequested = false
+    standbyStartId = null
+    standbyStartError = reason
+    lockedDial?.let { finishLockedDial(it, "Background call service did not start; locked-screen dial not performed") }
+    publish()
+}
+
+internal fun CallRuntime.onStandbyStopped(service: CallStandbyService) {
+    if (standbyService !== service) return
+    standbyService = null
+    standbyRunning.value = false
+    lockedDial?.let { finishLockedDial(it, "Background call service stopped; locked-screen dial not performed") }
+    if (work?.let { (it.direction == CallDirection.OUTGOING) || (it.automatic && it.answerSent && !interactiveForeground()) } == true) {
+        cancelWork("Background call service stopped; the system is handling the call")
+    }
+    cancelPendingIfStandbyLost()
+    publish()
+}
+
+internal fun CallRuntime.stopBackgroundStandby() {
+    val running = standbyService != null
+    standbyStartTimeout?.cancel()
+    standbyStartTimeout = null
+    standbyStarting = false
+    standbyIncomingRequested = false
+    standbyStartId = null
+    standbyService = null
+    standbyRunning.value = false
+    // Android can crash the process if a startForegroundService request is stopped before
+    // it is acknowledged with startForeground. An in-flight request acknowledges then stops itself.
+    if (running) runCatching { app.stopService(CallStandbyService.startIntent(app)) }
+    cancelPendingIfStandbyLost()
+}
+
+internal fun CallRuntime.stopBackgroundStandbyIfUnneeded() {
+    if (!hasOutgoingForegroundWork() && (standbyService != null || standbyStarting) &&
+        !(hasAuthorizedIncomingStandby() && (standbyService?.stickyAutoAnswer == true || standbyIncomingRequested))) {
+        stopBackgroundStandby()
+    }
+}
+
+internal fun CallRuntime.cancelPendingIfStandbyLost() {
+    if (!canAutomaticallyAnswerHere() && work?.let { it.automatic && !it.answerSent && it.stopReason.value == null } == true) {
+        cancelWork("Background standby is unavailable; the system is handling this incoming call")
+    }
+}
+
+internal fun CallRuntime.userUnlocked(): Boolean =
+    runCatching { app.getSystemService(UserManager::class.java)?.isUserUnlocked == true }.getOrDefault(false)
+
+internal fun CallRuntime.interactiveForeground(): Boolean = runCatching {
+    CallStandbyPolicy.interactiveForeground(
+        visible = app.foreground.visible.value,
+        interactive = app.getSystemService(PowerManager::class.java)?.isInteractive == true,
+        keyguardShowing = app.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked != false,
+    )
+}.getOrDefault(false)
+
+internal fun CallRuntime.keyguardLocked(): Boolean =
+    runCatching { app.getSystemService(KeyguardManager::class.java)?.isDeviceLocked == true }.getOrDefault(false)
+
+internal fun CallRuntime.canAutomaticallyAnswerHere(): Boolean = CallStandbyPolicy.allowsAutomaticAnswer(
+    userUnlocked = userUnlocked(), interactiveForeground = interactiveForeground(), serviceRunning = isIncomingStandbyRunning(),
+    notificationsAllowed = standbyService != null && CallStandbyService.notificationsAvailable(app),
+)
+
+suspend fun CallRuntime.pauseAutoAnswer(minutes: Int): CallActionResult = onMain {
+    if (minutes !in 1..CallPolicy.MAX_AUTO_ANSWER_PAUSE_MINUTES) {
+        return@onMain fail("Pause time must be between 1 minute and 24 hours")
+    }
+    if (!settings.state.value.enabled || !settings.state.value.autoAnswer) {
+        return@onMain fail("Auto-answer is not turned on")
+    }
+    saveAutoPause(System.currentTimeMillis() + minutes * 60_000L)
+}
+
+suspend fun CallRuntime.resumeAutoAnswer(): CallActionResult = onMain { saveAutoPause(null) }
+
+internal suspend fun CallRuntime.saveAutoPause(until: Long?): CallActionResult {
+    if (autoPauseWriting) return fail("Auto-answer settings are being saved")
+    autoPauseWriting = true
+    if (until != null) {
+        // Existing calls handled by AI stay connected; a pending auto-answer is left alone.
+        if (work?.let { it.automatic && !it.answerSent } == true) {
+            cancelWork("Auto-answer paused; the system is handling this incoming call")
+        }
+        liveCalls().filter { it.phase == CallPhase.RINGING }.forEach { it.autoTried = true }
+    }
+    val saved = try {
+        withContext(NonCancellable + Dispatchers.IO) {
+            runCatching {
+                synchronized(settings) {
+                    settings.save(settings.state.value.copy(autoAnswerPausedUntilMs = until))
+                }
+            }.isSuccess
+        }
+    } finally {
+        autoPauseWriting = false
+        publish()
+    }
+    return if (!saved) fail("Could not save auto-answer pause settings")
+    else ok(if (until == null) "Auto-answer settings restored" else "Auto-answer paused")
+}
