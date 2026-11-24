@@ -35,7 +35,6 @@
     <string name="voice_key_hint_openai">Tempel kunci dari platform.openai.com</string>
     <string name="voice_key_remove">Hapus kunci</string>
     <string name="voice_model">Model</string>
-    <string name="voice_voice">Suara</string>
     <string name="voice_default">Default</string>
     <string name="voice_gemini_foot">Google tidak punya cara resmi bagi aplikasi lain untuk memakai paket Google AI Pro atau Ultra, jadi ini perlu API key dari Google AI Studio.</string>
     <string name="voice_openai_foot">Masuk dengan ChatGPT memungkinkan Orbit memakai paket Plus atau Pro-mu untuk chat, tetapi OpenAI hanya menyediakannya untuk teks, bukan suara langsung. Untuk memakai paketmu dalam panggilan, pilih Bawaan: suara tersambung lewat model yang kamu pakai untuk chat.</string>

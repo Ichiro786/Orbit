@@ -4,7 +4,7 @@ display: Instagram
 description: View public profiles, posts, Reels, search and hashtags
 domains: ["instagram.com"]
 aliases: ["Instagram", "IG", "照片墙"]
-apps: []
+apps: ["instagram"]
 open: instagram.com
 mode: desktop
 ---

@@ -4,6 +4,7 @@ import org.junit.Rule
 import com.wangzan101.mika.i18n.ChineseTexts
 import com.wangzan101.mika.chat.BranchOrigin
 import com.wangzan101.mika.chat.ConversationSummary
+import com.wangzan101.mika.core.usage.DeepSeekCost
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -18,12 +19,27 @@ class ChatCopyTest {
     @Test fun threeDistinctExamplesKeepWhatsappAndDropTheOldMikaOnes() {
         val examples = ChatCopy.examples
         assertEquals(3, examples.size)
-        assertEquals(3, examples.map { it.text }.filter { it.isNotBlank() }.toSet().size)
-        assertEquals(ChatCopy.ExampleKind.App, examples.first().kind)
-        assertTrue(examples.none { it.text.contains("wangzan101") })
-        assertTrue(examples.none { it.text.trim() in ChatCopy.retiredSeeds })
-        assertEquals(ChatCopy.examples.map { it.text }, ChatCopy.recommendationSeeds().map { it.first })
-        assertEquals(ChatCopy.examples.map { it.text }, ChatCopy.recommendationSeeds().map { it.second })
+        assertEquals(3, examples.map { it.prompt }.filter { it.isNotBlank() }.toSet().size)
+        assertEquals(ChatCopy.ExampleKind.GroupChat, examples.first().kind)
+        assertTrue(examples.none { it.prompt.contains("wangzan101") })
+        assertTrue(examples.none { it.prompt.trim() in ChatCopy.retiredSeeds })
+        // The short title goes on the card, the full prompt into the box: stored separately
+        assertEquals(ChatCopy.examples.map { it.title }, ChatCopy.recommendationSeeds().map { it.first })
+        assertEquals(ChatCopy.examples.map { it.prompt }, ChatCopy.recommendationSeeds().map { it.second })
+    }
+
+    /** The card icon follows the kind: only a prompt identical to a built-in example is recognised; your own tasks get the generic icon. */
+    @Test fun kindsOnlyMatchTheBuiltInExamples() {
+        val examples = ChatCopy.examples
+        examples.forEach { assertEquals(it.kind, ChatCopy.kindOf(it.prompt)) }
+        assertNull(ChatCopy.kindOf("打开设置，把字体调大"))
+        assertNull(ChatCopy.kindOf(examples.first().prompt + "，再顺手点个 watch"))
+    }
+
+    @Test fun taskCostShowsTwoDecimalPlaces() {
+        assertEquals("约 ¥1.20", ChatTokensCopy.cost(DeepSeekCost("1.2", "1.2")))
+        assertEquals("约 ¥0.00", ChatTokensCopy.cost(DeepSeekCost("0.001", "0.004")))
+        assertEquals("约 ¥0.01–¥0.02", ChatTokensCopy.cost(DeepSeekCost("0.005", "0.015")))
     }
 
     /** 分支标题:源标题后面加后缀,总长不超过 24 字;截的是源标题,后缀留着,emoji 不截半个。 */
@@ -56,7 +72,7 @@ class ChatCopyTest {
         assertEquals("a.pdf", ChatCopy.plainTitle("附件:/workspace/inbox/a.pdf(1 KB)"))
         assertEquals(ScreenCopy.TAG, ChatCopy.plainTitle("[[screen:s1]]"))
         // 在浏览器页上对着一页问的:页面说明不当标题
-        val paged = com.wangzan101.mika.core.cap.web.AttachedPage.compose(com.wangzan101.mika.core.cap.web.AttachedPage.Page("https://a.example/", "页"), "挑一个\n第二行")
+        val paged = com.wangzan101.mika.core.agent.AttachedPage.compose(com.wangzan101.mika.core.agent.AttachedPage.Page("https://a.example/", "页"), "挑一个\n第二行")
         assertEquals("挑一个", ChatCopy.plainTitle(paged))
     }
 
@@ -222,17 +238,6 @@ class ChatCopyTest {
         assertEquals("更早", archivePeriodLabel(ArchivePeriod.Earlier))
     }
 
-    /** 只有存过的、没在跑、没归档的对话能左滑归档;草稿和在跑任务的不行。 */
-    @Test fun onlyIdleSavedConversationsCanBeSwipedToArchive() {
-        fun row(id: String?, saved: Boolean = true, running: Boolean = false, archived: Boolean = false) =
-            DrawerConversation(id, "一", "", running = running, current = false, enabled = true, archived = archived, saved = saved)
-        assertTrue(canSwipeArchive(row("a")))
-        assertFalse(canSwipeArchive(row("a", running = true)))
-        assertFalse(canSwipeArchive(row("a", archived = true)))
-        assertFalse(canSwipeArchive(row("a", saved = false)))
-        assertFalse(canSwipeArchive(row(null)))
-    }
-
     @Test fun greetingFollowsTheTimeOfDay() {
         assertEquals("早上好", ChatCopy.greeting(7))
         assertEquals("中午好", ChatCopy.greeting(12))
@@ -275,13 +280,17 @@ class ChatCopyTest {
         assertEquals("继续说点什么…", ChatCopy.placeholder(ComposerMode.Idle, hasHistory = true))
         assertEquals("回答 Orbit 的问题", ChatCopy.placeholder(ComposerMode.Answer, hasHistory = true))
         assertEquals("补充或改要求…", ChatCopy.placeholder(ComposerMode.Busy, hasHistory = true))
-        assertEquals("写下下一件事…", ChatCopy.placeholder(ComposerMode.Busy, hasHistory = true, followUp = FollowUpMode.Queue))
     }
 
-    @Test fun followUpHintExplainsWhenItTakesEffect() {
-        assertEquals("下一步就按这句话调整", followUpHint(FollowUpMode.Steer, ExchangeStatus.Working))
-        assertEquals("任务暂停中，继续后生效", followUpHint(FollowUpMode.Steer, ExchangeStatus.Paused("等解锁")))
-        assertEquals("任务暂停中，继续后生效", followUpHint(FollowUpMode.Steer, ExchangeStatus.NeedsTakeover("login", "登录")))
-        assertEquals("当前任务结束后自动开始", followUpHint(FollowUpMode.Queue, ExchangeStatus.Working))
+
+    @Test fun sandboxCopyMarksProjectWorkspacesDistinctly() {
+        val projectWs = com.wangzan101.mika.cap.sandbox.WorkspaceUsage(
+            dirName = "p-proj1", conversationId = null, title = "Mika 开发", bytes = 1024L, busy = false, projectId = "proj1",
+        )
+        val chatWs = com.wangzan101.mika.cap.sandbox.WorkspaceUsage(
+            dirName = "c-chat1", conversationId = "chat1", title = "闲聊", bytes = 512L, busy = false, projectId = null,
+        )
+        assertEquals("项目 · Mika 开发", SandboxCopy.workspaceTitle(projectWs))
+        assertEquals("闲聊", SandboxCopy.workspaceTitle(chatWs))
     }
 }

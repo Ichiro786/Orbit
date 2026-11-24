@@ -46,7 +46,7 @@ class MemoryViewModelTest {
     @Test fun inferredMemoryShowsItWasMikasConclusion() = runTest {
         store.add(MemoryKind.fact, "用户常在张江路一带活动", emptyList(), said.copy(type = com.wangzan101.mika.core.memory.MemoryContext.INFERRED, quote = "你自己总结几条写进记忆")).getOrThrow()
         val vm = vm()
-        assertEquals("Mika 在 10 月 23 日按你的要求归纳:『你自己总结几条写进记忆』", vm.ui.value.rows.first { it.content == "用户常在张江路一带活动" }.source)
+        assertEquals("Orbit 在 10 月 23 日按你的要求归纳:『你自己总结几条写进记忆』", vm.ui.value.rows.first { it.content == "用户常在张江路一带活动" }.source)
         // 开关默认关,打开后存得住
         assertFalse(vm.ui.value.switches.inferMemories)
         vm.setSwitches { it.copy(inferMemories = true) }

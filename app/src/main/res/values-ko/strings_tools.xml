@@ -20,9 +20,12 @@
     <string name="tool_find_element">화면에서 찾기</string>
     <string name="tool_collect">여러 화면에서 수집</string>
     <string name="tool_phone_run">휴대전화 동작 여러 개</string>
+    <string name="tool_list_device_files">기기 파일 보기</string>
+    <string name="tool_copy_device_file">기기 파일 복사</string>
     <string name="tool_process_files">파일 다루기</string>
     <string name="tool_run_script">내장 스크립트 실행</string>
     <string name="tool_read_file">파일 읽기</string>
+    <string name="tool_view_image">이미지 보기</string>
     <string name="tool_write_file">파일 쓰기</string>
     <string name="tool_search_files">파일 검색</string>
     <string name="tool_export_file">파일 내보내기</string>
@@ -77,10 +80,16 @@
     <string name="tool_mika_login_site">사이트 로그인</string>
     <string name="tool_mika_confirm_login">로그인 확인</string>
     <string name="tool_mika_favorites">자주 쓰는 사이트</string>
+    <string name="tool_wechat_owner">내 WeChat으로 보내기</string>
     <string name="tool_schedule">작업 예약</string>
     <string name="tool_helper">도우미에게 요청</string>
     <string name="tool_profile">프로필 업데이트</string>
     <string name="tool_history">이전 메시지 읽기</string>
     <string name="tool_user_screen">화면 보기</string>
     <string name="tool_update_plan">계획 업데이트</string>
+    <string name="tool_do_each">항목마다 반복</string>
+    <string name="tool_notices_read">알림 읽기</string>
+    <string name="tool_sms_login">SMS 코드로 로그인</string>
+    <string name="tool_device_directory_hints">기기 폴더 메모 보기</string>
+    <string name="tool_device_directory_describe">폴더 메모 업데이트</string>
 </resources>

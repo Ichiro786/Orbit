@@ -73,6 +73,7 @@ import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaRadius
 import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaShapes
 
 /** 关于页上点开的底部面板。 */
 private enum class AboutSheet { Update, Changelog, Feedback, Group, Diagnostics }
@@ -98,6 +99,10 @@ fun AboutScreen(
     diagnostics: () -> String = { "" },
     autoUpdate: Boolean = false,
     onAutoUpdate: (Boolean) -> Unit = {},
+    mirrorEnabled: Boolean = false,
+    mirrorCount: Int = 0,
+    onMirrorEnabled: (Boolean) -> Unit = {},
+    onOpenMirrors: () -> Unit = {},
 ) {
     val c = MikaTheme.colors
     val context = LocalContext.current

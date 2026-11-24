@@ -35,7 +35,6 @@
     <string name="voice_key_hint_openai">platform.openai.com のキーを貼り付け</string>
     <string name="voice_key_remove">キーを削除</string>
     <string name="voice_model">モデル</string>
-    <string name="voice_voice">音声</string>
     <string name="voice_default">デフォルト</string>
     <string name="voice_gemini_foot">Google は他のアプリが Google AI Pro や Ultra のプランを使う公式の方法を用意していないため、Google AI Studio の API キーが必要です。</string>
     <string name="voice_openai_foot">ChatGPT でサインインすると、Orbit はチャットで Plus または Pro プランを使えますが、OpenAI が提供しているのはテキストのみで、ライブ音声には対応していません。通話でプランを使うには「内蔵」を選んでください。チャットで使っているモデルを通して話します。</string>

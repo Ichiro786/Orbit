@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="backup_title">پشتیبان‌گیری و داده‌ها</string>
+    <string name="backup_sub">همه‌چیز را در یک فایل ZIP صادر کنید، یا از یک فایل بازیابی کنید</string>
+    <string name="backup_warning_title">این نسخه پشتیبان رمزگذاری نشده است</string>
+    <string name="backup_warning_body">فایل ZIP شامل تمام اطلاعات محرمانه شماست: کلیدهای API، توکن‌های OAuth و اطلاعات ورود به سرویس‌ها. آن را خصوصی نگه دارید، به اشتراک نگذارید و پس از وارد کردن حذف کنید.</string>
+    <string name="backup_included_label">موارد شامل‌شده</string>
+    <string name="backup_included_body">ارائه‌دهنده‌ها و کلیدها، گفتگوها، شخصیت‌ها، مهارت‌ها، حافظه، گردش‌کارها، اجراهای وظیفه و تنظیمات.</string>
+    <string name="backup_excluded_body">شامل نمی‌شود: جفت‌سازی اشکال‌زدایی بی‌سیم (پس از وارد کردن دوباره جفت‌سازی کنید)، تنظیم سرویس دسترس‌پذیری (آن را در تنظیمات Android دوباره روشن کنید)، فضای کاری سندباکس و پیوست‌های کتابخانه فایل.</string>
+
     <string name="backup_group">پشتیبان‌گیری</string>
     <string name="backup_export">خروجی گرفتن از پشتیبان</string>
     <string name="backup_export_sub">گفتگوها و مهارت‌های شخصی خود را در یک فایل محافظت‌شده با رمز عبور ذخیره کنید.</string>
     <string name="backup_import">وارد کردن پشتیبان</string>
     <string name="backup_import_sub">گفتگوها را از یک فایل پشتیبان اضافه کنید. گفتگوهایی که از قبل روی این گوشی هستند هرگز جایگزین یا حذف نمی‌شوند.</string>
+    <string name="backup_exported">نسخه پشتیبان ذخیره شد: %1$d فایل.</string>
+    <string name="backup_exported_skipped">نسخه پشتیبان ذخیره شد: %1$d فایل. %2$d کلید رمزگشایی نشد و کنار گذاشته شد.</string>
     <string name="backup_note">کلیدهای API مدل‌ها، حافظه و فایل‌های ذخیره‌شده در بارگیری‌ها شامل پشتیبان نمی‌شوند.</string>
     <string name="backup_working">در حال انجام…</string>
     <string name="backup_export_dialog_title">از پشتیبان خود محافظت کنید</string>
@@ -19,10 +29,24 @@
     <string name="backup_export_failed">ذخیره پشتیبان ممکن نشد.</string>
     <string name="backup_import_done">وارد کردن تمام شد. فایل‌های جدید افزوده‌شده: %1$d. فایل‌های موجود نگه‌داشته‌شده: %2$d. فهرست گفتگوها به‌روز شد.</string>
     <string name="backup_import_failed">تکمیل وارد کردن پشتیبان ممکن نشد.</string>
+    <string name="backup_import_confirm_title">داده‌های فعلی جایگزین شود؟</string>
+    <string name="backup_import_confirm_body">این گوشی از قبل گفتگوها و ارائه‌دهنده‌هایی دارد. وارد کردن، آن‌ها را جایگزین می‌کند.</string>
+    <string name="backup_replace">جایگزینی همه</string>
+    <string name="backup_imported_title">نسخه پشتیبان بازیابی شد</string>
+    <string name="backup_imported_body">%1$d فایل بازیابی شد.</string>
+    <string name="backup_after_import_body">برای استفاده از داده‌های بازیابی‌شده، Orbit را ببندید و دوباره باز کنید. سپس اشکال‌زدایی بی‌سیم را دوباره جفت‌سازی کنید، سرویس دسترس‌پذیری را در تنظیمات Android دوباره روشن کنید و فایل ZIP نسخه پشتیبان را حذف کنید.</string>
+    <string name="backup_close_app">بستن Orbit</string>
+    <string name="backup_restart_note">پیش از حذف هر چیزی، ابتدا صادر کنید: تنها این نصب می‌تواند داده‌های شما را رمزگشایی کند.</string>
     <string name="backup_err_password">رمز عبور اشتباه است یا فایل آسیب دیده است.</string>
     <string name="backup_err_format">این یک فایل پشتیبان Orbit نیست.</string>
     <string name="backup_err_version">این پشتیبان با نسخه جدیدتری از Orbit ساخته شده است.</string>
     <string name="backup_err_unsafe">پشتیبان شامل مسیرهای فایل ناامن است و رد شد.</string>
     <string name="backup_err_too_large">پشتیبان برای وارد کردن بیش از حد بزرگ است.</string>
     <string name="backup_err_corrupt">فایل پشتیبان آسیب دیده یا ناقص است.</string>
+    <string name="backup_zip_export">صادر کردن نسخه پشتیبان</string>
+    <string name="backup_zip_export_sub">ذخیره یک فایل ZIP شامل همه داده‌های شما</string>
+    <string name="backup_zip_import">وارد کردن نسخه پشتیبان</string>
+    <string name="backup_zip_import_sub">بازیابی همه‌چیز از فایل ZIP نسخه پشتیبان</string>
+    <string name="backup_zip_export_failed">ذخیره نسخه پشتیبان ممکن نشد.</string>
+    <string name="backup_zip_import_failed">وارد کردن این نسخه پشتیبان ممکن نشد.</string>
 </resources>

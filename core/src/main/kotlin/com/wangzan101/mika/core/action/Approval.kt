@@ -60,9 +60,11 @@ sealed interface Approval {
  */
 object ApprovalPolicy {
     fun decide(risk: Risk, run: RunProvenance = RunProvenance()): Approval = when {
+        // 无人值守/不在手机上:付款、工具声明要问的、不可逆的都不做;只读、界面改动、对外但可撤销的照做
+        (run.attendance == Attendance.Unattended || run.origin != RunOrigin.Ui) &&
+            (risk.payment || risk.ask != null || risk.level == ActionRisk.Irreversible) -> Approval.Deny
         !risk.payment && risk.ask == null ->
             if (risk.confirm && run.origin == RunOrigin.Ui && run.attendance != Attendance.Unattended) Approval.Ask else Approval.Allow
-        run.attendance == Attendance.Unattended || run.origin != RunOrigin.Ui -> Approval.Deny
         else -> Approval.Ask
     }
 }

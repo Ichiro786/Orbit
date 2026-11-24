@@ -56,13 +56,13 @@ import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaSize
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
+import com.wangzan101.mika.ui.theme.MikaRadius
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.remember
 import com.wangzan101.mika.ui.theme.pressScale
 import com.wangzan101.mika.ui.theme.MikaSpace
-import com.wangzan101.mika.ui.theme.MikaRadius
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.animation.core.animateDpAsState
 import com.wangzan101.mika.ui.theme.motion
@@ -278,11 +278,12 @@ fun TopBar(
     titleIcon: (@Composable () -> Unit)? = null,
     centerTitle: Boolean = false,
     barHeight: Dp = MikaSize.TopBar,
+    titleModifier: Modifier = Modifier,
 ) {
     val c = MikaTheme.colors
     Box(Modifier.fillMaxWidth().pageBackground(background).windowInsetsPadding(WindowInsets.statusBars)) {
         val titleContent: @Composable () -> Unit = {
-            Column(Modifier.padding(horizontal = MikaSpace.S4), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.padding(horizontal = MikaSpace.S4).then(titleModifier), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (titleIcon == null) {
                     Text(title, style = MikaType.Title, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 } else {
@@ -333,7 +334,14 @@ fun HeaderPill(size: Dp = 44.dp) {
 
 /** 可选的胶囊(服务商、接口类型):34 高,白卡底;选中时深色实底、反色字。[small] 是行内的小号。 */
 @Composable
-fun SelectChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, small: Boolean = false) {
+fun SelectChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    small: Boolean = false,
+    enabled: Boolean = true,
+) {
     val c = MikaTheme.colors
     val shape = if (small) SmallChipShape else MikaShapes.Pill
     val press = remember { MutableInteractionSource() }
@@ -342,20 +350,25 @@ fun SelectChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: M
             .pressScale(press)
             .then(
                 when {
+                    selected && !enabled -> Modifier.background(c.ink.copy(alpha = 0.38f), shape)
                     selected -> Modifier.background(c.ink, shape)
                     small -> Modifier.background(c.fill, shape)
                     else -> Modifier.cardSurface(c, shape)
                 },
             )
             .clip(shape)
-            .selectable(selected, press, LocalIndication.current, role = Role.RadioButton, onClick = onClick)
+            .selectable(selected, press, LocalIndication.current, enabled = enabled, role = Role.RadioButton, onClick = onClick)
             .heightIn(min = if (small) 28.dp else 34.dp)
             .padding(horizontal = if (small) MikaSpace.S12 else MikaSpace.S16),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text, style = if (small) SmallChipText else ChipText, maxLines = 1, softWrap = false,
-            color = if (selected) c.bg else c.ink,
+            color = when {
+                selected -> c.bg
+                !enabled -> c.ink.copy(alpha = 0.38f)
+                else -> c.ink
+            },
         )
     }
 }

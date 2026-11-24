@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -75,7 +76,7 @@ internal fun LiveServiceRow(
     )
 }
 
-/** 「Fun-ASR实时语音识别」设置页上的三个分页:自建服务,百炼北京,百炼新加坡。 */
+/** 「千问实时语音识别」设置页上的三个分页:自建服务,百炼北京,百炼新加坡。 */
 enum class FunAsrTab { Local, Beijing, Singapore;
     val region: BailianRegion? get() = when (this) { Local -> null; Beijing -> BailianRegion.Beijing; Singapore -> BailianRegion.Singapore }
 
@@ -135,7 +136,7 @@ private fun LanguagePicker(selected: AsrLanguage, onSelect: (AsrLanguage) -> Uni
 }
 
 /**
- * 「Fun-ASR实时语音识别」的设置页:顶上三个分页并排——自建、百炼·北京、百炼·新加坡,各管各的设置。
+ * 「千问实时语音识别」的设置页:顶上三个分页并排——自建、百炼·北京、百炼·新加坡,各管各的设置。
  * 自建:填服务地址(只写「主机:端口」时按 ws、默认端口补全)。百炼:API Key(各地域一份,已存的不回填,留空沿用)和模型。
  * 「连接并使用」先连一次走一遍开场(不送音频),通了才存下并选用。
  */
@@ -176,6 +177,14 @@ private fun LocalFunAsr(savedUrl: String?, savedLanguage: AsrLanguage, probe: Li
     var language by remember { mutableStateOf(savedLanguage) }
     val url = FunAsrProtocol.normalize(address)
     Text(tr(R.string.speech_funasr_setup_hint), Modifier.padding(top = MikaSpace.S4, bottom = MikaSpace.S4), style = MikaType.Callout, color = c.ink2)
+    // How to deploy each model is in the repository docs; with no app that can open web pages openUri throws, so nothing happens then
+    val uri = LocalUriHandler.current
+    Text(
+        tr(R.string.speech_funasr_deploy_guide),
+        Modifier.clip(MikaShapes.Pill).clickable { runCatching { uri.openUri(FunAsrProtocol.DEPLOY_GUIDE) } }
+            .padding(vertical = MikaSpace.S4).testTag("speech-funasr-guide"),
+        style = MikaType.Callout, color = c.accent,
+    )
     GroupLabel(tr(R.string.speech_funasr_server))
     GroupCard {
         InputRow(

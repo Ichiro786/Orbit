@@ -20,9 +20,12 @@
     <string name="tool_find_element">Cari di layar</string>
     <string name="tool_collect">Kumpulkan dari beberapa layar</string>
     <string name="tool_phone_run">Beberapa tindakan ponsel</string>
+    <string name="tool_list_device_files">Jelajahi berkas perangkat</string>
+    <string name="tool_copy_device_file">Salin berkas perangkat</string>
     <string name="tool_process_files">Olah berkas</string>
     <string name="tool_run_script">Jalankan skrip bawaan</string>
     <string name="tool_read_file">Baca berkas</string>
+    <string name="tool_view_image">Lihat gambar</string>
     <string name="tool_write_file">Tulis berkas</string>
     <string name="tool_search_files">Cari berkas</string>
     <string name="tool_export_file">Ekspor berkas</string>
@@ -77,10 +80,16 @@
     <string name="tool_mika_login_site">Masuk ke situs</string>
     <string name="tool_mika_confirm_login">Konfirmasi login</string>
     <string name="tool_mika_favorites">Situs sering dipakai</string>
+    <string name="tool_wechat_owner">Kirim ke WeChat saya</string>
     <string name="tool_schedule">Jadwalkan tugas</string>
     <string name="tool_helper">Minta bantuan asisten</string>
     <string name="tool_profile">Perbarui profil Anda</string>
     <string name="tool_history">Baca pesan sebelumnya</string>
     <string name="tool_user_screen">Lihat layar Anda</string>
     <string name="tool_update_plan">Perbarui rencana</string>
+    <string name="tool_do_each">Ulangi untuk setiap item</string>
+    <string name="tool_notices_read">Baca notifikasi</string>
+    <string name="tool_sms_login">Masuk dengan kode SMS</string>
+    <string name="tool_device_directory_hints">Lihat catatan folder perangkat</string>
+    <string name="tool_device_directory_describe">Perbarui catatan folder</string>
 </resources>

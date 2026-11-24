@@ -1,5 +1,9 @@
 package com.wangzan101.mika.calls
 
+import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -23,22 +27,28 @@ internal class CallPcmBridge(
     private val interruptPlayback: suspend () -> Boolean,
 ) {
     suspend fun run(
-        session: VolcRealtimeSession,
+        session: CallRealtimeSession,
         greeting: String,
         counters: CallMediaCounters?,
         onTranscript: (String, String) -> Unit,
         onFinalTranscript: (String, String) -> Unit = { _, _ -> },
+        playedOutputFrames: suspend () -> Long = { 0L },
         awaitFarewellDrain: suspend (CallFarewellFence) -> Boolean = { false },
         commitFarewell: () -> Boolean = { false },
+        sendDtmf: suspend (String) -> CallDtmfResult = { CallDtmfResult.rejected("unavailable", it.length) },
+        onStage: (CallVoiceStage) -> Unit = {},
     ): Unit = coroutineScope {
+        var stage = CallVoiceStage.Listening
         val playbackQueue = CallPlaybackQueue()
         val writerLock = Mutex()
         val assistantText = StringBuilder()
         val farewell = CallFarewellPlayback()
         val finished = CompletableDeferred<Unit>()
+        var toolJob: Job? = null
         var farewellWaiter: Job? = null
         fun cancelFarewellWaiter() { farewellWaiter?.cancel(); farewellWaiter = null }
         fun checkFarewell() {
+            if (toolJob?.isActive == true) return
             val fence = farewell.takeFence() ?: return
             farewellWaiter = launch {
                 if (awaitFarewellDrain(fence) && commitDrainedFarewell(commitFarewell)) finished.complete(Unit)
@@ -72,10 +82,11 @@ internal class CallPcmBridge(
         }
         try {
             if (!session.setMuted(false) || (greeting.isNotBlank() && !session.sendGreeting(greeting))) {
-                throw CallMediaFailure("Volcengine did not accept the greeting for this call")
+                throw CallMediaFailure("The voice service did not accept the greeting for this call")
             }
             val input = launch(Dispatchers.IO) {
-                val frame = ByteArray(VolcRealtimeClient.INPUT_CHUNK_BYTES)
+                val inputPacer = CallInputPacer(session.inputChunkBytes, session.inputSampleRate)
+                val frame = ByteArray(session.inputChunkBytes)
                 var position = 0
                 while (true) {
                     val count = callPipeIo { capture.read(frame, position, frame.size - position) }
@@ -83,7 +94,7 @@ internal class CallPcmBridge(
                     if (count == 0) continue
                     position += count
                     if (position == frame.size) {
-                        if (!session.sendPcm16(frame)) throw CallMediaFailure("Volcengine audio input was interrupted")
+                        if (!inputPacer.send { session.sendPcm16(frame) }) throw CallMediaFailure("Voice service audio input was interrupted")
                         counters?.inputAccepted(frame, System.nanoTime())
                         position = 0
                     }
@@ -93,6 +104,7 @@ internal class CallPcmBridge(
                 try {
                     session.events.collect { event ->
                         counters?.eventReceived(event)
+                        CallVoiceStage.after(stage, event).takeIf { it != stage }?.let { stage = it; onStage(it) }
                         when (event) {
                             is VolcRealtimeEvent.Audio -> {
                                 val queuedBytes = playbackQueue.offer(event.pcm)
@@ -109,6 +121,8 @@ internal class CallPcmBridge(
                                 farewell.cancelCandidate()
                                 if (farewell.hasPlaybackSinceFlush) {
                                     playbackQueue.invalidate()
+                                    val truncation = session.playbackTruncation?.takeIf { it.hasAudio }
+                                    val heardFrames = if (truncation != null) playedOutputFrames() else 0L
                                     // First release any writer blocked on a full pipe. Flush again under
                                     // the writer lock to remove the last chunk that raced the first flush.
                                     val cleared = interruptPlayback() && withTimeoutOrNull(750) {
@@ -116,18 +130,21 @@ internal class CallPcmBridge(
                                     } == true
                                     if (!cleared) throw CallMediaFailure("Call audio could not be stopped in time; handed back to the system")
                                     farewell.afterPairedFlush()
+                                    if (truncation?.interrupt(heardFrames) == false) {
+                                        throw CallMediaFailure("无法同步已播放的电话音频，已交还系统")
+                                    }
                                 }
                                 // Some providers report a second cancellation after user speech starts.
                                 // Without newly accepted PCM, another flush would only reset the route.
                                 flushAssistantText()
                             }
                             is VolcRealtimeEvent.UserTranscript -> {
-                                cancelFarewellWaiter()
+                                if (event.isCurrentTurn) cancelFarewellWaiter()
                                 if (event.isFinal) {
-                                    farewell.callerFinal(event.text, event.isCompleteFinal)
+                                    if (event.isCurrentTurn) farewell.callerFinal(event.text, event.isCompleteFinal && !event.hasUnresolvedPriorTurn)
                                     onTranscript("caller", event.text)
                                     onFinalTranscript("caller", event.text)
-                                } else farewell.cancelCandidate()
+                                } else if (event.isCurrentTurn) farewell.cancelCandidate()
                             }
                             VolcRealtimeEvent.AssistantAudioStarted -> {
                                 cancelFarewellWaiter()
@@ -146,12 +163,43 @@ internal class CallPcmBridge(
                                 flushAssistantText(completed = true)
                                 checkFarewell()
                             }
+                            is VolcRealtimeEvent.FunctionCall -> {
+                                // Tool execution must not block the microphone or incoming audio/events.
+                                // A function request invalidates any pending natural-hangup candidate.
+                                cancelFarewellWaiter()
+                                farewell.cancelCandidate()
+                                val digits = event.arguments["digits"]?.jsonPrimitive?.content.orEmpty()
+                                fun reply(result: CallDtmfResult) {
+                                    if (!session.sendToolResult(event.callId, buildJsonObject {
+                                        put("status", result.status)
+                                        put("sent_digits", result.sentDigits)
+                                        put("requested_digits", result.requestedDigits)
+                                        put("remote_confirmed", false)
+                                        put("next", "Wait for the next phone prompt; never retry uncertain or partial input automatically.")
+                                    })) throw CallMediaFailure("电话按键结果无法回传，已交还系统")
+                                }
+                                if (event.name != "send_dtmf" || digits.isEmpty() || digits.length > 32 ||
+                                    digits.any { it !in "0123456789*#" }) {
+                                    reply(CallDtmfResult.rejected("invalid_digits"))
+                                } else if (toolJob?.isActive == true) {
+                                    reply(CallDtmfResult.rejected("busy", digits.length))
+                                } else {
+                                    toolJob = launch {
+                                        val result = try { sendDtmf(digits) }
+                                        catch (cancelled: CancellationException) { throw cancelled }
+                                        catch (_: Exception) { CallDtmfResult.rejected("execution_uncertain", digits.length) }
+                                        // No raw entered identifiers are copied into transcripts or diagnostics.
+                                        reply(result)
+                                        farewell.cancelCandidate()
+                                    }
+                                }
+                            }
                             is VolcRealtimeEvent.Failed -> throw event.error
-                            VolcRealtimeEvent.Closed -> throw CallMediaFailure("Volcengine voice session ended; the system is handling the call")
+                            VolcRealtimeEvent.Closed -> throw CallMediaFailure("The realtime voice session ended; the system is handling the call")
                             else -> Unit
                         }
                     }
-                    throw CallMediaFailure("Volcengine voice connection dropped; the system is handling the call")
+                    throw CallMediaFailure("The realtime voice connection dropped; the system is handling the call")
                 } finally {
                     input.cancel()
                     flushAssistantText()
@@ -163,6 +211,7 @@ internal class CallPcmBridge(
                 eventReader.cancelAndJoin()
             } finally {
                 cancelFarewellWaiter()
+                toolJob?.cancel()
                 eventReader.cancel()
             }
         } finally {
@@ -254,8 +303,10 @@ internal class CallPlaybackQueue(capacityBytes: Int = MAX_PENDING_BYTES) {
     companion object {
         private const val BYTES_PER_SECOND = VolcRealtimeClient.OUTPUT_SAMPLE_RATE * 2
         const val WRITE_BYTES = BYTES_PER_SECOND / 50
-        // Covers short responses delivered faster than playback without an unbounded audio delay.
-        const val MAX_PENDING_BYTES = BYTES_PER_SECOND * 8
+        // 云端按 24kHz 实时生成，播放必须跟上。个别手机(见 #695)的电话 AudioTrack 会反复死/重建、
+        // 播放线程欠载，消费阶段性落后于生成；8 秒太小，会把这可恢复的设备抖动升级成「积压超限」。
+        // 放宽到 20 秒吸收累计缺口，同时保留硬上限：真卡死仍会交还系统，不会让音频无限延迟。
+        const val MAX_PENDING_BYTES = BYTES_PER_SECOND * 20
     }
 }
 

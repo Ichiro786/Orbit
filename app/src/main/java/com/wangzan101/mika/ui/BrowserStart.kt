@@ -238,7 +238,7 @@ private fun BigSearchField(value: String, onChange: (String) -> Unit, onGo: () -
     }
 }
 
-private val BigText = MikaType.Body.copy(fontSize = 16.sp)
+private val BigText = MikaType.Body
 
 @Composable
 private fun Caption(text: String) {

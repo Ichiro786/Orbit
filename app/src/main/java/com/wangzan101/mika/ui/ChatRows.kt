@@ -11,7 +11,7 @@ import com.wangzan101.mika.task.SteerState
 internal fun chatItemKeys(
     exchanges: List<Exchange>,
     kept: KeptPage?,
-    phoneSetupNeeded: Boolean,
+    phoneSetupRow: Int?,
     hasBlocked: Boolean,
     /** The last exchange is operating the phone in the background (it then always shows its working block). */
     operatingPhone: Boolean = false,
@@ -37,7 +37,7 @@ internal fun chatItemKeys(
         if (ex.files.isNotEmpty()) add("f$index")
         if (ex.runId != null && (ex.memoryNotes.isNotEmpty() || ex.skillNotes.isNotEmpty())) add("m$index")
     }
-    if (phoneSetupNeeded && exchanges.isNotEmpty()) add("phone-setup")
+    if (phoneSetupRow != null && exchanges.isNotEmpty()) add("phone-setup")
     if (hasBlocked) add("blocked")
 }
 
@@ -56,7 +56,8 @@ internal fun statusRows(ex: Exchange, backgroundNote: Boolean): StatusRows {
     val answering = ex.status == ExchangeStatus.Working && hasDraft
     val onlyThinking = ex.status == ExchangeStatus.Working && ex.waitingForModel && ex.steps.isEmpty() && !backgroundNote && !hasDraft
     return StatusRows(
-        work = if (active) !answering && !onlyThinking else ex.steps.isNotEmpty() || ex.runId != null,
+        // A notice turn (written straight into the chat by proactive suggestions) has no run to open
+        work = if (active) !answering && !onlyThinking else ex.steps.isNotEmpty() || (ex.runId != null && !ex.runId.startsWith("notice:")),
         thinking = onlyThinking,
         typing = hasDraft && active && ex.waitingForModel,
     )
@@ -69,10 +70,10 @@ internal fun statusRows(ex: Exchange, backgroundNote: Boolean): StatusRows {
 internal fun chatItemCount(
     exchanges: List<Exchange>,
     kept: KeptPage?,
-    phoneSetupNeeded: Boolean,
+    phoneSetupRow: Int?,
     hasBlocked: Boolean,
     operatingPhone: Boolean = false,
-): Int = chatItemKeys(exchanges, kept, phoneSetupNeeded, hasBlocked, operatingPhone).size
+): Int = chatItemKeys(exchanges, kept, phoneSetupRow, hasBlocked, operatingPhone).size
 
 /** 目标消息在 [chatItemKeys] 里的 key;轮次或消息已经不在了时返回 null。 */
 internal fun chatTargetKey(exchanges: List<Exchange>, target: ChatTarget): String? {
@@ -139,3 +140,14 @@ internal fun unreadSince(seen: Int, now: Int): Int = (now - seen).coerceAtLeast(
 
 /** The count shown on the jump-to-latest badge: the number itself up to nine, then "9+". */
 internal fun unreadBadge(unread: Int): String = if (unread > 9) "9+" else unread.toString()
+
+/**
+ * Where the "set up phone control" line goes: after the turn that needed the phone ([PhoneSetupPrompt.Need.runId]),
+ * -1 at the end when that turn is not found, null when this conversation needs no such line. Orbit draws it at the end.
+ */
+internal fun phoneSetupRow(need: com.wangzan101.mika.cap.phone.setup.PhoneSetupPrompt.Need?, conversationId: String?, exchanges: List<Exchange>): Int? {
+    if (need == null || exchanges.isEmpty()) return null
+    if (need.conversationId != null && need.conversationId != conversationId) return null
+    val match = need.runId?.let { rid -> exchanges.indexOfFirst { it.runId == rid } } ?: -1
+    return if (match >= 0) match else -1
+}

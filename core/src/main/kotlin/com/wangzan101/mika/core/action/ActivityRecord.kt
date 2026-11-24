@@ -38,7 +38,8 @@ internal object ActivityRecord {
                 RunEvent.clip(Redactor.text(com.wangzan101.mika.core.general.UpdatePlan.encode(steps))),
             )
         }
-        val target = RunEvent.placeLabel(exec.place)
+        // 读通知时筛的那段字(人名、会话名)不当作对象记下来
+        val target = if (verb == Verb.NoticesRead) null else RunEvent.placeLabel(exec.place)
             ?: targetKeys.firstNotNullOfOrNull { (args[it] as? JsonPrimitive)?.contentOrNull?.takeIf(String::isNotBlank) }
         val content = exec.content
         val failed = content["ok"] == JsonPrimitive(false)
@@ -54,6 +55,7 @@ internal object ActivityRecord {
             exec.observations.map { it.id }.filter { it > 0 }.distinct(), source, callId,
             exec.observations.lastOrNull { !it.title.isNullOrBlank() }?.title?.let { RunEvent.clip(Redactor.text(it)) },
             failed, outward,
+            mcpConnector = (exec.record["mcpConnector"] as? JsonPrimitive)?.contentOrNull?.let { RunEvent.clip(Redactor.text(it)) },
         )
     }
 }

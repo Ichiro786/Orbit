@@ -66,15 +66,15 @@ class ChatRecommendationTest {
 
     @Test fun emptyDraftIsPrefilledDirectly() {
         show()
-        val recommendation = ChatCopy.examples.first().text
-        compose.onNodeWithText(recommendation).performClick()
-        compose.onNodeWithTag("composer-field").assertTextEquals(recommendation)
+        val recommendation = ChatCopy.examples.first()
+        compose.onNodeWithText(recommendation.title).performClick()
+        compose.onNodeWithTag("composer-field").assertTextEquals(recommendation.prompt)
         compose.onNodeWithText("替换当前草稿？").assertDoesNotExist()
     }
 
     @Test fun remainingRecommendationsCanBeExpandedAndPrefilled() {
         show()
-        val recommendation = ChatCopy.examples.last().text
+        val recommendation = ChatCopy.examples.last().prompt
         compose.onNodeWithText(recommendation).assertDoesNotExist()
         compose.onNodeWithText("更多").performClick()
         compose.onNodeWithText(recommendation).performScrollTo().performClick()
@@ -84,17 +84,17 @@ class ChatRecommendationTest {
     @Test fun nonemptyDraftIsReplacedOnlyAfterConfirmation() {
         show()
         val original = "已经写好、还没发送的长草稿"
-        val recommendation = ChatCopy.examples.first().text
+        val recommendation = ChatCopy.examples.first()
         compose.onNodeWithTag("composer-field").performTextInput(original)
 
-        compose.onNodeWithText(recommendation).performClick()
+        compose.onNodeWithText(recommendation.title).performClick()
         compose.onNodeWithText("替换当前草稿？").assertExists()
         compose.onNodeWithTag("composer-field").assertTextEquals(original)
         compose.onNodeWithText("取消").performClick()
         compose.onNodeWithTag("composer-field").assertTextEquals(original)
 
-        compose.onNodeWithText(recommendation).performClick()
+        compose.onNodeWithText(recommendation.title).performClick()
         compose.onNodeWithTag("confirm-replace-draft").performClick()
-        compose.onNodeWithTag("composer-field").assertTextEquals(recommendation)
+        compose.onNodeWithTag("composer-field").assertTextEquals(recommendation.prompt)
     }
 }

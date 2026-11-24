@@ -32,6 +32,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.ListRow
+import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.components.MikaSwitch
@@ -71,6 +72,7 @@ object RecoveryCopy {
     val NEED_SETUP: String get() = tr(R.string.rec_need_setup)
     val FAILED: String get() = tr(R.string.rec_failed)
     val WORKING: String get() = tr(R.string.rec_working)
+    val LEARN: String get() = tr(R.string.rec_learn_what)
 
     /** 开关拨动后的一行反馈;成功时不多说。 */
     fun result(r: PermissionResult): String? = when (r) {
@@ -93,6 +95,7 @@ object RecoveryCopy {
     ): String? = when {
         !consent.wants(c) -> null
         restart == HelperRestart.UsbCommand && c in NEEDS_PAIRING -> tr(R.string.rec_needs_pairing)
+        restart == HelperRestart.Shizuku && c in NEEDS_PAIRING -> tr(R.string.rec_shizuku_no_wireless)
         consent.isApplied(c) -> null
         !paired -> NEED_SETUP
         c in autoFailed -> FAILED
@@ -175,21 +178,27 @@ fun RecoverySection(
     restartNote: String? = null,
     autoOnNote: String? = null,
 ) {
+    var showExplain by remember { mutableStateOf(false) }
     GroupCard {
         RecoveryCapability.entries.forEachIndexed { i, cap ->
             val copy = RecoveryCopy.switch(cap)
             val on = consent.wants(cap)
             val icon = iconOf(cap)
-            ListRow(icon, copy.title, if (busy == cap) RecoveryCopy.WORKING else copy.subtitle, first = i == 0) {
+            ListRow(icon, copy.title, if (busy == cap) RecoveryCopy.WORKING else null, first = i == 0) {
                 MikaSwitch(on, { want -> onToggle(cap, want) }, Modifier.testTag("recovery-${cap.name}"), enabled = busy == null)
             }
-            Note(copy.explain, MikaTheme.colors.ink3)
             notes[cap]?.let { Note(it, MikaTheme.colors.bad) }
             if (cap == RecoveryCapability.Accessibility) restartNote?.let { Note(it, MikaTheme.colors.ink3) }
             if (cap == RecoveryCapability.RestoreAfterReboot && consent.isApplied(cap)) {
                 RecoveryCopy.lastRestore(lastRestore)?.let { Note(it, MikaTheme.colors.warn) }
             }
             if (cap == RecoveryCapability.AutoWirelessDebugging && consent.wants(cap)) autoOnNote?.let { Note(it, MikaTheme.colors.warn) }
+        }
+        ListRow(MikaIcons.Info, RecoveryCopy.LEARN, onClick = { showExplain = !showExplain }) {
+            RowChevron()
+        }
+        if (showExplain) {
+            RecoveryCapability.entries.forEach { Note(RecoveryCopy.switch(it).explain, MikaTheme.colors.ink3) }
         }
     }
 }

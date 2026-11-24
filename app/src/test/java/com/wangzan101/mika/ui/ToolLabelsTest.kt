@@ -53,5 +53,7 @@ class ToolLabelsTest {
         assertEquals("Open web page", labels.label("browser_navigate"))
         assertEquals("Brand new thing", labels.label("phone_brand_new_thing"))
         assertEquals("Mystery tool", labels.label("mystery_tool"))
+        assertEquals("Browse device files", labels.label("list_device_files"))
+        assertEquals("Copy device file", labels.label("copy_device_file"))
     }
 }

@@ -54,6 +54,8 @@ internal class ToolConfig(
     val saveScreenshot: (suspend (String, ByteArray) -> String)? = null,
     /** 跨会话任务摘要;给了才提供 task_memory_search / task_memory_timeline / task_memory_step。 */
     val taskMemory: com.wangzan101.mika.core.memory.TaskMemoryStore? = null,
+    /** 这两天的通知原文和存着的各天、各周、各月的归纳(主动能力攒下的);给了才提供 notices_read。 */
+    val notices: com.wangzan101.mika.core.proactive.NoticeSource? = null,
 )
 
 /** 一个任务里按规矩不收的记忆写入,到这么多条为止不计入连续失败;再多就照常计(见 [ToolContext.noteMemoryRefusal])。 */
@@ -86,6 +88,10 @@ internal class ToolContext(
     var appOpened = false
     /** 本次调用的编号;页面脚本里的动作按它编号。 */
     var callId = ""
+    /** 这次调用走到了哪个外部 MCP 连接器(配置里的名字);只在分发进入 MCP 操作期间非空,进运行记录。 */
+    var mcpConnector: String? = null
+    /** MCP 调用开始时通知一次(界面把任务标成「正在调用 X MCP」);返回的闭包在调用结束时收回。 */
+    var onMcpCallStarted: ((String) -> (() -> Unit))? = null
     /** 自己不动界面的工具(页面脚本)里的动作经它回到执行入口;只读调用、测试里不给时里面的动作一律不做。 */
     var sub: SubActions? = null
     /** 自身工具的当次同意;由 AgentLoop 把等用户回答的那条路接进来,测试里换成假实现。 */

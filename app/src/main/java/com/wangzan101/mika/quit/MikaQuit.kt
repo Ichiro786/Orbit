@@ -42,6 +42,8 @@ object MikaQuit {
         runCatching { TriggerRuntime.suspendAlarms(app) }
         runCatching { RuntimePreparer.stop(app) }
         runCatching { app.whatsapp.stop() }
+        // Proactive suggestions on: stop reading notifications so the system does not restart the process for the listener
+        runCatching { if (FeatureFlags.get(app).proactive()) app.proactive.pause() }
         runCatching { app.mcp.stopServer() }
         runCatching { app.chatGptSignIn.cancel() }
         runCatching { app.stopService(Intent(app, TaskService::class.java)) }

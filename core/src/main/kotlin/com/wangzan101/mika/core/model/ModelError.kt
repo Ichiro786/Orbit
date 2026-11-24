@@ -4,11 +4,25 @@ import com.wangzan101.mika.core.net.ProxyFailure
 
 sealed class ModelError(message: String, cause: Throwable? = null) : Exception(message, cause) {
     class Auth : ModelError("The API key is invalid or lacks permission")
+    /**
+     * 请求头的值含有 OkHttp 拒绝的字符(换行、其它控制字符、非 ASCII)。在调用 `header()` 之前抛出,
+     * 避免构造 Request 时 [IllegalArgumentException] 把进程打掉。消息里不带头的原文,免得把 Key 打进日志。
+     * [header] 只是头的名字。
+     */
+    class IllegalHeader(val header: String) : ModelError("A request header contains characters that cannot be used")
     class QuotaExceeded : ModelError("Quota used up")
     /** 本任务的已报告用量达到预算；不再发起任何收尾或重试请求。 */
     class TaskBudgetExceeded(val limit: Long, val used: Long) : ModelError("This task's token budget is used up")
     /** 这家服务商今天在本地已报告的用量达到预算；[providerName] 只用于给用户说明是哪一家。 */
-    class DailyBudgetExceeded(val providerName: String, val limit: Long, val used: Long) : ModelError("The provider's token budget for today is used up")
+    class DailyBudgetExceeded(
+        val providerName: String, val limit: Long, val used: Long, val providerId: String? = null,
+    ) : ModelError("The provider's token budget for today is used up")
+    /**
+     * 主动能力今天(本地日历日,各服务商合计)的已报告用量达到它自己的预算;不发请求。
+     * [byCalls] 为真时到的是请求次数的上限,[limit]、[used] 是次数;否则是 Token。
+     * 只会出现在主动能力的后台调用里,调用方应安静停下,不当作用户任务的失败去提示。见 [com.wangzan101.mika.core.usage.ProactiveBudget]。
+     */
+    class ProactiveBudgetExceeded(val limit: Long, val used: Long, val byCalls: Boolean = false) : ModelError("Proactive suggestions' budget for today is used up")
     class RateLimited(val retryAfterMs: Long?) : ModelError("Too many requests; try again later")
     class ContextTooLong : ModelError("The conversation exceeds the model's context length")
     /**
@@ -43,15 +57,19 @@ sealed class ModelError(message: String, cause: Throwable? = null) : Exception(m
      * 回复不完整、不能用,重发同一个请求通常就好;和接口配置无关。
      */
     class StreamCut : ModelError("The reply was cut off when the connection dropped")
-    class Server(val status: Int) : ModelError("Model service error (HTTP $status)")
+    /** [detail] 保住服务商的报错原话:分类归 Server 走切换,原话给连接探测等诊断场景看(MK-1 第 2 批)。 */
+    class Server(val status: Int, val detail: String? = null) : ModelError(
+        "Model service error (HTTP $status)" + (detail?.takeIf { it.isNotBlank() }?.let { ": " + it.take(200) } ?: ""),
+    )
     class ContentRefused : ModelError("The model refused to process this content")
     /** 服务端明确拒绝思考强度参数:保留服务端原话,引导改档位,不能误报成地址或接口错误。 */
     class ReasoningEffortRejected(val detail: String) : ModelError("The model does not accept the selected reasoning effort")
+    class ServiceTierRejected(val detail: String) : ModelError("OpenAI does not accept the selected response speed")
     /** ChatGPT 套餐给其他 App 用的额度到了上限:不重试,等额度恢复或换模型。 */
     class ChatGptLimitReached : ModelError("ChatGPT quota used up")
     /** 这个 ChatGPT 账号不能在其他 App 里用套餐额度(套餐不符、地区或账号策略不允许):不重试。 */
     class ChatGptNotEligible(val detail: String = "") :
-        ModelError(if (detail.isEmpty()) "This account cannot use its ChatGPT quota in other apps" else "这个账号不能在其他 App 里用 ChatGPT 额度: $detail")
+        ModelError(if (detail.isEmpty()) "This account cannot use its ChatGPT quota in other apps" else "This account cannot use its ChatGPT quota in other apps: $detail")
     /** 登录已失效(换新令牌被拒,或用户在账号里断开了这个 App),要重新登录。[account] 是哪一家的登录(界面上的名字)。 */
     class SignInExpired(val account: String = "ChatGPT") : ModelError("Sign-in expired; please sign in again")
     /**
@@ -61,5 +79,29 @@ sealed class ModelError(message: String, cause: Throwable? = null) : Exception(m
     class AccountPlanNotAllowed(val account: String, val detail: String = "") :
         ModelError("Your $account subscription tier cannot use this endpoint")
     class BadResponse(detail: String = "", cause: Throwable? = null) :
-        ModelError(if (detail.isEmpty()) "The model returned content that could not be parsed" else "模型返回了无法解析的内容: $detail", cause)
+        ModelError(if (detail.isEmpty()) "The model returned content that could not be parsed" else "The model returned content that could not be parsed: $detail", cause)
+    /**
+     * 主模型链整条都试过、全部失败(MK-1 第 2 批):[primary] 是主模型最初的错误,失败说法以它为主;
+     * [entries] 按尝试顺序记每个模型(名字、它犯的错误),主模型自己是第一条。任务/每日预算错误不包这层,原样交出。
+     */
+    class ChainFailed(val primary: ModelError, val entries: List<Pair<String, ModelError>>) :
+        ModelError(primary.message.orEmpty())
+
+    /** 模型组里没有可用成员:全部停用、能力不符、冷却或限额。[detail] 说明是哪一类,不含内容。 */
+    class GroupUnavailable(val group: String = "", val detail: String = "") :
+        ModelError(if (detail.isEmpty()) "Model group \"$group\" has no usable model" else "Model group \"$group\" has no usable model: $detail")
+
+    /** 模型组里成员都达到限额。 */
+    class GroupExhausted(val group: String = "", val detail: String = "") :
+        ModelError(if (detail.isEmpty()) "Every model in group \"$group\" reached its limit" else "Every model in group \"$group\" reached its limit: $detail")
+}
+
+/** 错误分类的共用判断:哪些错误是一时的,过一会儿再发同一个请求可能就好。 */
+object ModelErrors {
+    fun transient(e: Throwable): Boolean = when (e) {
+        is ModelError.RateLimited, is ModelError.Network, is ModelError.StreamCut -> true
+        is ModelError.Server -> e.status in 500..599
+        is ModelError.Proxy -> e.failure == ProxyFailure.Unreachable
+        else -> false
+    }
 }

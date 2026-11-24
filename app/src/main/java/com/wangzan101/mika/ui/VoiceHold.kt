@@ -91,6 +91,8 @@ import com.wangzan101.mika.ui.components.floatShadow
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
+import com.wangzan101.mika.ui.theme.MikaRadius
+import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.voice.HoldToTalk
 import com.wangzan101.mika.voice.SpeechEngineSpec
 import com.wangzan101.mika.voice.SpeechFailure
@@ -104,7 +106,6 @@ import com.wangzan101.mika.ui.theme.MikaMotion
 import com.wangzan101.mika.ui.theme.rememberMikaPulse
 import androidx.compose.ui.graphics.TransformOrigin
 import com.wangzan101.mika.ui.theme.MikaSpace
-import com.wangzan101.mika.ui.theme.MikaRadius
 
 /**
  * 对话输入栏的按住说话:输入框上的手势([holdToTalk])、按住时整条变蓝的输入栏([VoiceBarCover])、
@@ -150,6 +151,8 @@ internal sealed interface VoiceSheet {
     /** 已经允许录音,识别服务仍说没有权限或录音出错:说明系统的麦克风总开关和权限管理,或被别的应用占用。 */
     data object MicBlocked : VoiceSheet
     data class Unavailable(val why: SpeechEngineSpec.Why) : VoiceSheet
+    /** 缺录音权限的是识别服务(另一个应用),不是 Mika:说明这一点,「去设置」打开的是它的设置页。 */
+    data class ServicePermission(val service: com.wangzan101.mika.voice.SpeechServiceTarget) : VoiceSheet
 }
 
 /**
@@ -217,6 +220,7 @@ internal object VoiceCopy {
         is SpeechEngineSpec.Bailian -> spec.model
         is SpeechEngineSpec.System -> tr(if (spec.onDevice) R.string.voice_engine_phone_offline else R.string.voice_engine_phone)
         is SpeechEngineSpec.Provider -> spec.model
+        is SpeechEngineSpec.Vendor -> spec.model
         is SpeechEngineSpec.Unavailable -> ""
     }
 
@@ -228,6 +232,7 @@ internal object VoiceCopy {
         // 服务商的错沿用模型出错时的说法(额度、Key、找不到模型……)
         is SpeechFailure.Provider -> tr(R.string.voice_provider_failed, why.error.message.orEmpty())
         SpeechFailure.NoPermission -> tr(R.string.voice_permission_title)
+        is SpeechFailure.ServiceNoPermission -> tr(R.string.voice_service_permission_title)
         is SpeechFailure.Unavailable -> tr(R.string.voice_unavailable_title)
     }
 
@@ -239,6 +244,7 @@ internal object VoiceCopy {
         SpeechEngineSpec.Why.NoSystemNoModel -> tr(R.string.voice_unavailable_no_engine)
         SpeechEngineSpec.Why.SystemGone -> tr(R.string.voice_unavailable_system_gone)
         SpeechEngineSpec.Why.SystemNoResponse -> tr(R.string.voice_unavailable_system_silent)
+        SpeechEngineSpec.Why.SystemFailed -> tr(R.string.voice_unavailable_system_failed)
         SpeechEngineSpec.Why.ProviderGone -> tr(R.string.voice_unavailable_provider_gone)
         SpeechEngineSpec.Why.Off -> tr(R.string.voice_unavailable_off)
     }
@@ -270,6 +276,15 @@ private object MicPermission {
 internal class VoiceHold(private val voice: VoiceSource, private val scope: CoroutineScope) {
     // 「太短」按手指按下算不到半秒:开始听时已经按了 HOLD_MS,状态机只再数剩下的
     val hold = HoldToTalk(clock = SystemClock::elapsedRealtime, maxMs = MAX_MS, minMs = MIN_TOTAL_MS - HOLD_MS)
+
+    /** 引擎现在不可用(识别服务没响应/没配服务商)。手势照常进语音流程(begin 弹说明页),这只决定点话筒是提示还是直接弹说明。 */
+    internal val engineUsable: Boolean get() = voice.spec() !is SpeechEngineSpec.Unavailable
+
+    /** 点话筒时引擎不可用:弹「还不能语音输入」说明页(原因 + 去选引擎的路),功能不可用也不装死。 */
+    fun explainUnavailable() {
+        toast = null
+        (voice.spec() as? SpeechEngineSpec.Unavailable)?.let { sheet = VoiceSheet.Unavailable(it.why) }
+    }
 
     /** 长按开始以后手指还没离开。 */
     var holding by mutableStateOf(false)
@@ -383,6 +398,8 @@ internal fun rememberVoiceHold(voice: VoiceSource?, onText: (String) -> Unit, on
                     is SpeechFailure.Unavailable -> vh.sheet = VoiceSheet.Unavailable(why.why)
                     // 录音权限还没给:照旧弹系统框或「去设置」。已经给了仍报没有权限,或识别服务报录音出错:
                     // 另弹说明(系统的麦克风总开关、权限管理)。麦克风起不来的其他情况照旧提示可能被占用
+                    // 查得出来是识别服务自己没有录音权限:说明是它,带用户去它的设置页(去 Mika 的权限页是指错了地方)
+                    is SpeechFailure.ServiceNoPermission -> vh.sheet = VoiceSheet.ServicePermission(why.service)
                     SpeechFailure.NoPermission -> if (vh.ensureMic()) vh.sheet = VoiceSheet.MicBlocked
                     SpeechFailure.AudioError -> vh.sheet = VoiceSheet.MicBlocked
                     else -> vh.toast = VoiceCopy.failure(why)
@@ -429,7 +446,7 @@ internal fun Modifier.holdToTalk(vh: VoiceHold, onTap: () -> Unit): Modifier {
         awaitEachGesture {
             val down = awaitFirstDown()
             down.consume()
-            // true:点一下;false:手指动了或没了,不算我们的;null:按满了,开始听
+            // true:点一下;false:手指动了或没了,不算我们的;null:按满了开始听——引擎不可用也由 begin 弹说明页,功能入口不消失
             val tapped = withTimeoutOrNull<Boolean>(HOLD_MS) {
                 var result: Boolean? = null
                 while (result == null) {
@@ -449,7 +466,19 @@ internal fun Modifier.holdToTalk(vh: VoiceHold, onTap: () -> Unit): Modifier {
                 null -> Unit
             }
             vh.begin()
-            if (!vh.holding) return@awaitEachGesture
+            if (!vh.holding) {
+                // 没起听:说明页/权限框已经弹出来了。按住了就留着说明页——这是用户发现语音入口、被带去设置的路;
+                // 不足半秒松手照旧回退点按:收掉说明页、当点按处理,不吃手势
+                while (true) {
+                    val ch = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: return@awaitEachGesture
+                    if (!ch.pressed) {
+                        ch.consume()
+                        if (ch.uptimeMillis - down.uptimeMillis < MIN_TOTAL_MS) { vh.sheet = null; onTap() }
+                        return@awaitEachGesture
+                    }
+                    ch.consume()
+                }
+            }
             var ended = false
             try {
                 while (true) {
@@ -458,6 +487,8 @@ internal fun Modifier.holdToTalk(vh: VoiceHold, onTap: () -> Unit): Modifier {
                         ch?.consume()
                         ended = true
                         vh.end()
+                        // 按得太短(多半是想来点按的):状态机已当没听清取消,这里补当点按——开键盘/出提示,不吃手势
+                        if (ch != null && ch.uptimeMillis - down.uptimeMillis < MIN_TOTAL_MS) onTap()
                         break
                     }
                     ch.consume()
@@ -707,11 +738,11 @@ internal fun VoiceConverting(modifier: Modifier = Modifier) {
     }
 }
 
-/** 能按住说话时的灰字：在可用输入区域里居中；[followUp] 决定任务在跑时说「插话」还是「排下一件」。 */
+/** The grey line while hold-to-talk is available; in a running task it says whether you steer it or queue the next one. */
 @Composable
 internal fun VoicePlaceholder(mode: ComposerMode, followUp: FollowUpMode = FollowUpMode.Steer, modifier: Modifier = Modifier) {
     val c = MikaTheme.colors
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+    Row(modifier.fillMaxWidth()) {
         Text(ChatCopy.voicePlaceholder(mode, followUp), style = MikaType.Body, color = c.ink3, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
@@ -748,6 +779,24 @@ internal fun VoiceSheetHost(vh: VoiceHold, onPickSpeech: () -> Unit) {
             action = stringResource(R.string.voice_go_pick)
             go = onPickSpeech
         }
+        is VoiceSheet.ServicePermission -> {
+            val service = sheet.service
+            title = stringResource(R.string.voice_service_permission_title)
+            body = stringResource(R.string.voice_service_permission_body, service.label)
+            action = stringResource(R.string.voice_permission_open)
+            // Mika 不能替别的应用申请权限,只能带用户到它的设置页。回来之后不自己重新录音:下次按住时再试。
+            // 这一页打不开时(有的系统不让看某些应用的详情)告诉用户到哪里找
+            go = {
+                try {
+                    context.startActivity(
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", service.packageName, null))
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    )
+                } catch (_: RuntimeException) {
+                    vh.toast = tr(R.string.voice_service_settings_failed, service.label)
+                }
+            }
+        }
         VoiceSheet.Permission, VoiceSheet.MicBlocked -> {
             val blocked = sheet == VoiceSheet.MicBlocked
             title = stringResource(if (blocked) R.string.voice_mic_blocked_title else R.string.voice_permission_title)
@@ -782,7 +831,7 @@ private val BarLabel = MikaType.Body.copy(fontWeight = FontWeight.Medium)
 private val HintText = MikaType.Label
 private val HeadText = MikaType.Hint
 private val ChipText = MikaType.Micro.copy(fontWeight = FontWeight.Normal)
-private val TimeText = TextStyle(fontSize = 12.5.sp, lineHeight = 17.sp, fontFeatureSettings = "tnum")
+private val TimeText = MikaType.Hint.copy(fontFeatureSettings = "tnum")
 private val ListenText = MikaType.Title.copy(fontWeight = FontWeight.Normal)
 private val FootText = MikaType.Hint
 private val ToastText = MikaType.Caption

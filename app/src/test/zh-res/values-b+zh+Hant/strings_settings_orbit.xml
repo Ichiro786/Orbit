@@ -35,7 +35,6 @@
     <string name="voice_key_hint_openai">貼上來自 platform.openai.com 的金鑰</string>
     <string name="voice_key_remove">移除金鑰</string>
     <string name="voice_model">模型</string>
-    <string name="voice_voice">聲音</string>
     <string name="voice_default">預設</string>
     <string name="voice_gemini_foot">Google 沒有官方方式讓其他應用程式使用 Google AI Pro 或 Ultra 方案，因此需要來自 Google AI Studio 的 API 金鑰。</string>
     <string name="voice_openai_foot">使用 ChatGPT 登入可讓 Orbit 在聊天中使用你的 Plus 或 Pro 方案，但 OpenAI 只開放文字，不支援即時語音。要在通話中使用你的方案，請選擇「內建」：它會透過你聊天所用的模型來說話。</string>

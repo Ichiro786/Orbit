@@ -7,6 +7,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/** 词标「Mika」统一用这个字重:比标题轻一档,顶栏、侧栏、回答头看起来是同一个名字。 */
+val WordmarkWeight = FontWeight.Medium
+
 /** 字号与字重。只定大小、字重、行高,颜色由用的地方给。 */
 object MikaType {
     /** 大标题:空状态、欢迎页。 */
@@ -40,6 +43,8 @@ object MikaType {
     val Micro = TextStyle(fontSize = 11.sp, lineHeight = 15.sp, fontWeight = FontWeight.SemiBold)
     /** Small spaced capitals over a group. */
     val Overline = TextStyle(fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.8.sp)
+    /** Very large numbers: totals, verification codes. */
+    val Display = TextStyle(fontSize = 34.sp, lineHeight = 40.sp, fontWeight = FontWeight.Bold)
 }
 
 /**
@@ -85,6 +90,8 @@ object MikaSize {
  * the app is one of these or a full pill.
  */
 object MikaRadius {
+    /** Tiny: badges, dots. */
+    val Micro = 4.dp
     val Xs = 6.dp
     val Sm = 9.dp
     val Md = 12.dp
@@ -96,16 +103,27 @@ object MikaRadius {
     val BubbleTail = 6.dp
     val Button = 20.dp
     val Tile = 9.dp
+    /** Small cards, images, chips. */
+    val Chip = 12.dp
+    /** Large cards, dialogs, bottom sheets. */
+    val Sheet = 24.dp
 }
 
 /** 常用形状;顶层常量,重组时不新建。 */
 object MikaShapes {
+    val Micro = RoundedCornerShape(MikaRadius.Micro)
     val Card = RoundedCornerShape(MikaRadius.Card)
+    val Chip = RoundedCornerShape(MikaRadius.Chip)
+    val Sheet = RoundedCornerShape(MikaRadius.Sheet)
+    /** 底部弹窗:上面两个角圆、下面直角。 */
+    val SheetTop = RoundedCornerShape(topStart = MikaRadius.Bubble, topEnd = MikaRadius.Bubble)
     /** 用户消息气泡:右下角是尾角。 */
     val UserBubble = RoundedCornerShape(MikaRadius.Bubble, MikaRadius.Bubble, MikaRadius.BubbleTail, MikaRadius.Bubble)
     /** Mika 的回答:左下角是尾角,和用户气泡对称。 */
     val AnswerBubble = RoundedCornerShape(MikaRadius.Bubble, MikaRadius.Bubble, MikaRadius.Bubble, MikaRadius.BubbleTail)
     val Button = RoundedCornerShape(MikaRadius.Button)
     val Tile = RoundedCornerShape(MikaRadius.Tile)
+    /** 输入栏外壳:固定圆角,多行时圆角不变(不像 [Pill] 那样随高度变圆)。 */
+    val Composer = RoundedCornerShape(MikaRadius.Sheet)
     val Pill = CircleShape
 }

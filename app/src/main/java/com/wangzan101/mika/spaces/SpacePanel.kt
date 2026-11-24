@@ -45,7 +45,7 @@ object SpacePanel {
     /** The page as it is now, or null when Orbit has not written it yet (or it is too big or unreadable). */
     suspend fun read(dirs: SandboxDirs, space: Space): String? = withContext(Dispatchers.IO) {
         runCatching {
-            dirs.gate.openRead(dirs.workspace(space.conversationId), FILE).use { file ->
+            dirs.gate.openRead(dirs.workspace(com.wangzan101.mika.cap.sandbox.WorkspaceKey.Conversation(space.conversationId)), FILE).use { file ->
                 if (file.size > MAX_BYTES) null else file.input().readBytes().toString(Charsets.UTF_8)
             }
         }.getOrNull()

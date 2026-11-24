@@ -20,9 +20,12 @@
     <string name="tool_find_element">Buscar en la pantalla</string>
     <string name="tool_collect">Recopilar de varias pantallas</string>
     <string name="tool_phone_run">Varias acciones en el teléfono</string>
+    <string name="tool_list_device_files">Explorar archivos del dispositivo</string>
+    <string name="tool_copy_device_file">Copiar archivo del dispositivo</string>
     <string name="tool_process_files">Trabajar con archivos</string>
     <string name="tool_run_script">Ejecutar script integrado</string>
     <string name="tool_read_file">Leer archivo</string>
+    <string name="tool_view_image">Ver imagen</string>
     <string name="tool_write_file">Escribir archivo</string>
     <string name="tool_search_files">Buscar archivos</string>
     <string name="tool_export_file">Exportar archivo</string>
@@ -77,10 +80,16 @@
     <string name="tool_mika_login_site">Iniciar sesión en un sitio</string>
     <string name="tool_mika_confirm_login">Confirmar inicio de sesión</string>
     <string name="tool_mika_favorites">Sitios frecuentes</string>
+    <string name="tool_wechat_owner">Enviar a mi WeChat</string>
     <string name="tool_schedule">Programar una tarea</string>
     <string name="tool_helper">Pedir ayuda a un asistente</string>
     <string name="tool_profile">Actualizar tu perfil</string>
     <string name="tool_history">Leer mensajes anteriores</string>
     <string name="tool_user_screen">Mirar tu pantalla</string>
     <string name="tool_update_plan">Actualizar el plan</string>
+    <string name="tool_do_each">Repetir para cada elemento</string>
+    <string name="tool_notices_read">Leer notificaciones</string>
+    <string name="tool_sms_login">Iniciar sesión con código SMS</string>
+    <string name="tool_device_directory_hints">Ver notas de carpetas del dispositivo</string>
+    <string name="tool_device_directory_describe">Actualizar la nota de una carpeta</string>
 </resources>

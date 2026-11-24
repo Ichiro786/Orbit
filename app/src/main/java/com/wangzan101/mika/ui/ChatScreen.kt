@@ -5,7 +5,7 @@ import com.wangzan101.mika.cap.sandbox.AttachmentFailure
 import com.wangzan101.mika.cap.sandbox.AttachmentFailureReason
 import com.wangzan101.mika.core.agent.QuoteMessage
 import com.wangzan101.mika.core.record.ConversationTokens
-import com.wangzan101.mika.core.cap.web.AttachedPage
+import com.wangzan101.mika.core.agent.AttachedPage
 import com.wangzan101.mika.ui.components.DirectionalIcon
 import com.wangzan101.mika.ui.components.keepsKeyboard
 import com.wangzan101.mika.ui.components.pageBackground
@@ -224,8 +224,16 @@ fun ChatScreen(
     /** 被拦下的提示里的「去设置」。 */
     openSettings: () -> Unit,
     openRun: (String) -> Unit = {},
-    /** 任务要用手机而手机操作没准备好:最后一轮下面放一行去设置。 */
-    phoneSetupNeeded: Boolean = false,
+    /** The task needs the phone but phone control is not ready: a line under the last turn links to setup. */
+    phoneSetupNeed: com.wangzan101.mika.cap.phone.setup.PhoneSetupPrompt.Need? = null,
+    /** Whether the running task's app sound was restored by the user (the live view's mute button follows it). */
+    pipSoundOn: StateFlow<Boolean>? = null,
+    onOpenBrowser: () -> Unit = {},
+    /** Opens a finished run's report and its step-by-step playback. */
+    openReport: (String) -> Unit = {},
+    openPlayback: (String) -> Unit = {},
+    /** Opens a voice call with Orbit; null keeps the header's hands-free call. */
+    onVoiceCall: (() -> Unit)? = null,
     /** The phone-control helper's status when it has dropped after being set up; null while it runs or was never set up. */
     helperDropped: BuiltinShellStatus? = null,
     onReconnectHelper: () -> Unit = {},
@@ -253,6 +261,8 @@ fun ChatScreen(
     DisposableEffect(vm) {
         onDispose { onVoiceListeningChanged(false) }
     }
+    val phoneSetupNeeded = phoneSetupNeed != null
+    val soundOn by (pipSoundOn ?: remember { MutableStateFlow(false) }).collectAsState()
     // A hands-free call with Orbit, opened from the header's call button.
     var calling by rememberSaveable { mutableStateOf(false) }
     val onCallOrbit: () -> Unit = { calling = true }
@@ -340,7 +350,7 @@ fun ChatScreen(
     // 返回聊天时同一条内容不重新滚动；新进展仅在跟随末尾时滚动。
     // 目标行直接由当前 UI 状态计算:layoutInfo 还是上一帧的测量结果,发送后立即读它会滚到旧的末尾。
     val last = ui.exchanges.lastOrNull()
-    val rowCount = chatItemCount(ui.exchanges, kept, phoneSetupNeeded, hasBlocked = ui.blocked != null, operatingPhone = ui.operatingPhone)
+    val rowCount = chatItemCount(ui.exchanges, kept, if (phoneSetupNeeded && ui.exchanges.isNotEmpty()) -1 else null, hasBlocked = ui.blocked != null, operatingPhone = ui.operatingPhone)
     val scrollMarker = "${ui.conversationId}:${ui.exchanges.size}:${last?.steps?.size}:${last?.steers?.size}:${last?.status?.hashCode()}:${ui.blocked?.hashCode()}"
     val jump = pendingJump?.takeIf { it.conversationId == ui.conversationId }
     // 目标行的高亮:只在目标还是当前对话时算。
@@ -350,7 +360,7 @@ fun ChatScreen(
     LaunchedEffect(scrollMarker, jump) {
         // 从搜索或文件库过来:先滚到目标消息,期间不要跟末尾;目标不在了就退回原来的逻辑。
         if (jump != null) {
-            val keys = chatItemKeys(ui.exchanges, kept, phoneSetupNeeded, hasBlocked = ui.blocked != null, operatingPhone = ui.operatingPhone)
+            val keys = chatItemKeys(ui.exchanges, kept, if (phoneSetupNeeded && ui.exchanges.isNotEmpty()) -1 else null, hasBlocked = ui.blocked != null, operatingPhone = ui.operatingPhone)
             val index = chatTargetKey(ui.exchanges, jump.target)?.let(keys::indexOf) ?: -1
             if (index >= 0) {
                 previousScrollMarker = scrollMarker
@@ -735,7 +745,8 @@ fun ChatScreen(
                 Toast.makeText(context, context.getString(R.string.pip_closed_hint), Toast.LENGTH_SHORT).show()
             },
             onReopen = vm::reopenPip,
-            onUnmute = vm::unmutePip,
+            soundOn = soundOn,
+            onToggleSound = vm::togglePipSound,
             label = last?.let { ChatCopy.progressLine(it) }.orEmpty(),
             steps = last?.let { LivePlans.from(it).stepNumber } ?: 0,
             startedAt = last?.startedAt ?: 0L,

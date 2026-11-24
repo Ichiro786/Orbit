@@ -126,6 +126,11 @@ fun MemoryScreen(
     onOpenRoutes: () -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
+    var market by rememberSaveable { mutableStateOf(false) }
+    if (market) {
+        SkillMarketScreen(onBack = { market = false }, onImport = vm::importSkill)
+        return
+    }
     val ui by vm.ui.collectAsState()
     var searching by rememberSaveable { mutableStateOf(false) }
     val searchable = ui.segment != Segment.Skills
@@ -151,7 +156,7 @@ fun MemoryScreen(
 
         when (ui.segment) {
             Segment.Memories -> MemoryEntries(vm, ui)
-            Segment.Skills -> SkillsSection(vm, ui.skills, pending = false)
+            Segment.Skills -> SkillsSection(vm, ui.skills, pending = false, onMarket = { market = true })
             Segment.Pending -> {
                 if (ui.pendingCount == 0) {
                     GroupLabel("")

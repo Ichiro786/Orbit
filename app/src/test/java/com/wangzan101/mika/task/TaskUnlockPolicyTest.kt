@@ -40,15 +40,42 @@ class TaskUnlockPolicyTest {
         var allowed = false
         var checks = 0
         val canUnlock: (ChannelPeer?) -> Boolean = { checks++; allowed }
-        val waitingTask = taskUnlockAuthorization(RunOrigin.Channel, peer, canUnlock)
+        val waitingTask = taskUnlockAuthorization(RunOrigin.Channel, peer, canUnlockChannel = canUnlock)
         assertNull(waitingTask)
         assertEquals(1, checks)
 
         allowed = true
         assertNull(waitingTask)
         assertEquals(1, checks)
-        val nextTask = taskUnlockAuthorization(RunOrigin.Channel, peer, canUnlock)
+        val nextTask = taskUnlockAuthorization(RunOrigin.Channel, peer, canUnlockChannel = canUnlock)
         assertTrue(requireNotNull(nextTask).invoke())
+    }
+
+    /** Tasks started on this phone follow the local switch: the check re-reads it on every call instead of caching the value at start. */
+    @Test fun uiTasksFollowTheLocalUnlockSwitchInRealTime() {
+        var on = true
+        var checks = 0
+        val authorized = requireNotNull(taskUnlockAuthorization(RunOrigin.Ui, null, localUnlockEnabled = {
+            checks++
+            on
+        }) {
+            error("Ui tasks must not read channel permission")
+        })
+        assertTrue(authorized())
+        on = false
+        assertFalse(authorized())
+        on = true
+        assertTrue(authorized())
+        assertEquals(4, checks)
+    }
+
+    /** MCP tasks never get unlock authorization, whatever the local switch says. */
+    @Test fun mcpTasksStayUnauthorizedWhateverTheLocalSwitchSays() {
+        for (on in listOf(false, true)) {
+            assertNull(taskUnlockAuthorization(RunOrigin.Mcp, null, localUnlockEnabled = { on }) {
+                error("Mcp tasks must not read channel permission")
+            })
+        }
     }
 
     @Test fun authorizedWhatsappTaskRechecksItsPeerAfterPermissionIsRevoked() {
