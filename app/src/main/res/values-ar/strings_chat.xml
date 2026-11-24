@@ -367,4 +367,5 @@
     <string name="chat_hold_to_allow">اضغط مطولًا للسماح مرة واحدة</string>
     <string name="hold_to_allow_hint">اضغط حتى تمتلئ الحلقة</string>
     <string name="hold_to_allow_holding">واصل الضغط</string>
+    <string name="chat_jump_latest_new">الانتقال إلى الأحدث، الجديد: %1$d</string>
 </resources>

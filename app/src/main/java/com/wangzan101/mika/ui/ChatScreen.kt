@@ -25,6 +25,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -140,6 +142,8 @@ import com.wangzan101.mika.settings.Prerequisites
 import com.wangzan101.mika.settings.RecommendedTask
 import com.wangzan101.mika.settings.RecommendedTaskStore
 import com.wangzan101.mika.takeover.Takeover
+import com.wangzan101.mika.task.TaskGate
+import com.wangzan101.mika.core.shell.BuiltinShellStatus
 import com.wangzan101.mika.task.SteerNote
 import com.wangzan101.mika.task.SteerState
 import com.wangzan101.mika.task.TaskService
@@ -321,6 +325,14 @@ fun ChatScreen(
             wasScrolling = scrolling
         }
     }
+
+    // Jump to latest: offered once the newest message is more than about a screen below; replies that arrive
+    // while the user is up there are counted on the button until they are back at the bottom.
+    val farFromLatest by remember(listState) { derivedStateOf { listState.farFromTail() } }
+    val showJumpToLatest = farFromLatest && ui.exchanges.isNotEmpty()
+    val replyCount = chatReplyCount(ui.exchanges)
+    var seenReplies by rememberSaveable(ui.conversationId) { mutableIntStateOf(replyCount) }
+    LaunchedEffect(showJumpToLatest, replyCount) { if (!showJumpToLatest) seenReplies = replyCount }
 
     // 返回聊天时同一条内容不重新滚动；新进展仅在跟随末尾时滚动。
     // 目标行直接由当前 UI 状态计算:layoutInfo 还是上一帧的测量结果,发送后立即读它会滚到旧的末尾。
@@ -576,7 +588,7 @@ fun ChatScreen(
                 Modifier.fillMaxWidth()
                     .layout { m, cons ->
                         val p = m.measure(cons.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity))
-                        layout(p.width, 0) { p.place(0, 0) }
+                        layout(p.width, 0) { p.placeRelative(0, 0) }
                     }
                     .height(scrimHeight),
             ) { com.wangzan101.mika.ui.components.FadingGlassScrim(Modifier.fillMaxSize(), backdrop) }
@@ -635,15 +647,15 @@ fun ChatScreen(
         } else null
         LaunchedEffect(canAttachNow) { if (!canAttachNow) attachOpen = false }
         // Scrolled up away from the newest message: a small glass arrow above the message bar brings you back.
-        val showJump by remember { derivedStateOf { !followingTail && listState.canScrollForward } }
         AnimatedVisibility(
-            showJump && !menuOpen,
+            showJumpToLatest && !followingTail && !menuOpen && !attachOpen,
             Modifier.align(Alignment.BottomCenter)
                 .padding(bottom = with(density) { composerHeight.toDp() } + MikaSpace.S12),
             enter = MikaTheme.motion.enter(TransformOrigin(0.5f, 1f)),
             exit = MikaTheme.motion.exit(TransformOrigin(0.5f, 1f)),
         ) {
-            JumpToLatest {
+            JumpToLatest(unreadSince(seenReplies, replyCount)) {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 followingTail = true
                 scope.launch {
                     val end = listState.layoutInfo.totalItemsCount - 1
@@ -818,6 +830,34 @@ private fun LazyListState.nearTail(thresholdPx: Int): Boolean {
     val end = layout.totalItemsCount - 1
     val tail = layout.visibleItemsInfo.firstOrNull { it.index == end } ?: return false
     return tail.offset + tail.size - layout.viewportEndOffset <= thresholdPx
+}
+
+/**
+ * True when the newest row is more than about one screen below what is showing. When the last row is not laid
+ * out yet, the distance is estimated from the rows that are: what is left of the last visible row plus the
+ * rows after it at the average visible height.
+ */
+private fun LazyListState.farFromTail(): Boolean {
+    val layout = layoutInfo
+    val end = layout.totalItemsCount - 1
+    val visible = layout.visibleItemsInfo
+    if (end < 0 || visible.isEmpty()) return false
+    val viewport = layout.viewportEndOffset - layout.viewportStartOffset
+    val lastVisible = visible.last()
+    val below = lastVisible.offset + lastVisible.size - layout.viewportEndOffset
+    if (lastVisible.index >= end) return below > viewport
+    val average = visible.sumOf { it.size } / visible.size
+    return below.coerceAtLeast(0) + (end - lastVisible.index) * average > viewport
+}
+
+/** Scrolls to the very end of row [end], below a reply taller than the screen too; smoothly when [animate]. */
+private suspend fun LazyListState.scrollToTail(end: Int, animate: Boolean) {
+    if (end < 0) return
+    if (animate) animateScrollToItem(end) else scrollToItem(end)
+    val layout = layoutInfo
+    val tail = layout.visibleItemsInfo.firstOrNull { it.index == end } ?: return
+    val below = tail.offset + tail.size - layout.viewportEndOffset + layout.afterContentPadding
+    if (below > 0) if (animate) animateScrollBy(below.toFloat()) else scrollBy(below.toFloat())
 }
 
 // ---------- 空对话 ----------
@@ -1252,15 +1292,18 @@ private fun RepliedTo(text: String) {
  */
 @Composable
 private fun Modifier.answerBubble(): Modifier = layout { m, c ->
-    val max = if (c.hasBoundedWidth) (c.maxWidth * AnswerWidthFraction).toInt() else c.maxWidth
+    val max = if (c.hasBoundedWidth) answerBubbleMaxWidth(c.maxWidth) else c.maxWidth
     val p = m.measure(c.copy(minWidth = 0, maxWidth = max))
-    layout(p.width, p.height) { p.place(0, 0) }
+    layout(p.width, p.height) { p.placeRelative(0, 0) }
 }.answerSurface()
 
 /** Mika 回答的底:很淡的灰,左下尾角。 */
 @Composable
 private fun Modifier.answerSurface(): Modifier =
-    background(MikaTheme.colors.answer, MikaShapes.AnswerBubble).padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12)
+    background(MikaTheme.colors.answer, MikaShapes.AnswerBubble)
+        .border(0.75.dp, MikaTheme.colors.edge, MikaShapes.AnswerBubble)
+        .clip(MikaShapes.AnswerBubble)
+        .padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12)
 
 // ---------- 进度 ----------
 
@@ -1465,9 +1508,15 @@ private fun StatusCard(
             val submission = rememberSaveable(saver = ApprovalSubmission.Saver) { ApprovalSubmission() }
             ApprovalCard(status, submission, onApprove = { vm.approve(status.key) }, onDecline = { vm.decline(status.key) })
         }
-        is ExchangeStatus.Paused -> NeedCard(stringResource(if (status.resumable) R.string.chat_paused else R.string.chat_waiting_for_you), status.why) {
-            CardButton(stringResource(R.string.action_cancel_task), onClick = vm::cancel)
-            if (status.resumable) CardButton(stringResource(R.string.chat_continue), primary = true, onClick = vm::resume)
+        is ExchangeStatus.Paused -> {
+            // Paused because the phone control helper dropped (it can, for instance, die while Wi-Fi is off and then
+            // has no way back): say what is wrong and offer Reconnect here instead of sending the user to Settings.
+            val link = LocalPhoneLink.current
+            if (link != null && status.resumable && status.why == TaskGate.SHELL_DOWN) PhoneDownCard(link, vm::cancel, vm::resume)
+            else NeedCard(stringResource(if (status.resumable) R.string.chat_paused else R.string.chat_waiting_for_you), status.why) {
+                CardButton(stringResource(R.string.action_cancel_task), onClick = vm::cancel)
+                if (status.resumable) CardButton(stringResource(R.string.chat_continue), primary = true, onClick = vm::resume)
+            }
         }
         // 排队等开始:轮到时自动开始,点继续不能插队,只给取消
         is ExchangeStatus.Queued -> NeedCard(stringResource(R.string.chat_queued), status.why) {
@@ -1497,6 +1546,15 @@ private fun StatusCard(
                 Text(stringResource(R.string.chat_not_done), style = MikaType.BodyStrong, color = MikaTheme.colors.ink)
             }
             Text(status.reason, Modifier.padding(top = MikaSpace.S4), style = CardBody, color = MikaTheme.colors.ink2)
+            // The task ended because the helper went away: while it is still down, offer to reconnect before retrying.
+            val link = LocalPhoneLink.current
+            if (link != null && status.reason == TaskService.SHELL_DIED && link.status != BuiltinShellStatus.Running) {
+                val copy = PhoneDownCopy.card(link.status)
+                Text(copy.body, Modifier.padding(top = MikaSpace.S8), style = MikaType.Caption, color = MikaTheme.colors.ink2)
+                Row(Modifier.fillMaxWidth().padding(top = MikaSpace.S12)) {
+                    CardButton(PhoneSetupCopy.RECONNECT, primary = true, enabled = !copy.connecting, tag = "phone-reconnect", onClick = link.reconnect)
+                }
+            }
             RecoveryActions(runId, recover)
         }
         // 停止后补上的交代当作这一轮的回答,排在「已停止」下面;还在写时一行小字
@@ -1645,11 +1703,33 @@ private fun NeedCard(
 }
 
 @Composable
-private fun RowScope.CardButton(text: String, primary: Boolean = false, onClick: () -> Unit) {
+private fun RowScope.CardButton(text: String, primary: Boolean = false, enabled: Boolean = true, tag: String? = null, onClick: () -> Unit) {
     MikaButton(
-        text, onClick, Modifier.weight(1f),
-        kind = if (primary) ButtonKind.Primary else ButtonKind.Tonal, size = ButtonSize.Medium,
+        text, onClick, Modifier.weight(1f).then(if (tag != null) Modifier.testTag(tag) else Modifier),
+        kind = if (primary) ButtonKind.Primary else ButtonKind.Tonal, size = ButtonSize.Medium, enabled = enabled,
     )
+}
+
+/**
+ * A task paused because phone control dropped. The card follows the helper's live state: what is wrong (Wi-Fi off,
+ * wireless debugging off, reconnecting), a Reconnect button that uses the existing paired-key reconnect, and
+ * Continue once it is back. After the user asked to reconnect, the task continues by itself when the helper returns.
+ */
+@Composable
+private fun PhoneDownCard(link: PhoneLink, onCancel: () -> Unit, onContinue: () -> Unit) {
+    val copy = PhoneDownCopy.card(link.status)
+    var asked by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(copy.back, asked) {
+        if (copy.back && asked) { asked = false; onContinue() }
+    }
+    NeedCard(copy.title, copy.body) {
+        CardButton(stringResource(R.string.action_cancel_task), onClick = onCancel)
+        if (copy.back) CardButton(stringResource(R.string.chat_continue), primary = true, tag = "phone-continue", onClick = onContinue)
+        else CardButton(PhoneSetupCopy.RECONNECT, primary = true, enabled = !copy.connecting, tag = "phone-reconnect") {
+            asked = true
+            link.reconnect()
+        }
+    }
 }
 
 @Composable
@@ -1815,7 +1895,7 @@ internal fun Composer(
                 val keyboardNow = (ime.getBottom(this) - nav.getBottom(this)).coerceAtLeast(0)
                 val extra = (minBottom.roundToPx() - keyboardNow).coerceAtLeast(0)
                 val p = m.measure(cons.offset(vertical = -extra))
-                layout(p.width, p.height + extra) { p.place(0, 0) }
+                layout(p.width, p.height + extra) { p.placeRelative(0, 0) }
             } else Modifier)
             .padding(start = if (editorial) MikaSpace.S16 else MikaSpace.S12, end = if (editorial) MikaSpace.S16 else MikaSpace.S12, top = MikaSpace.S12, bottom = if (editorial) MikaSpace.S8 else MikaSpace.S8),
     ) {
@@ -1997,13 +2077,16 @@ private fun FocusPill(state: PresenceState, title: String, status: String?, stat
 }
 
 /** How wide Orbit's reply bubble may grow, as a share of the chat column. */
-private const val AnswerWidthFraction = 0.85f
+internal const val AnswerBubbleWidth = 0.85f
+
+internal fun answerBubbleMaxWidth(rowWidth: Int): Int = (rowWidth * AnswerBubbleWidth).toInt()
 
 /** The jump-to-latest button: a 40dp frosted circle with a down arrow inside a 48dp touch target. */
 @Composable
-private fun JumpToLatest(onClick: () -> Unit) {
+private fun JumpToLatest(unread: Int, onClick: () -> Unit) {
     val c = MikaTheme.colors
-    val label = stringResource(R.string.chat_jump_latest)
+    val label = if (unread > 0) stringResource(R.string.chat_jump_latest_new, unread)
+        else stringResource(R.string.chat_jump_latest)
     val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Box(
         Modifier.size(MikaSize.TouchTarget).pressScale(press)
@@ -2017,7 +2100,17 @@ private fun JumpToLatest(onClick: () -> Unit) {
             Modifier.size(MikaSize.IconButton).floatShadow(c, CircleShape).background(c.surface, CircleShape)
                 .border(0.5.dp, c.glassEdge, CircleShape),
             contentAlignment = Alignment.Center,
-        ) { Icon(MikaIcons.Down, null, Modifier.size(MikaSize.SmallIcon + MikaSpace.S4), tint = c.ink) }
+         ) {
+            Icon(MikaIcons.Down, null, Modifier.size(MikaSize.SmallIcon + MikaSpace.S4), tint = c.ink)
+        }
+        if (unread > 0) {
+            Text(
+                if (unread > 99) "99+" else unread.toString(),
+                Modifier.align(Alignment.TopEnd).background(c.accent, MikaShapes.Pill)
+                    .padding(horizontal = MikaSpace.S4).clearAndSetSemantics {},
+                style = MikaType.Micro, color = c.onAccent,
+            )
+        }
     }
 }
 

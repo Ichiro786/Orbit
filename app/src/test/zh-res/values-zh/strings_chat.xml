@@ -281,4 +281,6 @@
     <string name="chat_hold_to_allow">长按允许这一次</string>
     <string name="hold_to_allow_hint">按住直到圆环填满</string>
     <string name="hold_to_allow_holding">继续按住</string>
+    <string name="chat_jump_latest">回到最新消息</string>
+    <string name="chat_jump_latest_new">回到最新消息,有 %1$d 条新回复</string>
 </resources>

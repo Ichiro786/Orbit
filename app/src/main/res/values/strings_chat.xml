@@ -311,4 +311,5 @@
     <string name="chat_hold_to_allow">Hold to allow once</string>
     <string name="hold_to_allow_hint">Hold until the ring fills</string>
     <string name="hold_to_allow_holding">Keep holding</string>
+    <string name="chat_jump_latest_new">Jump to latest, %1$d new</string>
 </resources>

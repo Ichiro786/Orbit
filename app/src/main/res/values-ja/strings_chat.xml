@@ -297,4 +297,5 @@
     <string name="chat_hold_to_allow">長押しで今回だけ許可</string>
     <string name="hold_to_allow_hint">リングが満ちるまで長押し</string>
     <string name="hold_to_allow_holding">そのまま押し続けて</string>
+    <string name="chat_jump_latest_new">最新へ移動、新着 %1$d 件</string>
 </resources>
