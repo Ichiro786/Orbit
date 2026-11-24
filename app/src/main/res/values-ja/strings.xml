@@ -151,5 +151,8 @@
     <string name="drawer_project_delete_title">このプロジェクトを削除しますか？</string>
     <string name="drawer_project_delete_body">「%1$s」のすべてのチャットと共有ワークスペースのファイルが削除され、元に戻せません。</string>
     <string name="drawer_project_actions">プロジェクトの操作</string>
+    <string name="drawer_project_sub">共有ワークスペース</string>
+    <string name="drawer_project_collapsed">折りたたみ</string>
+    <string name="drawer_project_expanded">展開</string>
     <string name="chat_project_shared">プロジェクト</string>
 </resources>

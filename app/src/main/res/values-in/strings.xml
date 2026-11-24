@@ -151,5 +151,8 @@
     <string name="drawer_project_delete_title">Hapus proyek ini?</string>
     <string name="drawer_project_delete_body">Semua obrolan dan berkas ruang kerja bersama di "%1$s" akan dihapus dan tidak dapat dipulihkan.</string>
     <string name="drawer_project_actions">Tindakan proyek</string>
+    <string name="drawer_project_sub">Ruang kerja bersama</string>
+    <string name="drawer_project_collapsed">Diciutkan</string>
+    <string name="drawer_project_expanded">Diluaskan</string>
     <string name="chat_project_shared">Proyek</string>
 </resources>

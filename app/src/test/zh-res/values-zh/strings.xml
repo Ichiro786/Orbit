@@ -151,5 +151,8 @@
     <string name="drawer_project_delete_title">删除这个项目？</string>
     <string name="drawer_project_delete_body">项目「%1$s」里的全部对话和共享工作区文件都会被删掉，没法找回。</string>
     <string name="drawer_project_actions">项目操作</string>
+    <string name="drawer_project_sub">共享工作区</string>
+    <string name="drawer_project_collapsed">已折叠</string>
+    <string name="drawer_project_expanded">已展开</string>
     <string name="chat_project_shared">项目</string>
 </resources>

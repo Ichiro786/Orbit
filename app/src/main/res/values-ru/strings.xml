@@ -151,5 +151,8 @@
     <string name="drawer_project_delete_title">Удалить этот проект?</string>
     <string name="drawer_project_delete_body">Все чаты и общие файлы рабочего пространства в «%1$s» будут удалены без возможности восстановления.</string>
     <string name="drawer_project_actions">Действия с проектом</string>
+    <string name="drawer_project_sub">Общая рабочая папка</string>
+    <string name="drawer_project_collapsed">Свёрнуто</string>
+    <string name="drawer_project_expanded">Развёрнуто</string>
     <string name="chat_project_shared">Проект</string>
 </resources>

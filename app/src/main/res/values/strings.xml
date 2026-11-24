@@ -169,5 +169,8 @@
     <string name="drawer_project_delete_title">Delete this project?</string>
     <string name="drawer_project_delete_body">All chats and shared workspace files in "%1$s" will be deleted and cannot be recovered.</string>
     <string name="drawer_project_actions">Project actions</string>
+    <string name="drawer_project_sub">Shared workspace</string>
+    <string name="drawer_project_collapsed">Collapsed</string>
+    <string name="drawer_project_expanded">Expanded</string>
     <string name="chat_project_shared">Project</string>
 </resources>

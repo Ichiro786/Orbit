@@ -425,6 +425,13 @@ fun ChatDrawer(
     onOpenSpace: (Space) -> Unit = {},
     onCreateSpace: () -> Unit = {},
     onSpaceActions: (Space, Rect) -> Unit = { _, _ -> },
+    /** Projects (upstream item 27): groups of chats sharing one workspace, each with its chats. */
+    projects: List<DrawerProjectGroup> = emptyList(),
+    collapsedProjects: Set<String> = emptySet(),
+    onToggleProject: (String) -> Unit = {},
+    onCreateProject: () -> Unit = {},
+    onNewInProject: (String) -> Unit = {},
+    onProjectActions: (DrawerProjectGroup, Rect) -> Unit = { _, _ -> },
     /** Everything: one long list of every chat, channel, side chat and space. */
     everythingView: Boolean = false,
     onEverything: () -> Unit = {},
@@ -620,6 +627,29 @@ fun ChatDrawer(
                     }
                     items(spaces.filterNot { it.hidden }, key = { "space-${it.id}" }) { SpaceEntry(it, now, onOpenSpace, onSpaceActions) }
                     item("space-new") { AddRow(stringResource(R.string.space_create), "space-new", dashed = true, enabled = canSwitch, onClick = onCreateSpace) }
+                    // Projects: chats that share one workspace, each folding open under its row.
+                    item("h-projects") {
+                        SectionHeader(stringResource(R.string.drawer_projects), stringResource(R.string.drawer_new_project), "drawer-new-project", canSwitch, onCreateProject)
+                    }
+                    projects.forEach { group ->
+                        val collapsed = group.project.id in collapsedProjects
+                        item("proj-h-${group.project.id}") {
+                            ProjectEntry(
+                                group, collapsed, enabled = canSwitch,
+                                onToggle = { onToggleProject(group.project.id) },
+                                onNewChat = { onNewInProject(group.project.id) },
+                                onActions = { _, bounds -> onProjectActions(group, bounds) },
+                            )
+                        }
+                        if (!collapsed) {
+                            items(group.rows, key = { "proj-${group.project.id}-${it.id}" }) {
+                                NestedRow { ConversationEntry(it, onOpen, onActions, onArchiveSwipe = swipeFor(it)) }
+                            }
+                        }
+                    }
+                    if (projects.isEmpty()) {
+                        item("project-new") { AddRow(stringResource(R.string.drawer_new_project), "project-new", enabled = canSwitch, onClick = onCreateProject) }
+                    }
                 }
                 if (sections.running.isNotEmpty()) {
                     // 「进行中」这一段的右边进「后台屏」页:看每个在跑的任务正在用哪个 App、实时画面
@@ -1355,6 +1385,23 @@ fun ChatWithDrawer(
             spaceActing = null
         }
     }
+    // Projects: the one long-pressed, and its dialogs.
+    val projects by vm.projects.collectAsState()
+    val collapsedProjects by vm.collapsedProjects.collectAsState()
+    var actingProject by remember { mutableStateOf<Pair<DrawerProjectGroup, Rect>?>(null) }
+    LaunchedEffect(actingProject) {
+        if (actingProject != null) lift.animateTo(1f, MikaMotion.specs(reduceMotion).spatialDefault())
+    }
+    fun closeProjectMenu(then: () -> Unit = {}) {
+        then()
+        scope.launch {
+            lift.animateTo(0f, MikaMotion.specs(reduceMotion).spatialFast())
+            actingProject = null
+        }
+    }
+    var creatingProject by remember { mutableStateOf(false) }
+    var renamingProject by remember { mutableStateOf<com.wangzan101.mika.chat.Project?>(null) }
+    var confirmingProject by remember { mutableStateOf<Pair<com.wangzan101.mika.chat.Project, com.wangzan101.mika.chat.ProjectDeleteImpact>?>(null) }
     var creatingSpace by remember { mutableStateOf(false) }
     var renamingSpace by remember { mutableStateOf<Space?>(null) }
     var deletingSpace by remember { mutableStateOf<Space?>(null) }
@@ -1382,6 +1429,10 @@ fun ChatWithDrawer(
             sideHistoryView = false
             everythingView = false
             spaceActing = null
+            actingProject = null
+            creatingProject = false
+            renamingProject = null
+            confirmingProject = null
             creatingSpace = false
             renamingSpace = null
             deletingSpace = null
@@ -1395,7 +1446,7 @@ fun ChatWithDrawer(
             drawer.snapTo(DrawerValue.Closed)
         }
     }
-    val menuOpen = acting != null || spaceActing != null
+    val menuOpen = acting != null || spaceActing != null || actingProject != null
     Box(Modifier.fillMaxSize()) {
         ModalNavigationDrawer(
             // 菜单开着时后面整屏(对话页和侧栏)模糊(安卓 12 起;更早的只变暗),无障碍也只读菜单
@@ -1504,6 +1555,9 @@ fun ChatWithDrawer(
                                 subtitle = summary.channel?.description.orEmpty()).copy(channelName = summary.channel?.name)
                         }
                 }
+                val projectGroups = remember(all, projects, current, canSwitch, deleted, runningIds) {
+                    drawerProjectGroups(all, projects, current.id, canSwitch, runningIds, deleted, System.currentTimeMillis())
+                }
                 val sideRows = remember(all, current, canSwitch, deleted, runningIds) {
                     val now = System.currentTimeMillis()
                     all.filter { it.id !in deleted && it.sideChat != null }.sortedByDescending { it.updatedAt }.map { summary ->
@@ -1554,6 +1608,12 @@ fun ChatWithDrawer(
                     onOpenSpace = { openSpaceId = it.id },
                     onCreateSpace = { creatingSpace = true },
                     onSpaceActions = { space, bounds -> spaceActing = space to bounds },
+                    projects = projectGroups,
+                    collapsedProjects = collapsedProjects,
+                    onToggleProject = vm::toggleProjectCollapsed,
+                    onCreateProject = { creatingProject = true },
+                    onNewInProject = { pid -> close { vm.newConversation(pid); onRegularChat() } },
+                    onProjectActions = { group, bounds -> actingProject = group to bounds },
                     everythingView = everythingView,
                     onEverything = { query = ""; everythingView = true },
                     onExitEverything = { query = ""; everythingView = false },
@@ -1676,6 +1736,21 @@ fun ChatWithDrawer(
             item.id?.let { id -> com.wangzan101.mika.export.ExportConversationDialog(id, item.title, onDismiss = { exporting = null }) }
         }
         usageFor?.let { id -> ConversationUsageSheet(id) { usageFor = null } }
+        actingProject?.let { (group, bounds) ->
+            val project = group.project
+            ProjectMenu(
+                group, bounds, progress = { lift.value },
+                onNewChat = { closeProjectMenu { close { vm.newConversation(project.id); onRegularChat() } } },
+                onRename = { closeProjectMenu { renamingProject = project } },
+                onTerminal = { closeProjectMenu {
+                    activity?.let { a ->
+                        com.wangzan101.mika.ui.terminal.TerminalLauncher.openWorkspace(a, com.wangzan101.mika.cap.sandbox.WorkspaceKey.Project(project.id), project.name)
+                    }
+                } },
+                onDelete = { closeProjectMenu { confirmingProject = project to vm.projectDeleteImpact(project.id) } },
+                onDismiss = { closeProjectMenu() },
+            )
+        }
         spaceActing?.let { (space, bounds) ->
             SpaceMenu(
                 space, bounds, progress = { lift.value },
@@ -1700,6 +1775,41 @@ fun ChatWithDrawer(
                 openSpaceId = space.id
             }
         }, onDismiss = { creatingSpace = false })
+    }
+    if (creatingProject) {
+        ProjectNameDialog(
+            title = stringResource(R.string.drawer_project_new_title),
+            initial = "",
+            confirmTag = "confirm-create-project",
+            onSave = { name ->
+                creatingProject = false
+                vm.createProject(name)?.getOrNull()?.let { p -> close { vm.newConversation(p.id); onRegularChat() } }
+            },
+            onDismiss = { creatingProject = false },
+        )
+    }
+    renamingProject?.let { project ->
+        ProjectNameDialog(
+            title = stringResource(R.string.drawer_project_rename_title),
+            initial = project.name,
+            confirmTag = "confirm-rename-project",
+            onSave = { name ->
+                renamingProject = null
+                vm.renameProject(project.id, name)
+            },
+            onDismiss = { renamingProject = null },
+        )
+    }
+    confirmingProject?.let { (project, impact) ->
+        DeleteProjectDialog(
+            project = project,
+            impact = impact,
+            onConfirm = {
+                confirmingProject = null
+                vm.deleteProject(project.id)
+            },
+            onDismiss = { confirmingProject = null },
+        )
     }
     renamingSpace?.let { space ->
         RenameSpaceDialog(space, onSave = { name ->
