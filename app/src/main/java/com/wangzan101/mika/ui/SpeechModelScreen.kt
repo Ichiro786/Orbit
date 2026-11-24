@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.SegmentedControl
 import com.wangzan101.mika.ui.theme.MikaShapes
@@ -27,8 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wangzan101.mika.MikaApp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.i18n.tr
@@ -53,6 +52,11 @@ import com.wangzan101.mika.voice.BailianRegion
 import com.wangzan101.mika.voice.FunAsrProtocol
 import com.wangzan101.mika.voice.LiveAsrTransport
 import com.wangzan101.mika.voice.probeLiveAsr
+import com.wangzan101.mika.voice.model.SttSelection
+import com.wangzan101.mika.voice.model.SttSelectionController
+import com.wangzan101.mika.voice.model.VoiceModelEnvironment
+import com.wangzan101.mika.voice.model.VoiceModelRef
+import com.wangzan101.mika.voice.model.VoiceCapability
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -62,6 +66,8 @@ import com.wangzan101.mika.ui.theme.MikaSpace
 class SpeechPickActions(
     /** 「手机自带」或「不用」:当场生效并返回。 */
     val pick: (SpeechChoice) -> Unit = {},
+    /** 迁移后的目录模型:只保存引用,不联网。 */
+    val pickRef: (VoiceModelRef) -> Unit = {},
     /** (服务商 id, 模型名):先试转,通了才选上并返回;列表里点的和手填的都走这里。 */
     val pickModel: (String, String) -> Unit = { _, _ -> },
     /** 进豆包流式识别的设置页。 */
@@ -72,7 +78,7 @@ class SpeechPickActions(
     val useDoubao: (String) -> Unit = {},
     val clearDoubao: () -> Unit = {},
     /** 进自建 Fun-ASR、百炼的设置页。 */
-    /** 进「Fun-ASR实时语音识别」的设置页(自建、百炼北京、百炼新加坡三个分页)。 */
+    /** 进「千问实时语音识别」的设置页(自建、百炼北京、百炼新加坡三个分页)。 */
     val openFunAsr: () -> Unit = {},
     /** 沿用上次那种(自建的地址,或百炼某个地域的模型),当场选用。 */
     val useFunAsr: () -> Unit = {},
@@ -83,14 +89,15 @@ class SpeechPickActions(
  * 选好(手机自带、不用、试转通过的服务商模型)后回到进来的那一页。
  */
 @Composable
-fun SpeechModelScreen(store: ProviderStore, onBack: () -> Unit) {
+fun SpeechModelScreen(store: ProviderStore, onBack: () -> Unit, onOpenServices: (() -> Unit)? = null) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val settings = (context.applicationContext as? MikaApp)?.speech
+    val voiceModels = remember { VoiceModelEnvironment.get(context) }
     var doubaoConfigured by remember { mutableStateOf(settings?.hasDoubaoCredentials == true) }
     // 豆包的设置页叠在这一页上面;返回键先关它
     var doubaoOpen by remember { mutableStateOf(false) }
-    // 「Fun-ASR实时语音识别」三个分页的已存内容;存、删之后重读
+    // 「千问实时语音识别」三个分页的已存内容;存、删之后重读
     fun funAsrSaved() = settings?.let { s ->
         FunAsrSaved(
             s.funAsrUrl, BailianRegion.entries.filter(s::hasBailianKey).toSet(),
@@ -123,13 +130,18 @@ fun SpeechModelScreen(store: ProviderStore, onBack: () -> Unit) {
                 val silent = settings?.systemSilent?.value ?: false
                 SystemSpeech.capability(context.applicationContext, silent)
             },
+            stt = voiceModels.stt,
         )
     }
     val ui by vm.state.collectAsState()
     val probe by vm.speechProbe.collectAsState()
-    LaunchedEffect(Unit) { vm.ensureListed(); vm.clearSpeechProbe() }
+    LaunchedEffect(ui.sttCatalog != null) {
+        if (ui.sttCatalog == null) vm.ensureListed()
+        vm.clearSpeechProbe()
+    }
     val actions = SpeechPickActions(
         pick = { vm.pickSpeech(it); onBack() },
+        pickRef = { vm.pickSttModel(it) },
         pickModel = { pid, model -> vm.pickSpeechModel(pid, model, onPicked = onBack) },
         openDoubao = { doubaoOpen = true },
         // 存好后回到语音转文字页,看得到它已选上
@@ -187,7 +199,64 @@ fun SpeechModelScreen(store: ProviderStore, onBack: () -> Unit) {
                 onClearBailian = { region -> settings?.clearBailian(region); funAsrDone() },
             ) { funAsrOpen = false }
         }
+        ui.sttCatalog != null -> MigratedSpeechModelContent(ui, actions, onBack, onOpenServices)
         else -> SpeechModelContent(ui, probe, actions, onBack, doubaoConfigured, funAsrLast != null)
+    }
+}
+
+/** 迁移后只选择目录里的模型;系统健康说明保留,模型选择本身不发送请求。 */
+@Composable
+private fun MigratedSpeechModelContent(
+    ui: ModelSetupUi, actions: SpeechPickActions, onBack: () -> Unit, onOpenServices: (() -> Unit)?,
+) {
+    val context = LocalContext.current
+    val voiceVm = rememberVoiceCatalogViewModel(remember { VoiceModelEnvironment.get(context) })
+    val catalog = requireNotNull(ui.sttCatalog)
+    val system = ui.systemSpeech
+    val selection = catalog.selections.stt
+    val systemSelected = system.usable &&
+        (selection == SttSelection.Model(SttSelectionController.SYSTEM_STT_REF) || selection == SttSelection.Auto)
+    val c = MikaTheme.colors
+    Page(tr(R.string.voice_hub_stt), onBack) {
+        Text(
+            tr(R.string.speech_hint), Modifier.padding(top = MikaSpace.S4, bottom = MikaSpace.S12), style = MikaType.Body, color = c.ink2,
+        )
+        GroupCard {
+            RadioRow(
+                tr(R.string.speech_system), selected = systemSelected, enabled = system.available,
+                onClick = { actions.pick(SpeechChoice.System) }, first = true,
+                subtitle = tr(
+                    when {
+                        !system.available -> R.string.speech_system_none_note
+                        !system.responsive -> R.string.speech_system_silent_note
+                        system.onDevice -> R.string.speech_system_note
+                        else -> R.string.speech_system_note_online
+                    },
+                ),
+                trailing = {
+                    when {
+                        system.usable -> StatusPill(tr(R.string.speech_tag_ok), PillTone.Ok)
+                        system.available -> StatusPill(tr(R.string.speech_tag_silent), PillTone.Neutral)
+                        else -> StatusPill(tr(R.string.speech_tag_none), PillTone.Neutral)
+                    }
+                },
+            )
+            RadioRow(
+                tr(R.string.models_off), selected = selection == SttSelection.Off,
+                onClick = { actions.pick(SpeechChoice.Off) }, subtitle = tr(R.string.speech_off_note),
+            )
+        }
+        val choices = voiceOptions(VoiceCapability.STT, catalog, ui.providers).filter { it.source != VoiceSource.Device }
+        if (choices.isNotEmpty()) {
+            GroupLabel(tr(R.string.voice_choices_label))
+            VoiceOptionList(
+                choices, (selection as? SttSelection.Model)?.ref, tr(R.string.voice_try_stt), voiceVm,
+                onPick = { choice -> actions.pickRef(voiceVm.ensureInCatalog(choice)) },
+                onTest = { choice -> voiceVm.tryChoice(choice, "") },
+            )
+        }
+        onOpenServices?.let { VoiceMoreServices(it) }
+        FooterNote(tr(R.string.voice_stt_footer), Modifier.padding(top = MikaSpace.S8))
     }
 }
 
@@ -239,7 +308,8 @@ fun SpeechModelContent(
             val testing = ui.speechTesting == p.id
             GroupLabel(ModelsCopy.providerName(p))
             // 手填选上的模型不在列表里,也补一行标成选中,让人看得出现在用的是哪个
-            val picked = (choice as? SpeechChoice.Provider)?.takeIf { it.providerId == p.id }?.model
+            val picked = (choice as? SpeechChoice.Provider)
+                ?.takeIf { it.providerId == p.id }?.model
             val rows = if (picked != null && picked !in g.models) g.models + picked else g.models
             GroupCard {
                 rows.forEachIndexed { i, id ->
@@ -270,7 +340,7 @@ fun SpeechModelContent(
 }
 
 /**
- * 「边说边转的语音服务」一组:豆包和「Fun-ASR实时语音识别」(自建服务、百炼北京、百炼新加坡三选一,在它的设置页里分页)各一行。
+ * 「边说边转的语音服务」一组:豆包和「千问实时语音识别」(自建服务、百炼北京、百炼新加坡三选一,在它的设置页里分页)各一行。
  * 没设置过时点行进设置页;设置过以后点圆圈就用它(Fun-ASR 沿用上次那种),右边「设置」进去改或删掉。
  * 凭据和聊天服务商分开存,不列模型、不试转。
  */

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keypool_keys">API keys</string>
+    <string name="keypool_one">API key pool · 1 key</string>
+    <string name="keypool_many">API key pool · Keys: %1$d · rotating</string>
+    <string name="keypool_show">Show keys</string>
+    <string name="keypool_hide">Hide keys</string>
+    <string name="keypool_show_short">Show</string>
+    <string name="keypool_hide_short">Hide</string>
+    <string name="keypool_none">No key configured</string>
+    <string name="keypool_none_sub">Add a key to connect this provider</string>
+    <string name="keypool_required">Required</string>
+    <string name="keypool_key_n">Key %1$d</string>
+    <string name="keypool_active">Active</string>
+    <string name="keypool_remove">Remove</string>
+    <string name="keypool_add">Add API key</string>
+    <string name="keypool_add_first">Paste your key to connect</string>
+    <string name="keypool_add_more">Add another key to the rotation pool</string>
+    <string name="keypool_footer_many">Keys rotate automatically: a key that hits a rate limit (429) or times out is skipped until it recovers.</string>
+    <string name="keypool_footer_one">Add more keys to switch automatically when one is rate-limited.</string>
+    <string name="keypool_paste_hint">Paste one or more keys (comma or newline separated)</string>
+    <string name="keypool_detected">Key pool: %1$d keys detected (rotating on 429 or timeout)</string>
+    <string name="keypool_add_body">Paste one key, or several separated by commas or new lines to add them all at once.</string>
+    <string name="keypool_paste_here">Paste API key(s) here</string>
+    <string name="keypool_add_detected">Keys detected: %1$d. All will be added to the rotation pool.</string>
+    <string name="keypool_add_one">1 key ready to add</string>
+    <string name="keypool_add_n">Add keys: %1$d</string>
+    <string name="keypool_setup_detected">Keys detected: %1$d. The pool rotates on rate limits or timeouts.</string>
+    <string name="keypool_setup_one">1 key ready</string>
+    <string name="models_no_providers">No providers connected</string>
+    <string name="models_providers_pool">Providers: %1$d · keys in pool: %2$d</string>
+    <string name="models_providers_n">Providers: %1$d</string>
+    <string name="model_remove_backup">Remove backup</string>
+</resources>

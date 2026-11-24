@@ -99,10 +99,12 @@ fun PlanEditorDialog(
     newThreadId: String,
     onDismiss: () -> Unit,
     onSave: (TriggerDefinition) -> Unit,
+    /** A draft to start from (copying a plan); null starts blank. */
+    initialDraft: PlanDraft? = null,
 ) {
     val newId = remember(original?.id) { original?.id ?: UUID.randomUUID().toString() }
     var draft by remember(original?.id) {
-        mutableStateOf(original?.toPlanDraft() ?: newPlanDraft(System.currentTimeMillis()))
+        mutableStateOf(original?.toPlanDraft() ?: initialDraft ?: newPlanDraft(System.currentTimeMillis()))
     }
     var attempted by remember(original?.id) { mutableStateOf(false) }
     val candidate = runCatching {
@@ -135,7 +137,11 @@ fun PlanEditorDialog(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        tr(if (original == null) R.string.plans_create_title else R.string.plans_edit_title),
+                        tr(when {
+                            original != null -> R.string.plans_edit_title
+                            initialDraft != null -> R.string.plans_copy
+                            else -> R.string.plans_create_title
+                        }),
                         Modifier.weight(1f).semantics { heading() },
                         style = MikaType.Title.copy(fontSize = 22.sp, lineHeight = 28.sp), color = c.ink,
                     )

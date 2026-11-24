@@ -8,6 +8,14 @@ import com.wangzan101.mika.settings.AesGcmKeyCipher
 import com.wangzan101.mika.settings.ChatGptSignIns
 import com.wangzan101.mika.settings.ProviderConfig
 import com.wangzan101.mika.settings.ProviderStore
+import com.wangzan101.mika.settings.configFor
+import com.wangzan101.mika.settings.connect
+import com.wangzan101.mika.settings.connectOpenRouter
+import com.wangzan101.mika.settings.openRouterAccount
+import com.wangzan101.mika.settings.providerKey
+import com.wangzan101.mika.settings.signOutOpenRouter
+import java.io.File
+import javax.crypto.KeyGenerator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,8 +37,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.io.File
-import javax.crypto.KeyGenerator
 
 /**
  * 用 OpenRouter 账号登录走一遍:浏览器(假的)打开授权页,带着 code 回到本机回调,换到 Key,
@@ -52,12 +58,14 @@ class OpenRouterSignInTest {
         server.shutdown()
     }
 
-    private fun store() = ProviderStore(
+    private fun store(
+        models: List<ListedModel> = listOf(ListedModel("openai/gpt-x"), ListedModel("anthropic/claude-x")),
+    ) = ProviderStore(
         tmp.root, AesGcmKeyCipher { key },
         openRouterAuth = OpenRouterAuth(http, keysUrl = server.url("/api/v1/auth/keys").toString()),
         modelLister = { _, url, apiKey, _ ->
             synchronized(listCalls) { listCalls += url to apiKey }
-            ModelListResult.Ok(listOf(ListedModel("openai/gpt-x"), ListedModel("anthropic/claude-x")))
+            ModelListResult.Ok(models)
         },
     )
 
@@ -128,6 +136,27 @@ class OpenRouterSignInTest {
         assertEquals(listOf<String?>("已取消登录。"), browser.pages)
         assertTrue(s.providers.value.isEmpty())
         assertEquals(0, server.requestCount)
+    }
+
+    @Test fun accountSignInPicksAUsableMainModel() {
+        val models = listOf(
+            ListedModel("fishaudio/drama-3-int4"),
+            ListedModel("vendor/synth", unsupportedApis = listOf("/v1/audio/speech")),
+            ListedModel("vendor/opaque"),
+        )
+        val s = store(models)
+        val existing = s.connectOpenRouter("old-key", models)
+        server.enqueue(MockResponse().setHeader("Content-Type", "application/json").setBody("""{"key":"sk-or-v1-NEW"}"""))
+        val vm = ModelSetupViewModel(s, scope, io = Dispatchers.IO, browser = Browser(), signIns = ChatGptSignIns(scope))
+
+        val ui = vm.signInAndWait(AccountProvider.OpenRouter)
+
+        assertEquals(existing.id, ui.signedInProvider)
+        assertTrue(ui.openRouterAccount!!.signedIn)
+        assertEquals(models, s.openRouterAccount()?.models)
+        // 不再按 ttsModels 标记排除:第一个可用的对话模型成为主模型
+        assertNotNull(ui.roles.main)
+        assertEquals("fishaudio/drama-3-int4", s.configFor(com.wangzan101.mika.core.model.ModelRole.Main)?.model)
     }
 
     /**

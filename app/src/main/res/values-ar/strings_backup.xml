@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="backup_title">النسخ الاحتياطي والبيانات</string>
+    <string name="backup_sub">صدّر كل شيء إلى ملف ZIP، أو استعد من ملف</string>
+    <string name="backup_warning_title">هذه النسخة الاحتياطية غير مشفّرة</string>
+    <string name="backup_warning_body">يحتوي ملف ZIP على كل أسرارك: مفاتيح API ورموز OAuth وبيانات اعتماد الخدمات. أبقِه خاصًا، ولا تشاركه، واحذفه بعد استيراده.</string>
+    <string name="backup_included_label">ما الذي يتم تضمينه</string>
+    <string name="backup_included_body">المزوّدون والمفاتيح، والمحادثات، والشخصيات، والمهارات، والذاكرة، وسير العمل، وتشغيلات المهام، والإعدادات.</string>
+    <string name="backup_excluded_body">غير مضمّن: إقران التصحيح اللاسلكي (أعد الإقران بعد الاستيراد)، وإعداد خدمة الوصول (أعد تشغيله في إعدادات Android)، ومساحة عمل العزل (sandbox)، ومرفقات مكتبة الملفات.</string>
+
     <string name="backup_group">النسخ الاحتياطي</string>
     <string name="backup_export">تصدير نسخة احتياطية</string>
     <string name="backup_export_sub">احفظ محادثاتك ومهاراتك الشخصية في ملف واحد محمي بكلمة مرور.</string>
     <string name="backup_import">استيراد نسخة احتياطية</string>
     <string name="backup_import_sub">أضف محادثات من ملف نسخة احتياطية. لا يتم أبدًا استبدال المحادثات الموجودة على هذا الهاتف أو حذفها.</string>
+    <string name="backup_exported">تم حفظ النسخة الاحتياطية: %1$d ملف.</string>
+    <string name="backup_exported_skipped">تم حفظ النسخة الاحتياطية: %1$d ملف. تعذّر فك تشفير %2$d مفتاح وتم استبعادها.</string>
     <string name="backup_note">لا تشمل النسخة مفاتيح API للنماذج ولا الذاكرة ولا الملفات المحفوظة في التنزيلات.</string>
     <string name="backup_working">جارٍ التنفيذ…</string>
     <string name="backup_export_dialog_title">احمِ نسختك الاحتياطية</string>
@@ -19,10 +29,24 @@
     <string name="backup_export_failed">تعذّر حفظ النسخة الاحتياطية.</string>
     <string name="backup_import_done">اكتمل الاستيراد. الملفات الجديدة المضافة: %1$d. الملفات الموجودة التي أُبقيت: %2$d. تم تحديث قائمة المحادثات.</string>
     <string name="backup_import_failed">تعذّر إكمال استيراد النسخة الاحتياطية.</string>
+    <string name="backup_import_confirm_title">هل تريد استبدال البيانات الحالية؟</string>
+    <string name="backup_import_confirm_body">يحتوي هذا الهاتف بالفعل على محادثات ومزوّدين. سيؤدي الاستيراد إلى استبدالها.</string>
+    <string name="backup_replace">استبدال الكل</string>
+    <string name="backup_imported_title">تمت استعادة النسخة الاحتياطية</string>
+    <string name="backup_imported_body">تمت استعادة %1$d ملف.</string>
+    <string name="backup_after_import_body">أغلق Orbit ثم افتحه مرة أخرى لاستخدام البيانات المستعادة. بعد ذلك، أعد إقران التصحيح اللاسلكي، وأعد تشغيل خدمة الوصول في إعدادات Android، واحذف ملف ZIP للنسخة الاحتياطية.</string>
+    <string name="backup_close_app">إغلاق Orbit</string>
+    <string name="backup_restart_note">صدّر أولًا قبل إلغاء تثبيت أي شيء: هذا التثبيت فقط هو من يستطيع فك تشفير بياناتك.</string>
     <string name="backup_err_password">كلمة المرور غير صحيحة أو الملف تالف.</string>
     <string name="backup_err_format">هذا ليس ملف نسخة احتياطية لـ Orbit.</string>
     <string name="backup_err_version">أُنشئت هذه النسخة بإصدار أحدث من Orbit.</string>
     <string name="backup_err_unsafe">تحتوي النسخة على مسارات ملفات غير آمنة وتم رفضها.</string>
     <string name="backup_err_too_large">النسخة الاحتياطية كبيرة جدًا للاستيراد.</string>
     <string name="backup_err_corrupt">ملف النسخة الاحتياطية تالف أو غير مكتمل.</string>
+    <string name="backup_zip_export">تصدير النسخة الاحتياطية</string>
+    <string name="backup_zip_export_sub">احفظ ملف ZIP بكل بياناتك</string>
+    <string name="backup_zip_import">استيراد النسخة الاحتياطية</string>
+    <string name="backup_zip_import_sub">استعد كل شيء من ملف ZIP للنسخة الاحتياطية</string>
+    <string name="backup_zip_export_failed">تعذّر حفظ النسخة الاحتياطية.</string>
+    <string name="backup_zip_import_failed">تعذّر استيراد هذه النسخة الاحتياطية.</string>
 </resources>

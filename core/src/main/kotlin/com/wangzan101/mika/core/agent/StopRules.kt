@@ -42,6 +42,7 @@ internal object StopRules {
     fun modelFailed(e: Throwable): TaskState.Failed = when (e) {
         is ModelError.TaskBudgetExceeded -> TaskState.Failed(userReason(e), FailKind.TokenLimit)
         is ModelError.DailyBudgetExceeded -> TaskState.Failed(userReason(e), FailKind.TokenLimit)
+        is ModelError.ProactiveBudgetExceeded -> TaskState.Failed(userReason(e), FailKind.TokenLimit)
         is ModelError.RateLimited -> TaskState.Failed(userReason(e), FailKind.Model, FailureCode.ModelRateLimited)
         is ModelError -> TaskState.Failed(userReason(e), FailKind.Model)
         else -> TaskState.Failed("Model call failed: ${e.message ?: e::class.simpleName}", FailKind.Model)
@@ -51,7 +52,7 @@ internal object StopRules {
         val treeBlind = v.evidence["treeBlind"] == JsonPrimitive(true)
         val why = when (v.code) {
             "repeating_action" -> "the same action was repeated with no effect"
-            "no_progress" -> if (treeBlind) "the control tree could not locate the target and the screen showed no visible change after repeated actions, so I could not confirm the action worked and stopped retrying"
+            "no_progress" -> if (treeBlind) "this screen's controls could not be read and taps and swipes had no visible effect; this app may not respond to Orbit's automated actions"
                 else "the screen did not change after several actions"
             "read_loop" -> "the page did not change and repeated reads found nothing new"
             "too_many_failures" -> "actions kept failing"
@@ -64,10 +65,13 @@ internal object StopRules {
 
 internal fun userReason(e: ModelError): String = when (e) {
     is ModelError.Auth -> "The model service rejected the request: the API key is invalid or lacks permission. Check the API key in Settings and that it can use this model."
+    is ModelError.IllegalHeader -> "The API key contains characters that cannot be used. In Settings › Model, paste only the key itself, without notes, line breaks or emoji."
     is ModelError.QuotaExceeded -> "The model account's quota is used up. Check the provider account's balance or plan."
     is ModelError.TaskBudgetExceeded -> "Reached this task's budget of ${e.limit} tokens; the task is not finished."
     is ModelError.DailyBudgetExceeded ->
         "Provider \"${e.providerName}\" reached today's budget of ${e.limit} tokens; the task is not finished. It resets when the local date changes."
+    // Proactive calls are not made inside tasks, so this should not happen; if it does, just say so plainly.
+    is ModelError.ProactiveBudgetExceeded -> "Proactive suggestions reached today's budget. It resets when the local date changes."
     is ModelError.ModelNotFound -> {
         // 404 不一定是模型名不对(地址不对,或网关、中转服务说的别的情况):有原话时照原话说,不断定模型不存在
         val check = if (e.model.isEmpty()) "Check the model name and Base URL in Settings › Model."
@@ -88,6 +92,10 @@ internal fun userReason(e: ModelError): String = when (e) {
     is ModelError.ContentRefused -> "The model refused to process this content. Rephrase the task or pick another model."
     is ModelError.ReasoningEffortRejected ->
         "The model does not accept the selected reasoning effort. Server replied: ${quoted(e.detail)}. Set reasoning effort to default or a level the server supports in Settings › Model."
+    is ModelError.ServiceTierRejected ->
+        "OpenAI does not accept the selected response speed. " +
+            (if (e.detail.isBlank()) "" else "Server replied: ${quoted(e.detail)}. ") +
+            "In Settings › Model › Providers, open this model and set response speed to default or another available level."
     is ModelError.RateLimited -> "The model service is rate limiting; requests are still too frequent after retrying. Try again later or check the account's rate limits."
     is ModelError.Network -> "Could not reach the model service after retrying. Check the network and Base URL."
     is ModelError.Proxy -> when (e.failure) {
@@ -106,6 +114,25 @@ internal fun userReason(e: ModelError): String = when (e) {
     is ModelError.SignInExpired -> "Your ${e.account} sign-in has expired. Sign in with ${e.account} again in Settings › Model."
     is ModelError.AccountPlanNotAllowed ->
         "Your ${e.account} subscription tier cannot use this endpoint (HTTP 403). ${if (e.detail.isEmpty()) "" else "Server note: ${quoted(e.detail)}. "}Use a ${e.account} API key instead, or pick another model in Settings › Model."
+    is ModelError.ChainFailed -> {
+        // The main message is the primary model's original error (worded by its type above); then each model in the chain with its status and one line.
+        val trail = e.entries.joinToString("; ") { (name, err) ->
+            "\"$name\"${chainErrorTag(err)}: ${err.message.orEmpty().lineSequence().firstOrNull().orEmpty().take(80)}"
+        }
+        userReason(e.primary) + " This task tried the whole fallback chain and every model failed: $trail."
+    }
+    is ModelError.GroupUnavailable ->
+        "Model group \"${e.group}\" has no usable model${if (e.detail.isEmpty()) "" else " (${e.detail})"}. In Settings › Model, check that the group's members are enabled and have the needed abilities, or try again later."
+    is ModelError.GroupExhausted ->
+        "Every model in group \"${e.group}\" has reached its limit${if (e.detail.isEmpty()) "" else " (${e.detail})"}. Try again later or adjust the group's settings."
+}
+
+/** Short tag for each error in a chain-failure record: the HTTP status when known, otherwise the failure name. */
+private fun chainErrorTag(e: ModelError): String = when (e) {
+    is ModelError.Server -> " HTTP ${e.status}"
+    is ModelError.RateLimited -> " HTTP 429"
+    is ModelError.Auth -> " " + RetryPolicy.label(e)
+    else -> " ${RetryPolicy.label(e)}"
 }
 
 /** 引在句中的服务端原话:去掉末尾一个句号(原话自带的),由引它的句子补上自己的「。」;省略号(截短的「…」、「...」)不动。 */

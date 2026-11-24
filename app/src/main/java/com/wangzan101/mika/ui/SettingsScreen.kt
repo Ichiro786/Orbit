@@ -20,11 +20,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.wangzan101.mika.settings.configFor
+import com.wangzan101.mika.settings.setVisionGroundingVerified
 import com.wangzan101.mika.ui.components.FooterNote
 import com.wangzan101.mika.ui.theme.MikaType
 import androidx.compose.foundation.ScrollState
 import com.wangzan101.mika.R
 import com.wangzan101.mika.i18n.tr
+import com.wangzan101.mika.i18n.trPlural
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.wangzan101.mika.settings.ProviderConnection
@@ -101,7 +104,10 @@ import com.wangzan101.mika.ui.theme.SettingsTint
 import com.wangzan101.mika.ui.theme.MikaSize
 
 /** 设置里能进入的子页面;[Home] 是设置首页,[Advanced] 集中放置连接、维护和工程能力。 */
-private enum class SettingsPage { Home, Advanced, AppAccess, PhoneOps, Calls, Whatsapp, DuringWork, Capsule, Language, Appearance, Voice, Prompts, PromptInstructions, PromptSystem, Notifications, Recommendations, Sandbox, Recovery, SelfCheck, ComputerAccess, McpServers, Root, Developer, RunStats }
+private enum class SettingsPage { Home, Advanced, AppAccess, PhoneOps, Calls, Whatsapp, DuringWork, Capsule, Language, Appearance, Voice, Prompts, PromptInstructions, PromptSystem, Notifications, Recommendations, Sandbox, Recovery, SelfCheck, ComputerAccess, McpServers, Root, Developer, RunStats,
+    SmsLogin, AppPace, Checklists, Workflows, Plugins, EnvVars, DeviceDirectories, Proactive, Backup }
+
+private const val SHIZUKU_SETUP_GUIDE_URL = "https://shizuku.rikka.app/guide/setup/"
 
 /**
  * 设置页:总状态卡 + 常用 / 我的数据 / 其他。高级与其他只增加一层,各子页返回来时的页面。
@@ -117,6 +123,10 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onOpenModels: () -> Unit,
     onOpenMemory: (() -> Unit)? = null,
+    onOpenBrowser: () -> Unit = {},
+    onOpenFiles: () -> Unit = {},
+    onOpenPersonal: () -> Unit = {},
+    onOpenPlans: () -> Unit = {},
     /** 任务运行里的「自主模式」:当前值和换它的办法。 */
     autonomous: Boolean = false,
     onAutonomous: (Boolean) -> Unit = {},
@@ -128,23 +138,44 @@ fun SettingsScreen(
     /** 外部 MCP server 设置(outbound);为空时不显示入口。 */
     mcpServers: com.wangzan101.mika.settings.McpServerStore? = null,
     onOpenSpeech: () -> Unit = {},
+    /** After the call settings move, opens the shared voice model catalog. */
+    onOpenVoiceCatalog: () -> Unit = {},
+    /** Persona settings; null hides the entry. */
+    onOpenPersonas: (() -> Unit)? = null,
+    openPhoneOps: Boolean = false,
+    onPhoneOpsOpened: () -> Unit = {},
 ) {
     val configs by store.configs.collectAsState()
     val roles by store.roles.collectAsState()
+    val groups by store.groups.collectAsState()
     // 开发者选项里的「看图定位已验证」跟着看图模型(看图用主模型时是主模型那条配置)
     val visionConfig = remember(configs, roles) { store.configFor(ModelRole.Vision) }
-    var page by rememberSaveable { mutableStateOf(SettingsPage.Home) }
+    var page by rememberSaveable { mutableStateOf(if (openPhoneOps) SettingsPage.PhoneOps else SettingsPage.Home) }
     var explaining by remember { mutableStateOf<Problem?>(null) }
     // 「完全退出」先问一句:任务、胶囊和通知都会停
     var confirmingQuit by remember { mutableStateOf(false) }
 
-    fun fix(f: Fix) = if (f == Fix.AddModel) onOpenModels() else onFix(f)
+    LaunchedEffect(openPhoneOps) {
+        if (openPhoneOps) {
+            page = SettingsPage.PhoneOps
+            onPhoneOpsOpened()
+        }
+    }
+
+    fun fix(f: Fix) = when (f) {
+        Fix.AddModel -> onOpenModels()
+        Fix.OpenPhoneOps -> page = SettingsPage.PhoneOps
+        else -> onFix(f)
+    }
     val onProblem: (Problem) -> Unit = { p -> StatusCopy.directFix(p)?.let(::fix) ?: run { explaining = p } }
 
     // 并行任务的上限只在实验开关 parallelTasks 打开时出现;设备能力按此刻算,第二块屏建失败过就按失败算
     val context = LocalContext.current
     val recommendedTasks = remember { (context.applicationContext as com.wangzan101.mika.MikaApp).recommendedTasks }
-    val root = remember { com.wangzan101.mika.cap.phone.PhoneServices.of(context).shellManager.root }
+    val savedChecklists = remember { (context.applicationContext as com.wangzan101.mika.MikaApp).savedChecklists }
+    val workflows = remember { (context.applicationContext as com.wangzan101.mika.MikaApp).workflows }
+    val shellManager = remember { com.wangzan101.mika.cap.phone.PhoneServices.of(context).shellManager }
+    val root = remember { shellManager.root }
     val rootState by root.state.collectAsState()
     LaunchedEffect(Unit) { root.refresh() }
     val whatsapp = remember { (context.applicationContext as com.wangzan101.mika.MikaApp).whatsapp }
@@ -153,12 +184,21 @@ fun SettingsScreen(
     var personalStart by remember { mutableStateOf(flags.personalStart()) }
     var parallelMax by remember { mutableIntStateOf(flags.parallelMax()) }
     var keepScreenOn by remember { mutableStateOf(flags.keepScreenOn()) }
+    val pocketPrefs = remember { context.getSharedPreferences(com.wangzan101.mika.pocket.PocketGuardManager.PREFS, 0) }
+    var pocketGuard by remember { mutableStateOf(pocketPrefs.getBoolean(com.wangzan101.mika.pocket.PocketGuardManager.ENABLED, false)) }
+    var pocketCompletionLock by remember { mutableStateOf(pocketPrefs.getBoolean(com.wangzan101.mika.pocket.PocketGuardManager.LOCK_ON_COMPLETION, false)) }
+    var showTaskCost by remember { mutableStateOf(flags.showTaskCost()) }
     var muteTarget by remember { mutableStateOf(flags.muteTarget()) }
     var operatingPace by remember { mutableStateOf(flags.operatingPace()) }
     var stepLimit by remember { mutableStateOf(flags.taskStepLimit()) }
+    var triggerRunMinutes by remember { mutableStateOf(flags.triggerRunMinutes()) }
+    var sandboxBudgetMinutes by remember { mutableStateOf(flags.sandboxBudgetMinutes()) }
+    var attachmentMaxMb by remember { mutableStateOf(flags.attachmentMaxMb()) }
+    var workspaceMaxGb by remember { mutableStateOf(flags.workspaceMaxGb()) }
     var tokenBudget by remember { mutableStateOf(flags.taskTokenBudget()) }
     var selfConfig by remember { mutableStateOf(flags.selfConfig()) }
     var selfOperate by remember { mutableStateOf(flags.selfOperate()) }
+    var deviceFiles by remember { mutableStateOf(flags.deviceFiles()) }
     var pipOperate by remember { mutableStateOf(flags.pipOperate()) }
     var externalSchedule by remember { mutableStateOf(flags.externalSchedule()) }
     var autoArchiveDays by remember { mutableStateOf(flags.autoArchiveDays()) }
@@ -191,6 +231,8 @@ fun SettingsScreen(
     val mcpNetworkOn by mcp.settings.enabled.collectAsState()
     val mcpUsbOn by mcp.usb.enabled.collectAsState()
     val mcpOn = mcpNetworkOn || mcpUsbOn
+    val pluginRegistry = remember { (context.applicationContext as com.wangzan101.mika.MikaApp).plugins }
+    val pluginRecords by pluginRegistry.plugins.collectAsState()
     val parallel = if (!speed.parallelTasks) null else ParallelSetting(
         parallelMax,
         ParallelCapability.detect(
@@ -204,11 +246,13 @@ fun SettingsScreen(
     val toAdvanced = { page = SettingsPage.Advanced }
     val back = {
         page = when (page) {
-            SettingsPage.RunStats -> SettingsPage.Developer
+            SettingsPage.RunStats, SettingsPage.DeviceDirectories -> SettingsPage.Developer
+            SettingsPage.AppPace -> SettingsPage.DuringWork
+            SettingsPage.Checklists, SettingsPage.Workflows -> SettingsPage.Recommendations
             SettingsPage.SelfCheck -> SettingsPage.Recovery
             SettingsPage.PromptInstructions, SettingsPage.PromptSystem -> SettingsPage.Prompts
             SettingsPage.Sandbox, SettingsPage.ComputerAccess,
-            SettingsPage.McpServers, SettingsPage.Root, SettingsPage.Developer -> SettingsPage.Advanced
+            SettingsPage.McpServers, SettingsPage.Root, SettingsPage.Developer, SettingsPage.EnvVars, SettingsPage.Plugins -> SettingsPage.Advanced
             else -> SettingsPage.Home
         }
     }
@@ -216,20 +260,25 @@ fun SettingsScreen(
     if (page != SettingsPage.Home) BackHandler { back() }
 
     val visiblePage = when {
-        !showDeveloper && (page == SettingsPage.Developer || page == SettingsPage.RunStats) -> SettingsPage.Home
+        !showDeveloper && (page == SettingsPage.Developer || page == SettingsPage.DeviceDirectories || page == SettingsPage.RunStats) -> SettingsPage.Home
         page == SettingsPage.Root && !rootState.suPresent -> SettingsPage.Advanced
         else -> page
     }
     when (visiblePage) {
         SettingsPage.Home -> SettingsContent(
             status = status, androidRelease = androidRelease,
-            mainModel = roles.main?.let { id -> configs.firstOrNull { it.id == id } }?.let(ProviderConnection::displayName),
+            mainModel = roles.main?.let { id -> configs.firstOrNull { it.id == id } }?.let(ProviderConnection::displayName)
+                ?: roles.mainGroup?.let { id -> groups.firstOrNull { it.id == id }?.name },
             onBack = onBack, onProblem = onProblem, onOpenModels = onOpenModels,
             onOpenPhoneOps = { page = SettingsPage.PhoneOps },
             onOpenCalls = { page = SettingsPage.Calls },
             whatsappStatus = whatsappStatus,
             onOpenWhatsapp = { page = SettingsPage.Whatsapp },
             onOpenAppAccess = { page = SettingsPage.AppAccess },
+            onOpenProactive = { page = SettingsPage.Proactive },
+            onOpenSmsLogin = { page = SettingsPage.SmsLogin },
+            onOpenBackup = { page = SettingsPage.Backup },
+            onOpenPersonas = onOpenPersonas,
             onOpenDuringWork = { page = SettingsPage.DuringWork },
             capsuleMode = capsuleMode, onOpenCapsule = { page = SettingsPage.Capsule },
             onOpenNotifications = { page = SettingsPage.Notifications },
@@ -252,6 +301,8 @@ fun SettingsScreen(
             proxy = proxy, proxyNote = proxy?.let { NetProxyCopy.subtitle(it, browserProxy) }, onOpenProxy = { editingProxy = true },
             webSearch = webSearch, onOpenWebSearch = { editingSearch = true },
             sandbox = sandboxStatus, onOpenSandbox = { page = SettingsPage.Sandbox },
+            pluginsCount = pluginRecords.size, onOpenPlugins = { page = SettingsPage.Plugins },
+            onOpenEnvVars = { page = SettingsPage.EnvVars },
             showRecovery = status.sdkInt >= Prerequisites.MIN_SDK, onOpenRecovery = { page = SettingsPage.Recovery },
             computerAccess = mcpOn, onOpenComputerAccess = { page = SettingsPage.ComputerAccess },
             mcpServersCount = mcpServers?.servers?.value?.size, onOpenMcpServers = { page = SettingsPage.McpServers },
@@ -261,12 +312,21 @@ fun SettingsScreen(
             onQuit = { confirmingQuit = true },
         )
         SettingsPage.AppAccess -> AppAccessScreen(onBack = toHome)
+        SettingsPage.SmsLogin -> SmsLoginSettingsScreen(onBack = toHome)
         SettingsPage.Whatsapp -> WhatsappSettingsScreen(whatsapp, onBack = toHome)
         SettingsPage.PhoneOps -> PhoneOpsScreen(
             status, androidRelease, onProblem,
             onRepair = { onFix(Fix.RepairPhoneHelper) }, onUnpair = { onFix(Fix.UnpairPhoneHelper) }, onBack = toHome,
+            onSelectTransport = { shellManager.engine.selectTransport(it) },
+            onGrantShizuku = {
+                if (!shellManager.shizuku.openGrantPermissionOrApp(context)) {
+                    openInBrowser(context, SHIZUKU_SETUP_GUIDE_URL)
+                }
+            },
+            onOpenShizukuGuide = { openInBrowser(context, SHIZUKU_SETUP_GUIDE_URL) },
+            onRefreshShizuku = { shellManager.refreshShizukuAsync() },
         )
-        SettingsPage.Calls -> CallSettingsScreen((context.applicationContext as com.wangzan101.mika.MikaApp).calls, onBack = toHome)
+        SettingsPage.Calls -> CallSettingsScreen((context.applicationContext as com.wangzan101.mika.MikaApp).calls, onBack = toHome, onOpenVoiceCatalog = onOpenVoiceCatalog)
         SettingsPage.Notifications -> NotificationsScreen(status, onFix = ::fix, onBack = back)
         SettingsPage.DuringWork -> DuringWorkScreen(
             keepScreenOn, onKeepScreenOn = { flags.setKeepScreenOn(it); keepScreenOn = it },
@@ -275,19 +335,33 @@ fun SettingsScreen(
             autonomous = autonomous, onAutonomous = onAutonomous,
             operatingPace = operatingPace, onOperatingPace = { flags.setOperatingPace(it); operatingPace = it },
             stepLimit = stepLimit, onStepLimit = { flags.setTaskStepLimit(it); stepLimit = it },
+            triggerRunMinutes = triggerRunMinutes, onTriggerRunMinutes = { flags.setTriggerRunMinutes(it); triggerRunMinutes = it },
+            sandboxBudgetMinutes = sandboxBudgetMinutes, onSandboxBudgetMinutes = { flags.setSandboxBudgetMinutes(it); sandboxBudgetMinutes = it },
+            attachmentMaxMb = attachmentMaxMb, onAttachmentMaxMb = { flags.setAttachmentMaxMb(it); attachmentMaxMb = it },
+            workspaceMaxGb = workspaceMaxGb, onWorkspaceMaxGb = { flags.setWorkspaceMaxGb(it); workspaceMaxGb = it },
             tokenBudget = tokenBudget, onTokenBudget = { flags.setTaskTokenBudget(it); tokenBudget = it },
+            showTaskCost = showTaskCost, onShowTaskCost = { flags.setShowTaskCost(it); showTaskCost = it },
+            pocketGuard = pocketGuard, onPocketGuard = { pocketPrefs.edit().putBoolean(com.wangzan101.mika.pocket.PocketGuardManager.ENABLED, it).apply(); pocketGuard = it },
+            pocketCompletionLock = pocketCompletionLock, onPocketCompletionLock = { pocketPrefs.edit().putBoolean(com.wangzan101.mika.pocket.PocketGuardManager.LOCK_ON_COMPLETION, it).apply(); pocketCompletionLock = it },
             selfConfig = selfConfig, onSelfConfig = { flags.setSelfConfig(it); selfConfig = it },
             selfOperate = selfOperate, onSelfOperate = { flags.setSelfOperate(it); selfOperate = it },
             pipOperate = pipOperate, onPipOperate = { flags.setPipOperate(it); pipOperate = it },
             externalSchedule = externalSchedule, onExternalSchedule = { flags.setExternalSchedule(it); externalSchedule = it },
+            onOpenAppPace = { page = SettingsPage.AppPace },
+            deviceAccess = (context.applicationContext as com.wangzan101.mika.MikaApp).deviceAccess.settings,
         )
+        SettingsPage.AppPace -> AppPaceScreen(operatingPace, flags, onBack = { page = SettingsPage.DuringWork })
         SettingsPage.Language -> LanguageScreen(language, onLanguage = { AppLanguage.set(context, it) }, onBack = toHome, languageOnly = true)
         SettingsPage.Appearance -> LanguageScreen(language, onLanguage = { AppLanguage.set(context, it) }, onBack = toHome, languageOnly = false)
         SettingsPage.Voice -> VoiceSettingsScreen(onOpenSpeech = onOpenSpeech, onBack = toHome)
         SettingsPage.Prompts -> PromptFilesScreen(onOpen = { page = if (it == PromptFile.Instructions) SettingsPage.PromptInstructions else SettingsPage.PromptSystem }, onBack = toHome)
         SettingsPage.PromptInstructions -> PromptEditorScreen(PromptFile.Instructions, onBack = back)
         SettingsPage.PromptSystem -> PromptEditorScreen(PromptFile.SystemPrompt, onBack = back)
-        SettingsPage.Recommendations -> RecommendedTasksScreen(recommendedTasks, onBack = toHome)
+        SettingsPage.Recommendations -> RecommendedTasksScreen(recommendedTasks, onBack = toHome,
+            onOpenChecklists = { page = SettingsPage.Checklists },
+            onOpenWorkflows = { page = SettingsPage.Workflows })
+        SettingsPage.Checklists -> SavedChecklistsScreen(savedChecklists, onBack = back)
+        SettingsPage.Workflows -> WorkflowsScreen(workflows, onBack = back)
         SettingsPage.Capsule -> CapsuleScreen(
             capsuleMode, onMode = {
                 flags.setCapsuleMode(it)
@@ -298,6 +372,8 @@ fun SettingsScreen(
             cardScale = capsuleCardScale,
             onCardScale = { flags.setCapsuleCardScale(it); capsuleCardScale = it },
         )
+        SettingsPage.Plugins -> PluginsScreen(pluginRegistry, onBack = toAdvanced)
+        SettingsPage.EnvVars -> EnvVarSettingsScreen(remember { com.wangzan101.mika.settings.EnvVarStore.get(context) }, onBack = toAdvanced)
         SettingsPage.Sandbox -> SandboxScreen(onBack = toAdvanced)
         SettingsPage.Recovery -> RecoveryScreen(onBack = toHome, onOpenSelfCheck = { page = SettingsPage.SelfCheck })
         SettingsPage.SelfCheck -> SelfCheckScreen(status, onBack = back)
@@ -309,8 +385,17 @@ fun SettingsScreen(
             grounding = visionConfig?.let { GroundingSetting(it.model, it.capabilities.groundingVerified) },
             onGrounding = { verified -> scope.launch { withContext(Dispatchers.IO) { store.setVisionGroundingVerified(verified) } } },
             onOpenRunStats = { page = SettingsPage.RunStats },
+            deviceFiles = deviceFiles, onDeviceFiles = { flags.setDeviceFiles(it); deviceFiles = it },
+            onDeviceDirectories = { page = SettingsPage.DeviceDirectories },
+        )
+        SettingsPage.DeviceDirectories -> DeviceDirectoriesScreen(
+            remember { com.wangzan101.mika.settings.DeviceDirectoryStore.get(context) },
+            remember { com.wangzan101.mika.cap.phone.PhoneServices.of(context).hub },
+            onBack = { page = SettingsPage.Developer },
         )
         SettingsPage.RunStats -> RunStatsScreen(remember { RunStore(context).metrics }, onBack = back)
+        SettingsPage.Proactive -> com.wangzan101.mika.proactive.ProactiveScreen(onBack = back)
+        SettingsPage.Backup -> BackupScreen(onBack = toHome)
     }
 
     if (editingProxy) NetProxyDialog(
@@ -422,6 +507,12 @@ fun SettingsContent(
     whatsappStatus: WhatsappStatus = WhatsappStatus.NotLinked,
     onOpenWhatsapp: () -> Unit = {},
     onOpenAppAccess: () -> Unit = {},
+    /** Proactive suggestions from notifications; its own row on the Settings home. */
+    onOpenProactive: () -> Unit = {},
+    onOpenSmsLogin: () -> Unit = {},
+    onOpenBackup: (() -> Unit)? = null,
+    /** Persona settings; null hides the row. */
+    onOpenPersonas: (() -> Unit)? = null,
     onOpenDuringWork: () -> Unit = {},
     /** 悬浮胶囊此刻的选择,写在「悬浮胶囊」一行的右边。 */
     capsuleMode: CapsuleMode = CapsuleMode.DEFAULT,
@@ -466,14 +557,23 @@ fun SettingsContent(
                 "speech call live gemini openai realtime tts microphone", onOpenVoice) { voiceEngine?.let { RowValue(it) }; RowChevron() },
             SettingsEntry(MikaIcons.Doc, SettingsTint.Orange, stringResource(R.string.settings_prompts), stringResource(R.string.settings_prompts_sub),
                 "system prompt instructions personality rules", onOpenPrompts),
+        ) + listOfNotNull(
+            onOpenPersonas?.let {
+                SettingsEntry(MikaIcons.Chats, SettingsTint.Purple, stringResource(R.string.persona_title), stringResource(R.string.persona_sub),
+                    "persona personality tone style name nickname voice", it)
+            },
         ),
         stringResource(R.string.settings_group_abilities) to listOf(
             SettingsEntry(MikaIcons.Phone, SettingsTint.Green, stringResource(R.string.settings_phone_ops), stringResource(R.string.settings_phone_ops_sub),
                 "accessibility shizuku adb root control screen", onOpenPhoneOps) { PhoneOpsPill(status); RowChevron() },
             SettingsEntry(MikaIcons.Clock, SettingsTint.Orange, stringResource(R.string.settings_during_work), stringResource(R.string.settings_during_work_sub),
                 "autonomous pace step limit keep screen on mute speed", onOpenDuringWork),
+            SettingsEntry(MikaIcons.Ripple, SettingsTint.Teal, stringResource(R.string.proactive_title), stringResource(R.string.proactive_entry_sub),
+                "proactive notifications suggestions capsule reminders", onOpenProactive),
             SettingsEntry(MikaIcons.Shield, SettingsTint.Red, stringResource(R.string.appaccess_title), stringResource(R.string.appaccess_row_sub),
                 "app access block privacy screen sharing", onOpenAppAccess),
+            SettingsEntry(MikaIcons.Key, SettingsTint.Gray, stringResource(R.string.sms_login_title), null,
+                "sms login verification code one-time password otp", onOpenSmsLogin),
         ),
         stringResource(R.string.orbit_settings_reach) to listOf(
             SettingsEntry(MikaIcons.Call, SettingsTint.Teal, stringResource(R.string.calls_title), stringResource(R.string.calls_entry_sub),
@@ -504,6 +604,10 @@ fun SettingsContent(
             onOpenMemory?.let {
                 SettingsEntry(MikaIcons.Heart, SettingsTint.Pink, stringResource(R.string.settings_memory_data), stringResource(R.string.settings_memory_sub),
                     "memory skills routes sign-ins websites data", it)
+            },
+            onOpenBackup?.let {
+                SettingsEntry(MikaIcons.Archive, SettingsTint.Blue, stringResource(R.string.backup_title), stringResource(R.string.backup_sub),
+                    "backup export import restore zip data", it)
             },
             SettingsEntry(MikaIcons.Archive, SettingsTint.Gray, stringResource(R.string.settings_auto_archive), stringResource(R.string.settings_auto_archive_sub),
                 "archive auto-archive chats", onOpenAutoArchive) {
@@ -601,6 +705,9 @@ fun AdvancedSettingsContent(
     onOpenWebSearch: () -> Unit = {},
     sandbox: SandboxStatus? = null,
     onOpenSandbox: () -> Unit = {},
+    pluginsCount: Int? = null,
+    onOpenPlugins: () -> Unit = {},
+    onOpenEnvVars: () -> Unit = {},
     showRecovery: Boolean = true,
     onOpenRecovery: () -> Unit = {},
     computerAccess: Boolean? = null,
@@ -647,11 +754,17 @@ fun AdvancedSettingsContent(
                         RowValue(stringResource(R.string.mcp_servers_count, count)); RowChevron()
                     }
                 }
+                pluginsCount?.let {
+                    ListRow(MikaIcons.Spark, stringResource(R.string.plugins_title), first = take(), onClick = onOpenPlugins) {
+                        RowValue(trPlural(R.plurals.plugins_count, it)); RowChevron()
+                    }
+                }
                 if (showRoot) {
                     ListRow(MikaIcons.Key, PhoneSetupCopy.ROOT_GROUP, PhoneSetupCopy.rootEntryLine(rootCommands), first = take(), onClick = onOpenRoot) {
                         RowChevron()
                     }
                 }
+                ListRow(MikaIcons.Code, stringResource(R.string.env_vars_title), first = take(), onClick = onOpenEnvVars) { RowChevron() }
             }
         }
         BackupSettingsGroup()

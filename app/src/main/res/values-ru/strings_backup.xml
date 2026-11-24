@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="backup_title">Резервное копирование и данные</string>
+    <string name="backup_sub">Экспортируйте всё в ZIP-файл или восстановите из него</string>
+    <string name="backup_warning_title">Эта резервная копия не зашифрована</string>
+    <string name="backup_warning_body">ZIP-файл содержит все ваши секреты: ключи API, токены OAuth и учётные данные сервисов. Храните его в тайне, никому не передавайте и удалите после импорта.</string>
+    <string name="backup_included_label">Что входит</string>
+    <string name="backup_included_body">Провайдеры и ключи, чаты, персоны, навыки, память, рабочие процессы, запуски задач и настройки.</string>
+    <string name="backup_excluded_body">Не входит: сопряжение беспроводной отладки (подключите заново после импорта), настройка службы специальных возможностей (включите её снова в настройках Android), изолированная рабочая область и вложения библиотеки файлов.</string>
+
     <string name="backup_group">Резервная копия</string>
     <string name="backup_export">Экспорт копии</string>
     <string name="backup_export_sub">Сохраните чаты и личные навыки в один файл, защищённый паролем.</string>
     <string name="backup_import">Импорт копии</string>
     <string name="backup_import_sub">Добавьте чаты из файла копии. Чаты, которые уже есть на этом телефоне, не заменяются и не удаляются.</string>
+    <string name="backup_exported">Резервная копия сохранена: %1$d файл(ов).</string>
+    <string name="backup_exported_skipped">Резервная копия сохранена: %1$d файл(ов). %2$d ключей не удалось расшифровать, они были пропущены.</string>
     <string name="backup_note">API-ключи моделей, память и файлы, сохранённые в «Загрузки», в копию не входят.</string>
     <string name="backup_working">Выполняется…</string>
     <string name="backup_export_dialog_title">Защитите копию</string>
@@ -19,10 +29,24 @@
     <string name="backup_export_failed">Не удалось сохранить копию.</string>
     <string name="backup_import_done">Импорт завершён. Добавлено новых файлов: %1$d. Сохранено существующих файлов: %2$d. Список чатов обновлён.</string>
     <string name="backup_import_failed">Не удалось завершить импорт копии.</string>
+    <string name="backup_import_confirm_title">Заменить текущие данные?</string>
+    <string name="backup_import_confirm_body">На этом телефоне уже есть чаты и провайдеры. Импорт заменит их.</string>
+    <string name="backup_replace">Заменить всё</string>
+    <string name="backup_imported_title">Резервная копия восстановлена</string>
+    <string name="backup_imported_body">Восстановлено файлов: %1$d.</string>
+    <string name="backup_after_import_body">Закройте Orbit и откройте его снова, чтобы использовать восстановленные данные. Затем заново выполните сопряжение беспроводной отладки, снова включите службу специальных возможностей в настройках Android и удалите ZIP-файл резервной копии.</string>
+    <string name="backup_close_app">Закрыть Orbit</string>
+    <string name="backup_restart_note">Сначала экспортируйте, прежде чем что-либо удалять: только эта установка может расшифровать ваши данные.</string>
     <string name="backup_err_password">Неверный пароль или файл повреждён.</string>
     <string name="backup_err_format">Это не файл резервной копии Orbit.</string>
     <string name="backup_err_version">Эта копия создана более новой версией Orbit.</string>
     <string name="backup_err_unsafe">Копия содержит небезопасные пути к файлам и была отклонена.</string>
     <string name="backup_err_too_large">Копия слишком велика для импорта.</string>
     <string name="backup_err_corrupt">Файл копии повреждён или неполон.</string>
+    <string name="backup_zip_export">Экспортировать резервную копию</string>
+    <string name="backup_zip_export_sub">Сохраните ZIP-файл со всеми вашими данными</string>
+    <string name="backup_zip_import">Импортировать резервную копию</string>
+    <string name="backup_zip_import_sub">Восстановите всё из ZIP-файла резервной копии</string>
+    <string name="backup_zip_export_failed">Не удалось сохранить резервную копию.</string>
+    <string name="backup_zip_import_failed">Не удалось импортировать эту резервную копию.</string>
 </resources>

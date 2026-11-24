@@ -24,6 +24,7 @@ import com.wangzan101.mika.ui.theme.MikaRadius
 import com.wangzan101.mika.ui.theme.MikaSize
 import androidx.compose.ui.res.stringResource
 import com.wangzan101.mika.R
+import com.wangzan101.mika.ui.theme.MikaShapes
 
 internal data class ReadingSection(val title: MdBlock.Heading?, val blocks: List<MdBlock>)
 

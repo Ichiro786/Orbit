@@ -91,6 +91,10 @@ internal fun ConversationMenu(
     onDismiss: () -> Unit,
     /** Start selecting with this row ticked; null where a row can't be selected. */
     onSelect: (() -> Unit)? = null,
+    /** Export this conversation as a file to share; null hides the entry. */
+    onExport: (() -> Unit)? = null,
+    /** This conversation's token usage and context; null hides the entry. */
+    onUsage: (() -> Unit)? = null,
 ) {
     val c = MikaTheme.colors
     LongPressMenu(
@@ -105,6 +109,8 @@ internal fun ConversationMenu(
             MenuEntry(stringResource(if (item.channel) R.string.orbit_channel_edit else R.string.drawer_rename), MikaIcons.Edit, "drawer-menu-rename", onClick = onRename),
             onSelect?.let { MenuEntry(stringResource(R.string.drawer_select), MikaIcons.Check, "drawer-select", onClick = it) },
             MenuEntry(stringResource(R.string.terminal_open), MikaIcons.Terminal, "drawer-menu-terminal", onClick = onTerminal),
+            onExport?.let { MenuEntry(stringResource(R.string.export_conversation), MikaIcons.Share, "drawer-menu-export", onClick = it) },
+            onUsage?.let { MenuEntry(stringResource(R.string.drawer_usage), MikaIcons.Chart, "drawer-menu-usage", onClick = it) },
             MenuEntry(stringResource(if (item.channel) R.string.orbit_channel_remove else R.string.confirm_delete), MikaIcons.Trash, "drawer-menu-delete", c.bad, onDelete),
         ),
         onDismiss = onDismiss,

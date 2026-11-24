@@ -20,6 +20,7 @@ import com.wangzan101.mika.R
 import com.wangzan101.mika.cap.phone.a11y.launchableApps
 import com.wangzan101.mika.core.access.*
 import com.wangzan101.mika.core.model.ModelRole
+import com.wangzan101.mika.settings.modelFor
 import com.wangzan101.mika.ui.components.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -49,7 +50,7 @@ private class Failure(val message: Int, val detail: String? = null)
  * 分类时让模型用界面的语言写理由:同一个应用换语言后旧理由仍是旧语言,这没关系,下次分类会覆盖。
  * 中文按文字体系分,和资源目录(values-zh / values-b+zh+Hant)一致。
  */
-private fun classifierLanguage(locale: java.util.Locale): String =
+internal fun classifierLanguage(locale: java.util.Locale): String =
     if (locale.language == "zh") "English" else locale.getDisplayLanguage(java.util.Locale.ENGLISH)
 
 @Composable

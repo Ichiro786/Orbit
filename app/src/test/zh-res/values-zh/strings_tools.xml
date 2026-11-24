@@ -20,9 +20,12 @@
     <string name="tool_find_element">查找界面控件</string>
     <string name="tool_collect">采集多屏内容</string>
     <string name="tool_phone_run">连续操作手机</string>
+    <string name="tool_list_device_files">查看设备文件</string>
+    <string name="tool_copy_device_file">复制设备文件</string>
     <string name="tool_process_files">处理文件</string>
     <string name="tool_run_script">运行自带脚本</string>
     <string name="tool_read_file">读文件</string>
+    <string name="tool_view_image">看图</string>
     <string name="tool_write_file">写文件</string>
     <string name="tool_search_files">搜索文件</string>
     <string name="tool_export_file">导出文件</string>
@@ -77,10 +80,16 @@
     <string name="tool_mika_login_site">请你登录网站</string>
     <string name="tool_mika_confirm_login">核对登录</string>
     <string name="tool_mika_favorites">常用网站</string>
+    <string name="tool_wechat_owner">发送到我的微信</string>
     <string name="tool_schedule">安排任务</string>
     <string name="tool_helper">交给助手</string>
     <string name="tool_profile">修改个人资料</string>
     <string name="tool_history">读取之前的消息</string>
     <string name="tool_user_screen">看你的屏幕</string>
     <string name="tool_update_plan">更新计划</string>
+    <string name="tool_do_each">逐项执行</string>
+    <string name="tool_notices_read">读取通知</string>
+    <string name="tool_sms_login">短信验证码登录</string>
+    <string name="tool_device_directory_hints">查看设备文件夹说明</string>
+    <string name="tool_device_directory_describe">更新设备文件夹说明</string>
 </resources>

@@ -99,6 +99,12 @@ class WhatsappStore(private val dir: File) {
         return ChannelPeer(WhatsappChannel.ID, jid, thread)
     }
 
+    /**
+     * Where an explicitly requested result push goes: the user's own chat, only while WhatsApp is linked and enabled.
+     * Null otherwise; a task captures this at start and compares it again before sending.
+     */
+    @Synchronized fun ownerPeer(): ChannelPeer? = if (state.enabled && state.ownJid != null) selfPeer() else null
+
     @Synchronized fun accepts(peer: ChannelPeer) = state.enabled && state.ownJid != null &&
         peer.channelId == WhatsappChannel.ID && peer.peerId == state.ownJid && peer.threadId == state.threadId
 

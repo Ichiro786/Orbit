@@ -20,9 +20,12 @@
     <string name="tool_find_element">Find on screen</string>
     <string name="tool_collect">Collect across screens</string>
     <string name="tool_phone_run">Several phone actions</string>
+    <string name="tool_list_device_files">Browse device files</string>
+    <string name="tool_copy_device_file">Copy device file</string>
     <string name="tool_process_files">Work with files</string>
     <string name="tool_run_script">Run built-in script</string>
     <string name="tool_read_file">Read file</string>
+    <string name="tool_view_image">View image</string>
     <string name="tool_write_file">Write file</string>
     <string name="tool_search_files">Search files</string>
     <string name="tool_export_file">Export file</string>
@@ -77,10 +80,16 @@
     <string name="tool_mika_login_site">Sign in to a site</string>
     <string name="tool_mika_confirm_login">Confirm sign-in</string>
     <string name="tool_mika_favorites">Frequently used sites</string>
+    <string name="tool_wechat_owner">Send to my WeChat</string>
     <string name="tool_schedule">Schedule a task</string>
     <string name="tool_helper">Ask a helper</string>
     <string name="tool_profile">Update your profile</string>
     <string name="tool_history">Read earlier messages</string>
     <string name="tool_user_screen">Look at your screen</string>
     <string name="tool_update_plan">Update the plan</string>
+    <string name="tool_do_each">Repeat for each item</string>
+    <string name="tool_notices_read">Read notifications</string>
+    <string name="tool_sms_login">Sign in with SMS code</string>
+    <string name="tool_device_directory_hints">List device folder notes</string>
+    <string name="tool_device_directory_describe">Update a device folder note</string>
 </resources>

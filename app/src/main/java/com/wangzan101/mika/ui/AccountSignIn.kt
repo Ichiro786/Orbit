@@ -45,6 +45,7 @@ import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaRadius
+import com.wangzan101.mika.ui.theme.MikaShapes
 
 /** 「添加模型」里「用账号登录」那一组的三家。ChatGPT 的登录另有一套,xAI、OpenRouter 对应 [AccountProvider]。 */
 enum class SignInKind(val account: AccountProvider?, val label: String, val tag: String) {
@@ -193,7 +194,7 @@ private fun DeviceCodeBody(s: AccountSignInUi, code: String, cancel: () -> Unit)
     )
     Text(
         code, Modifier.fillMaxWidth().padding(top = MikaSpace.S16).testTag("signin-code"),
-        fontFamily = FontFamily.Monospace, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = 4.sp,
+        fontFamily = FontFamily.Monospace, style = MikaType.Display, letterSpacing = 4.sp,
         fontWeight = FontWeight.SemiBold, color = c.ink, textAlign = TextAlign.Center,
     )
     if (s.expiresAtMs > 0) {

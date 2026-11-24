@@ -105,6 +105,8 @@ fun AgentPip(
     webContent: Boolean,
     /** Lets the user tap and swipe on the virtual screen inside the live view; null while there is none. */
     pipInput: PipInput? = null,
+    /** The target app's sound was restored by the user: the button offers mute, otherwise restore sound. */
+    soundOn: Boolean = false,
     /** The user turned on "let me operate the small view directly" in Settings. */
     operateEnabled: Boolean = false,
     reduceMotion: Boolean,
@@ -115,7 +117,7 @@ fun AgentPip(
     onAttention: () -> Unit,
     onClose: () -> Unit = {},
     onReopen: () -> Unit = {},
-    onUnmute: () -> Unit = {},
+    onToggleSound: () -> Unit = {},
     /** What Orbit is doing right now, in the user's words ("Reading BBVM 12th PCM"). */
     label: String = "",
     /** Steps taken so far; 0 hides the count. */
@@ -188,6 +190,7 @@ fun AgentPip(
                 pip = pip,
                 frame = frame,
                 pipInput = pipInput,
+                soundOn = soundOn,
                 operateEnabled = operateEnabled,
                 reduceMotion = reduceMotion,
                 height = sheetHeight,
@@ -195,7 +198,7 @@ fun AgentPip(
                 meta = meta,
                 onCollapse = onCollapse,
                 onClose = onClose,
-                onUnmute = onUnmute,
+                onToggleSound = onToggleSound,
                 onStop = onStop,
                 onTakeControl = if (needsYou) onTakeControl else null,
                 plan = plan,
@@ -286,6 +289,7 @@ private fun LiveSheet(
     pip: PipUi,
     frame: Bitmap?,
     pipInput: PipInput?,
+    soundOn: Boolean,
     operateEnabled: Boolean,
     reduceMotion: Boolean,
     height: Dp,
@@ -293,7 +297,7 @@ private fun LiveSheet(
     meta: String,
     onCollapse: () -> Unit,
     onClose: () -> Unit,
-    onUnmute: () -> Unit,
+    onToggleSound: () -> Unit,
     onStop: (() -> Unit)?,
     onTakeControl: (() -> Unit)?,
     plan: LivePlan? = null,
@@ -379,7 +383,7 @@ private fun LiveSheet(
                     if (operateInput != null) {
                         PipButton(MikaIcons.Back, stringResource(R.string.pip_back), { scope.launch { operateInput.back() } }, "pip-back")
                     }
-                    PipButton(MikaIcons.Sound, stringResource(R.string.pip_unmute), onUnmute, "pip-unmute")
+                    PipButton(if (soundOn) MikaIcons.Sound else MikaIcons.Mute, stringResource(if (soundOn) R.string.pip_mute else R.string.pip_unmute), onToggleSound, if (soundOn) "pip-mute" else "pip-unmute")
                     PipButton(MikaIcons.EyeOff, stringResource(R.string.pip_close), onClose, "pip-close")
                 }
             }

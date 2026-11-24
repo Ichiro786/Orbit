@@ -29,6 +29,8 @@ import com.wangzan101.mika.i18n.uiLocale
 import com.wangzan101.mika.settings.AllowanceRoute
 import com.wangzan101.mika.settings.Provider
 import com.wangzan101.mika.settings.ProviderStore
+import com.wangzan101.mika.settings.allowanceKey
+import com.wangzan101.mika.settings.matchesAllowanceConnection
 import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.ListRow
 import com.wangzan101.mika.ui.components.RowChevron

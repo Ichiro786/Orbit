@@ -35,7 +35,6 @@
     <string name="voice_key_hint_openai">کلیدی از platform.openai.com جای‌گذاری کن</string>
     <string name="voice_key_remove">حذف کلید</string>
     <string name="voice_model">مدل</string>
-    <string name="voice_voice">صدا</string>
     <string name="voice_default">پیش‌فرض</string>
     <string name="voice_gemini_foot">Google راه رسمی‌ای برای استفادهٔ برنامه‌های دیگر از اشتراک Google AI Pro یا Ultra ندارد؛ بنابراین به کلید API از Google AI Studio نیاز است.</string>
     <string name="voice_openai_foot">ورود با ChatGPT به Orbit اجازه می‌دهد برای گفتگوها از اشتراک Plus یا Pro تو استفاده کند، اما OpenAI این را فقط برای متن ارائه می‌کند، نه صدای زنده. برای استفاده از اشتراکت در تماس، «داخلی» را انتخاب کن: با همان مدلی که در گفتگو داری صحبت می‌کند.</string>

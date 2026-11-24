@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keypool_keys">کلیدهای API</string>
+    <string name="keypool_one">مجموعه کلید API · ۱ کلید</string>
+    <string name="keypool_many">مجموعه کلید API · کلیدها: %1$d · چرخشی</string>
+    <string name="keypool_show">نمایش کلیدها</string>
+    <string name="keypool_hide">پنهان کردن کلیدها</string>
+    <string name="keypool_show_short">نمایش</string>
+    <string name="keypool_hide_short">پنهان</string>
+    <string name="keypool_none">کلیدی تنظیم نشده</string>
+    <string name="keypool_none_sub">برای اتصال این سرویس یک کلید اضافه کنید</string>
+    <string name="keypool_required">لازم</string>
+    <string name="keypool_key_n">کلید %1$d</string>
+    <string name="keypool_active">فعال</string>
+    <string name="keypool_remove">حذف</string>
+    <string name="keypool_add">افزودن کلید API</string>
+    <string name="keypool_add_first">کلید خود را برای اتصال جای‌گذاری کنید</string>
+    <string name="keypool_add_more">کلید دیگری به مجموعه چرخشی اضافه کنید</string>
+    <string name="keypool_footer_many">کلیدها خودکار می‌چرخند: کلیدی که به محدودیت درخواست (429) برسد یا زمانش تمام شود تا بهبود رد می‌شود.</string>
+    <string name="keypool_footer_one">کلیدهای بیشتری اضافه کنید تا وقتی یکی محدود شد خودکار جابه‌جا شود.</string>
+    <string name="keypool_paste_hint">یک یا چند کلید را جای‌گذاری کنید (جدا شده با ویرگول یا خط جدید)</string>
+    <string name="keypool_detected">مجموعه کلید: %1$d کلید پیدا شد (چرخش هنگام 429 یا پایان زمان)</string>
+    <string name="keypool_add_body">یک کلید، یا چند کلید جدا شده با ویرگول یا خط جدید را جای‌گذاری کنید تا همه با هم اضافه شوند.</string>
+    <string name="keypool_paste_here">کلیدهای API را اینجا جای‌گذاری کنید</string>
+    <string name="keypool_add_detected">کلیدهای پیدا شده: %1$d. همه به مجموعه چرخشی اضافه می‌شوند.</string>
+    <string name="keypool_add_one">۱ کلید آماده افزودن</string>
+    <string name="keypool_add_n">افزودن کلیدها: %1$d</string>
+    <string name="keypool_setup_detected">کلیدهای پیدا شده: %1$d. مجموعه هنگام محدودیت یا پایان زمان می‌چرخد.</string>
+    <string name="keypool_setup_one">۱ کلید آماده</string>
+    <string name="models_no_providers">سرویسی متصل نیست</string>
+    <string name="models_providers_pool">سرویس‌ها: %1$d · کلیدهای مجموعه: %2$d</string>
+    <string name="models_providers_n">سرویس‌ها: %1$d</string>
+    <string name="model_remove_backup">حذف پشتیبان</string>
+</resources>

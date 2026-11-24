@@ -85,7 +85,7 @@ import com.wangzan101.mika.capsule.ThreadList
 import com.wangzan101.mika.chat.ConversationStore
 import com.wangzan101.mika.confirm.ConfirmationNotifier
 import com.wangzan101.mika.core.agent.TaskState
-import com.wangzan101.mika.core.cap.web.AttachedPage
+import com.wangzan101.mika.core.agent.AttachedPage
 import com.wangzan101.mika.core.record.RunEvent
 import com.wangzan101.mika.core.tool.PACKAGE_NAME_RE
 import com.wangzan101.mika.takeover.Takeover
@@ -100,6 +100,7 @@ import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
+import com.wangzan101.mika.ui.theme.MikaRadius
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -112,7 +113,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import com.wangzan101.mika.ui.theme.MikaSpace
-import com.wangzan101.mika.ui.theme.MikaRadius
 import com.wangzan101.mika.ui.theme.MikaSize
 
 /** 浏览器页上「问 Mika」那一块的固定说法。 */
@@ -551,11 +551,11 @@ private fun AskField(chat: PageChat, hint: String, stop: (() -> Unit)?) {
     ) {
         Icon(MikaIcons.Spark, null, Modifier.size(17.dp), tint = GlowColor)
         Box(Modifier.weight(1f).padding(vertical = MikaSpace.S12)) {
-            if (chat.draft.isEmpty()) Text(hint, style = MikaType.Body.copy(fontSize = 14.5.sp), color = c.ink3, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (chat.draft.isEmpty()) Text(hint, style = MikaType.Body, color = c.ink3, maxLines = 1, overflow = TextOverflow.Ellipsis)
             BasicTextField(
                 chat.draft, { chat.draft = it },
                 Modifier.fillMaxWidth().focusRequester(focus).testTag("page-ask-field").semantics { contentDescription = hint },
-                textStyle = MikaType.Body.copy(fontSize = 14.5.sp, color = c.ink, textDirection = androidx.compose.ui.text.style.TextDirection.Content), maxLines = 4, cursorBrush = SolidColor(c.accent),
+                textStyle = MikaType.Body.copy(color = c.ink, textDirection = androidx.compose.ui.text.style.TextDirection.Content), maxLines = 4, cursorBrush = SolidColor(c.accent),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(onSend = { if (canSend) chat.send() }),
             )
@@ -609,7 +609,7 @@ fun PagePanel(chat: PageChat, site: String, pageTitle: String, modifier: Modifie
                         .testTag("page-panel-open-chat"),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S4),
                 ) {
-                    Text(PageAskCopy.OPEN_CHAT, style = MikaType.Hint.copy(fontSize = 12.5.sp), color = c.accent)
+                    Text(PageAskCopy.OPEN_CHAT, style = MikaType.Hint, color = c.accent)
                     Icon(MikaIcons.External, null, Modifier.size(13.dp), tint = c.accent)
                 }
             }

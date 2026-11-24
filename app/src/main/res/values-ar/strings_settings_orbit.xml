@@ -35,7 +35,6 @@
     <string name="voice_key_hint_openai">الصق مفتاحًا من platform.openai.com</string>
     <string name="voice_key_remove">إزالة المفتاح</string>
     <string name="voice_model">النموذج</string>
-    <string name="voice_voice">الصوت</string>
     <string name="voice_default">افتراضي</string>
     <string name="voice_gemini_foot">لا توفّر Google طريقة رسمية للتطبيقات الأخرى لاستخدام اشتراك Google AI Pro أو Ultra، لذا يلزم مفتاح API من Google AI Studio.</string>
     <string name="voice_openai_foot">يتيح تسجيل الدخول عبر ChatGPT لـ Orbit استخدام اشتراكك Plus أو Pro في المحادثات، لكن OpenAI تقدّم ذلك للنص فقط وليس للصوت المباشر. لاستخدام اشتراكك في مكالمة، اختر «مدمج»: فهو يتحدث عبر النموذج الذي تدردش معه.</string>

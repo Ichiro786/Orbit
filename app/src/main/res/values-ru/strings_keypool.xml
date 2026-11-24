@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keypool_keys">Ключи API</string>
+    <string name="keypool_one">Пул ключей API · 1 ключ</string>
+    <string name="keypool_many">Пул ключей API · ключей: %1$d · по очереди</string>
+    <string name="keypool_show">Показать ключи</string>
+    <string name="keypool_hide">Скрыть ключи</string>
+    <string name="keypool_show_short">Показать</string>
+    <string name="keypool_hide_short">Скрыть</string>
+    <string name="keypool_none">Ключ не задан</string>
+    <string name="keypool_none_sub">Добавьте ключ, чтобы подключить этого провайдера</string>
+    <string name="keypool_required">Нужен</string>
+    <string name="keypool_key_n">Ключ %1$d</string>
+    <string name="keypool_active">Активен</string>
+    <string name="keypool_remove">Удалить</string>
+    <string name="keypool_add">Добавить ключ API</string>
+    <string name="keypool_add_first">Вставьте ключ для подключения</string>
+    <string name="keypool_add_more">Добавить ещё один ключ в пул</string>
+    <string name="keypool_footer_many">Ключи меняются автоматически: ключ, упёршийся в лимит запросов (429) или таймаут, пропускается, пока не восстановится.</string>
+    <string name="keypool_footer_one">Добавьте ещё ключи, чтобы автоматически переключаться при лимите.</string>
+    <string name="keypool_paste_hint">Вставьте один или несколько ключей (через запятую или с новой строки)</string>
+    <string name="keypool_detected">Пул ключей: найдено ключей: %1$d (смена при 429 или таймауте)</string>
+    <string name="keypool_add_body">Вставьте один ключ или несколько через запятую или с новой строки, чтобы добавить их сразу.</string>
+    <string name="keypool_paste_here">Вставьте ключи API сюда</string>
+    <string name="keypool_add_detected">Найдено ключей: %1$d. Все будут добавлены в пул.</string>
+    <string name="keypool_add_one">1 ключ готов к добавлению</string>
+    <string name="keypool_add_n">Добавить ключи: %1$d</string>
+    <string name="keypool_setup_detected">Найдено ключей: %1$d. Пул переключается при лимитах и таймаутах.</string>
+    <string name="keypool_setup_one">1 ключ готов</string>
+    <string name="models_no_providers">Нет подключённых провайдеров</string>
+    <string name="models_providers_pool">Провайдеров: %1$d · ключей в пуле: %2$d</string>
+    <string name="models_providers_n">Провайдеров: %1$d</string>
+    <string name="model_remove_backup">Удалить резервную</string>
+</resources>

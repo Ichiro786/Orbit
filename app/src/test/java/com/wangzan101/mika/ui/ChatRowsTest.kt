@@ -10,15 +10,15 @@ import org.junit.Test
 class ChatRowsTest {
     private fun count(
         exchanges: List<Exchange>,
-        phoneSetupNeeded: Boolean = false,
+        phoneSetupRow: Int? = null,
         hasBlocked: Boolean = false,
-    ) = chatItemCount(exchanges, kept = null, phoneSetupNeeded, hasBlocked)
+    ) = chatItemCount(exchanges, kept = null, phoneSetupRow, hasBlocked)
 
     @Test
     fun emptyAndBlockedStatesHaveTheirActualRows() {
         assertEquals(1, count(emptyList()))
         assertEquals(1, count(emptyList(), hasBlocked = true))
-        assertEquals(1, count(emptyList(), phoneSetupNeeded = true, hasBlocked = true))
+        assertEquals(1, count(emptyList(), phoneSetupRow = -1, hasBlocked = true))
     }
 
     @Test
@@ -36,14 +36,14 @@ class ChatRowsTest {
         assertEquals(3, count(listOf(working)))
         val done = working.copy(status = ExchangeStatus.Done("回答", null), draft = null, runId = "run")
         assertEquals(3, count(listOf(done)))
-        assertEquals(4, count(listOf(done), phoneSetupNeeded = true))
-        assertEquals(5, count(listOf(done), phoneSetupNeeded = true, hasBlocked = true))
+        assertEquals(4, count(listOf(done), phoneSetupRow = -1))
+        assertEquals(5, count(listOf(done), phoneSetupRow = -1, hasBlocked = true))
     }
 
     @Test
     fun keysListRowsInTheSameOrderTheDslEmitsThem() {
         val working = Exchange("问", emptyList(), ExchangeStatus.Working, live = true, draft = "正在回答")
-        assertEquals(listOf("u0", "d0", "r0"), chatItemKeys(listOf(working), kept = null, phoneSetupNeeded = false, hasBlocked = false))
+        assertEquals(listOf("u0", "d0", "r0"), chatItemKeys(listOf(working), kept = null, phoneSetupRow = null, hasBlocked = false))
 
         val steer = SteerNote("s1", "改成靠窗", SteerState.Joined, interrupted = "被打断", finished = "正在改")
         val done = Exchange(
@@ -53,7 +53,7 @@ class ChatRowsTest {
         )
         assertEquals(
             listOf("u0", "s0", "a0-s1", "i0-s1", "m0-s1", "r0", "f0"),
-            chatItemKeys(listOf(done), kept = null, phoneSetupNeeded = false, hasBlocked = false),
+            chatItemKeys(listOf(done), kept = null, phoneSetupRow = null, hasBlocked = false),
         )
     }
 
@@ -120,7 +120,7 @@ class ChatRowsTest {
     }
 
     private fun keys(ex: Exchange, operatingPhone: Boolean = false) =
-        chatItemKeys(listOf(ex), kept = null, phoneSetupNeeded = false, hasBlocked = false, operatingPhone = operatingPhone)
+        chatItemKeys(listOf(ex), kept = null, phoneSetupRow = null, hasBlocked = false, operatingPhone = operatingPhone)
 
     /** While a task works there is exactly one "still going" row, never the working block and the Thinking line together. */
     @Test
@@ -167,7 +167,7 @@ class ChatRowsTest {
             Exchange("二", emptyList(), ExchangeStatus.Working, live = true, waitingForModel = true),
             Exchange("三", listOf(step), ExchangeStatus.Working, live = true, waitingForModel = true, draft = "写着"),
         )
-        val keys = chatItemKeys(all, kept = null, phoneSetupNeeded = true, hasBlocked = false, operatingPhone = true)
+        val keys = chatItemKeys(all, kept = null, phoneSetupRow = -1, hasBlocked = false, operatingPhone = true)
         assertEquals(keys.size, keys.toSet().size)
     }
 }

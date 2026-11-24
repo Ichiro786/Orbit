@@ -35,7 +35,6 @@
     <string name="voice_key_hint_openai">Вставьте ключ с platform.openai.com</string>
     <string name="voice_key_remove">Удалить ключ</string>
     <string name="voice_model">Модель</string>
-    <string name="voice_voice">Голос</string>
     <string name="voice_default">По умолчанию</string>
     <string name="voice_gemini_foot">У Google нет официального способа для сторонних приложений использовать подписку Google AI Pro или Ultra, поэтому нужен API-ключ из Google AI Studio.</string>
     <string name="voice_openai_foot">Вход через ChatGPT позволяет Orbit использовать вашу подписку Plus или Pro для чатов, но OpenAI предлагает это только для текста, а не для живого голоса. Чтобы использовать подписку в звонке, выберите «Встроенный»: он говорит через ту модель, с которой вы общаетесь в чате.</string>

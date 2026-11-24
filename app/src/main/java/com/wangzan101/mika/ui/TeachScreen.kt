@@ -1,40 +1,46 @@
 package com.wangzan101.mika.ui
 
+import android.app.Activity
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.collectAsState
-import android.app.Activity
-import androidx.compose.ui.platform.LocalContext
 import com.wangzan101.mika.R
+import com.wangzan101.mika.core.knowledge.FrontMatter
+import com.wangzan101.mika.core.skills.PersonalSkill
 import com.wangzan101.mika.core.teach.TeachPhase
-import com.wangzan101.mika.core.teach.TeachStep
-import com.wangzan101.mika.core.teach.teachGoalAccepted
-import com.wangzan101.mika.core.teach.teachLine
+import com.wangzan101.mika.core.teach.TeachSession
 import com.wangzan101.mika.teach.TeachNotice
 import com.wangzan101.mika.teach.TeachRuntime
+import com.wangzan101.mika.teach.TeachUi
 import com.wangzan101.mika.ui.components.ButtonKind
 import com.wangzan101.mika.ui.components.ButtonSize
 import com.wangzan101.mika.ui.components.MikaButton
-import com.wangzan101.mika.ui.components.TopBar
 import com.wangzan101.mika.ui.components.MikaCard
+import com.wangzan101.mika.ui.components.TopBar
 import com.wangzan101.mika.ui.components.OrbitNote
 import com.wangzan101.mika.ui.components.OrbitTextField
 import com.wangzan101.mika.ui.components.OrbitFieldShape
@@ -46,7 +52,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import com.wangzan101.mika.ui.theme.MikaIcons
@@ -55,24 +60,59 @@ import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaSize
 
-/**
- * Teach Orbit: the goal form, the live demonstration controls, step review and the saved draft.
- * Every phase uses the same frame: scrolling content on top, full-width actions pinned to the bottom.
- */
+/** 总结页要显示的东西，和 runtime 分开，便于单独预览与测试。 */
+internal data class TeachSummaryView(
+    val display: String,
+    val description: String,
+    val body: String,
+    val folded: List<String>,
+    val basic: Boolean,
+)
+
 @Composable
-fun TeachScreen(runtime: TeachRuntime, onBack: () -> Unit, onOpenDrafts: () -> Unit) {
+fun TeachScreen(runtime: TeachRuntime, onBack: () -> Unit) {
     val ui by runtime.ui.collectAsState()
     val session = ui.session
     Column(Modifier.fillMaxSize().background(MikaTheme.colors.bg)) {
         TopBar(stringResource(R.string.teach_title), MikaIcons.Back, onBack, stringResource(R.string.back))
-        Notice(ui.notice, Modifier.padding(horizontal = MikaSpace.S24, vertical = MikaSpace.S4))
+        Notice(ui.notice)
+        val draft = ui.draft
         when (session?.phase) {
-            null, TeachPhase.Idle, TeachPhase.Ready -> GoalForm(runtime, ui.hint)
+            null, TeachPhase.Idle, TeachPhase.Ready -> Intro(ui.hint.orEmpty(), runtime)
             TeachPhase.Recording, TeachPhase.Paused -> Live(runtime, session.phase, session.steps.size)
             TeachPhase.Interrupted -> Interrupted(runtime)
-            TeachPhase.Reviewing, TeachPhase.Drafting -> Review(runtime, session.steps, session.phase == TeachPhase.Drafting)
-            TeachPhase.Saved -> Saved(runtime, onOpenDrafts)
+            TeachPhase.Drafting -> Summarizing(failed = false, notice = ui.notice, onRetry = runtime::retry, onDiscard = runtime::discard)
+            TeachPhase.Reviewing -> if (draft != null) {
+                TeachSummaryPage(
+                    view = summaryView(draft, ui),
+                    onAccept = { runtime.accept() },
+                    onRedo = { teachAgain(runtime, session.goal) },
+                    onDiscard = runtime::discard,
+                )
+            } else {
+                Summarizing(failed = true, notice = ui.notice, onRetry = runtime::retry, onDiscard = runtime::discard)
+            }
+            // 收下以后带着新目标再进来:问的是新目标,不该停在上一份的「已学会」
+            TeachPhase.Saved -> if (showDone(session, ui.hint)) TeachDonePage(
+                name = ui.acceptedName ?: metaValue(draft, "display") ?: session.goal,
+                description = metaValue(draft, "description").orEmpty(),
+                onBackToChat = onBack,
+                onTeachAgain = { teachAgain(runtime, session.goal) },
+            ) else Intro(ui.hint.orEmpty(), runtime)
         }
+    }
+}
+
+/** 已经收下、且没有带着新目标进来时，才停在「已学会」页。 */
+internal fun showDone(session: TeachSession?, hint: String?): Boolean =
+    session?.phase == TeachPhase.Saved && (hint.isNullOrBlank() || hint == session.goal)
+
+@Composable
+private fun Intro(hint: String, runtime: TeachRuntime) {
+    val context = LocalContext.current
+    TeachIntroPage(hint) { goal ->
+        val problem = runtime.start(goal)
+        if (problem == null) (context as? Activity)?.moveTaskToBack(true)
     }
 }
 
@@ -136,57 +176,27 @@ private fun WideButton(text: String, onClick: () -> Unit, kind: ButtonKind = But
 }
 
 @Composable
-private fun GoalForm(runtime: TeachRuntime, hint: String?) {
-    var goal by remember { mutableStateOf(hint.orEmpty()) }
-    var armed by remember { mutableStateOf(false) }
-    var local by remember { mutableStateOf<TeachNotice?>(null) }
-    LaunchedEffect(hint) { if (goal.isEmpty() && !hint.isNullOrEmpty()) goal = hint }
-    val context = LocalContext.current
-    TeachFrame(
-        Modifier.testTag("teach-form"),
-        actions = {
-            if (!armed) {
-                WideButton(stringResource(R.string.teach_continue), {
-                    local = when {
-                        goal.isBlank() -> TeachNotice.NeedGoal
-                        !teachGoalAccepted(goal) -> TeachNotice.SecretGoal
-                        else -> null
-                    }
-                    if (local == null) armed = true
-                })
-            } else {
-                WideButton(stringResource(R.string.teach_start), {
-                    local = runtime.start(goal)
-                    if (local == null) {
-                        armed = false
-                        (context as? Activity)?.moveTaskToBack(true)
-                    }
-                }, modifier = Modifier.testTag("teach-start"))
-                WideButton(stringResource(R.string.back), { armed = false }, kind = ButtonKind.Tonal)
-            }
-        },
-    ) {
-        Notice(local)
-        if (!armed) {
-            OrbitTextField(
-                goal, { goal = it; local = null },
-                stringResource(R.string.teach_goal_label),
-                Modifier.testTag("teach-goal"),
-                placeholder = stringResource(R.string.teach_goal_hint),
-                singleLine = false,
+internal fun TeachIntroPage(initial: String, onStart: (String) -> Unit) {
+    var goal by remember(initial) { mutableStateOf(initial) }
+    var detailed by remember { mutableStateOf(false) }
+    TeachFrame(Modifier.testTag("teach-form"), actions = {
+        WideButton(stringResource(R.string.teach_start), { onStart(goal) }, modifier = Modifier.testTag("teach-start"))
+    }) {
+        TeachHeading(stringResource(R.string.teach_intro_title), stringResource(R.string.teach_intro_body))
+        OrbitTextField(
+            goal, { goal = it },
+            stringResource(R.string.teach_goal_label),
+            Modifier.testTag("teach-goal"),
+            placeholder = stringResource(R.string.teach_goal_hint),
+            singleLine = false,
+        )
+        MikaCard(Modifier.clickable(role = Role.Button) { detailed = !detailed }.testTag("teach-disclosure")) {
+            Text(
+                stringResource(if (detailed) R.string.teach_disclosure else R.string.teach_disclosure_short),
+                Modifier.padding(MikaSpace.S16),
+                style = MikaType.Caption,
+                color = MikaTheme.colors.ink2,
             )
-            OrbitNote(MikaIcons.Shield, stringResource(R.string.teach_disclosure))
-        } else {
-            Text(stringResource(R.string.teach_ready_body), style = MikaType.Body, color = MikaTheme.colors.ink2)
-            MikaCard {
-                Row(Modifier.fillMaxWidth().padding(MikaSpace.S16), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(34.dp).background(MikaTheme.colors.fill, CircleShape), contentAlignment = Alignment.Center) {
-                        Icon(MikaIcons.Spark, null, Modifier.size(MikaSize.TileIcon), tint = MikaTheme.colors.ink2)
-                    }
-                    Text(goal, Modifier.weight(1f), style = MikaType.BodyStrong, color = MikaTheme.colors.ink)
-                }
-            }
         }
     }
 }
@@ -238,75 +248,100 @@ private fun Interrupted(runtime: TeachRuntime) {
 }
 
 @Composable
-private fun Review(runtime: TeachRuntime, steps: List<TeachStep>, drafting: Boolean) {
-    var confirm by remember { mutableStateOf(false) }
+internal fun Summarizing(failed: Boolean, notice: TeachNotice?, onRetry: () -> Unit, onDiscard: () -> Unit) {
     TeachFrame(actions = {
-        WideButton(
-            stringResource(R.string.teach_generate), runtime::generate,
-            enabled = steps.isNotEmpty() && !drafting, modifier = Modifier.testTag("teach-generate"),
-        )
-        if (confirm) {
-            Text(stringResource(R.string.teach_discard_body), style = MikaType.Caption, color = MikaTheme.colors.warn)
-            WideButton(stringResource(R.string.teach_discard), runtime::discard, kind = ButtonKind.Tonal)
+        if (failed) WideButton(stringResource(R.string.teach_retry), onRetry, modifier = Modifier.testTag("teach-retry"))
+        WideButton(stringResource(R.string.teach_discard), onDiscard, kind = if (failed) ButtonKind.Text else ButtonKind.Tonal, modifier = Modifier.testTag("teach-discard"))
+    }) {
+        if (failed) {
+            TeachHeading(stringResource(if (notice == TeachNotice.NoSteps) R.string.teach_no_steps_again else R.string.teach_draft_failed))
         } else {
-            WideButton(stringResource(R.string.teach_discard), { confirm = true }, kind = ButtonKind.Text)
+            TeachHeading(stringResource(R.string.teach_summarizing), stringResource(R.string.teach_summary_head))
         }
-    }) {
-        TeachHeading(stringResource(R.string.teach_review))
-        if (steps.isEmpty()) Text(stringResource(R.string.teach_no_steps), style = MikaType.Body, color = MikaTheme.colors.ink2)
-        steps.forEachIndexed { i, step -> StepEditor(runtime, step, i + 1) }
     }
 }
 
 @Composable
-private fun StepEditor(runtime: TeachRuntime, step: TeachStep, number: Int) {
-    var correction by remember(step.id, step.correction) { mutableStateOf(step.correction.orEmpty()) }
-    var explanation by remember(step.id, step.explanation) { mutableStateOf(step.explanation.orEmpty()) }
+internal fun TeachSummaryPage(
+    view: TeachSummaryView,
+    onAccept: () -> Unit,
+    onRedo: () -> Unit,
+    onDiscard: () -> Unit,
+) {
+    var foldedOpen by remember { mutableStateOf(false) }
+    var confirmDiscard by remember { mutableStateOf(false) }
     val c = MikaTheme.colors
-    MikaCard {
-        Column(Modifier.fillMaxWidth().padding(MikaSpace.S16), verticalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
-                Box(Modifier.size(24.dp).background(c.fill, CircleShape), contentAlignment = Alignment.Center) {
-                    Text(number.toString(), style = MikaType.Hint, color = c.ink2)
-                }
-                Text(teachLine(step), Modifier.weight(1f), style = MikaType.Body, color = c.ink)
-            }
-            if (step.insufficient) Text(stringResource(R.string.teach_insufficient_note), style = MikaType.Hint, color = c.ink3)
-            if (step.sensitiveOmitted) Text(stringResource(R.string.teach_sensitive_note), style = MikaType.Hint, color = c.ink3)
-            OrbitTextField(
-                correction,
-                {
-                    correction = it
-                    runtime.annotate(step.id, it, explanation)
-                },
-                stringResource(R.string.teach_correct),
-                singleLine = false,
+    TeachFrame(Modifier.testTag("teach-summary"), actions = {
+        WideButton(stringResource(R.string.teach_accept), onAccept, modifier = Modifier.testTag("teach-accept"))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
+            WideButton(stringResource(R.string.teach_redo), onRedo, kind = ButtonKind.Tonal, modifier = Modifier.weight(1f).testTag("teach-redo"))
+            // Discarding the summary takes a second tap, so one slip does not throw the demonstration away
+            WideButton(
+                stringResource(if (confirmDiscard) R.string.teach_discard_confirm else R.string.teach_discard),
+                { if (confirmDiscard) onDiscard() else confirmDiscard = true },
+                kind = ButtonKind.Text, modifier = Modifier.weight(1f).testTag("teach-discard"),
             )
-            if (step.needsClarification) {
-                OrbitTextField(
-                    explanation,
-                    { explanation = it; runtime.annotate(step.id, correction, it) },
-                    stringResource(R.string.teach_clarify),
-                    Modifier.testTag("teach-clarify"),
-                    singleLine = false,
+        }
+    }) {
+        Column(verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
+            Text(stringResource(R.string.teach_summary_ready), style = MikaType.Label, color = c.accent)
+            TeachHeading(view.display, view.description.takeIf { it.isNotBlank() })
+            Text(stringResource(R.string.teach_summary_head), style = MikaType.Hint, color = c.ink3)
+        }
+        if (view.folded.isNotEmpty()) {
+            MikaCard(Modifier.clickable(role = Role.Button) { foldedOpen = !foldedOpen }.testTag("teach-folded")) {
+                Text(
+                    stringResource(R.string.teach_folded_n, view.folded.size),
+                    Modifier.padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12),
+                    style = MikaType.Label, color = c.ink,
                 )
-            }
-            Row {
-                MikaButton(stringResource(R.string.teach_remove), { runtime.remove(step.id) }, kind = ButtonKind.Tonal, size = ButtonSize.Small)
+                if (foldedOpen) {
+                    view.folded.forEach {
+                        Text(
+                            "· $it",
+                            Modifier.padding(start = MikaSpace.S16, end = MikaSpace.S16, bottom = MikaSpace.S4),
+                            style = MikaType.Hint, color = c.ink3,
+                        )
+                    }
+                    Spacer(Modifier.height(MikaSpace.S8))
+                }
             }
         }
+        if (view.basic) {
+            Text(stringResource(R.string.teach_basic_note), style = MikaType.Caption, color = c.warn)
+        }
+        SkillReadingView(view.body)
     }
 }
 
 @Composable
-private fun Saved(runtime: TeachRuntime, onOpenDrafts: () -> Unit) {
-    TeachFrame(actions = {
-        WideButton(stringResource(R.string.teach_open_drafts), onOpenDrafts)
-        WideButton(stringResource(R.string.teach_discard), runtime::discard, kind = ButtonKind.Text)
+internal fun TeachDonePage(
+    name: String,
+    description: String,
+    onBackToChat: () -> Unit,
+    onTeachAgain: () -> Unit,
+) {
+    TeachFrame(Modifier.testTag("teach-done"), actions = {
+        WideButton(stringResource(R.string.teach_back_chat), onBackToChat, modifier = Modifier.testTag("teach-back-chat"))
+        WideButton(stringResource(R.string.teach_teach_again), onTeachAgain, kind = ButtonKind.Tonal, modifier = Modifier.testTag("teach-again"))
     }) {
-        Box(Modifier.size(52.dp).background(MikaTheme.colors.okSoft, CircleShape), contentAlignment = Alignment.Center) {
-            Icon(MikaIcons.Check, null, Modifier.size(24.dp), tint = MikaTheme.colors.ok)
-        }
-        TeachHeading(stringResource(R.string.teach_draft_ready))
+        Text(stringResource(R.string.teach_accepted_title), style = MikaType.Label, color = MikaTheme.colors.accent)
+        TeachHeading(stringResource(R.string.teach_accepted_body, name), description.takeIf { it.isNotBlank() })
     }
 }
+
+private fun teachAgain(runtime: TeachRuntime, goal: String) {
+    runtime.discard()
+    runtime.prefill(goal)
+}
+
+private fun summaryView(draft: PersonalSkill, ui: TeachUi) = TeachSummaryView(
+    display = metaValue(draft, "display") ?: draft.name,
+    description = metaValue(draft, "description").orEmpty(),
+    body = skillPreviewBody(draft.markdown),
+    folded = ui.folded,
+    basic = ui.basic,
+)
+
+private fun metaValue(draft: PersonalSkill?, field: String): String? =
+    draft?.let { (FrontMatter.parse(it.markdown).first[field] as? String)?.takeIf { v -> v.isNotBlank() } }

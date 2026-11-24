@@ -90,6 +90,7 @@ import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
+import com.wangzan101.mika.ui.theme.MikaRadius
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
@@ -101,7 +102,6 @@ import java.time.ZoneOffset
 import com.wangzan101.mika.i18n.uiLocale
 import kotlin.math.roundToInt
 import com.wangzan101.mika.ui.theme.MikaSpace
-import com.wangzan101.mika.ui.theme.MikaRadius
 
 /** 用量页顶上的五段:前四段是固定的范围,[Custom] 打开日期选择。 */
 enum class UsagePreset(private val labelRes: Int) {
@@ -151,13 +151,24 @@ object UsageCopy {
     fun tokens(n: Long): String {
         if (n < 10_000) return n.toString()
         val wan = round3(BigDecimal(n).divide(BigDecimal(10_000)))
-        // 英文按千、百万、十亿写:12.3K、1.5M
-        for ((unit, size) in listOf("K" to 1_000L, "M" to 1_000_000L, "B" to 1_000_000_000L)) {
-            val v = round3(BigDecimal(n).divide(BigDecimal(size)))
-            if (v < BigDecimal(1_000) || unit == "B") return "${v.stripTrailingZeros().toPlainString()}$unit"
+        // Orbit is English-first: K, M, B in every language
+        return formatMetricTokens(n, ::round3)
+    }
+
+    /** Chat usage shares the same K/M/B units in every language. Round only for display. */
+    fun compactTokens(n: Long): String =
+        if (n < 1_000) n.toString() else formatMetricTokens(n) { it.setScale(1, RoundingMode.HALF_UP) }
+
+    private fun formatMetricTokens(n: Long, round: (BigDecimal) -> BigDecimal): String {
+        for ((unit, size) in TOKEN_UNITS) {
+            val v = round(BigDecimal.valueOf(n).divide(size))
+            if (v < BigDecimal.valueOf(1_000) || unit == "B") return "${v.stripTrailingZeros().toPlainString()}$unit"
         }
         return n.toString()
     }
+
+    private val TOKEN_UNITS = listOf("K" to BigDecimal.valueOf(1_000),
+        "M" to BigDecimal.valueOf(1_000_000), "B" to BigDecimal.valueOf(1_000_000_000))
 
     private fun round3(v: BigDecimal): BigDecimal = v.setScale(
         when {
@@ -175,8 +186,8 @@ object UsageCopy {
 
     /** 占比:不到 1% 但不是 0 时写「<1%」。 */
     fun percent(share: Double): String {
-        val p = (share * 100).roundToInt()
-        return if (p == 0 && share > 0) "<1%" else "$p%"
+        if (share > 0 && share < 0.01) return "<1%"
+        return "${(share * 100).roundToInt()}%"
     }
 
     fun missing(n: Long) = trPlural(R.plurals.usage_missing, n.toInt())
@@ -244,12 +255,13 @@ object UsageCopy {
 }
 
 /**
- * 设置 › Token 用量。先显示当前额度，再选时间和查看总用量及三张图：用量趋势(按服务商叠起来)、
+ * 设置 › Token 用量。选时间和查看总用量及三张图：用量趋势(按服务商叠起来)、
  * 按服务商排行(点一家选中,再点取消)、按模型排行(可切服务商)。选中的服务商只影响图里亮哪家、模型列哪家的,
  * 总用量始终是全部。账本每记一笔([UsageLedger.version])就重新统计;本地时区在统计时换算。
+ * 服务商的当前额度在服务商页面上看([UsageAllowanceCard])。
  */
 @Composable
-fun UsageScreen(ledger: UsageLedger, store: ProviderStore, onBack: () -> Unit, onOpenUrl: (String) -> Unit) {
+fun UsageScreen(ledger: UsageLedger, store: ProviderStore, onBack: () -> Unit) {
     var preset by rememberSaveable { mutableStateOf(UsagePreset.Week) }
     // 自定义范围的两头,存成纪元日(rememberSaveable 能存的类型)
     var customFrom by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -278,7 +290,6 @@ fun UsageScreen(ledger: UsageLedger, store: ProviderStore, onBack: () -> Unit, o
         onPickCustom = { picking = true },
         onSelect = { selected = it },
         onBack = onBack,
-        currentAllowance = { UsageAllowanceCard(live, store, onOpenUrl) },
     )
 
     if (picking) {
@@ -310,11 +321,9 @@ fun UsageContent(
     onPickCustom: () -> Unit,
     onSelect: (String?) -> Unit,
     onBack: () -> Unit,
-    currentAllowance: @Composable () -> Unit = {},
 ) {
     val c = MikaTheme.colors
     PageScaffold(UsageCopy.TITLE, onBack) {
-        currentAllowance()
         SegmentedControl(
             UsagePreset.entries.map { it.label }, preset.ordinal, { onPreset(UsagePreset.entries[it]) },
             tags = UsagePreset.entries.map { "usage-range-${it.name}" },
@@ -499,7 +508,7 @@ private fun RankRow(
 
 private val RowShape = RoundedCornerShape(MikaRadius.Sm)
 private val RankText = MikaType.Caption
-private val RankMono = TextStyle(fontSize = 12.5.sp, lineHeight = 18.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Medium)
+private val RankMono = MikaType.Hint.copy(fontWeight = FontWeight.Medium, fontFamily = FontFamily.Monospace)
 private val RankValue = MikaType.Caption
 private val RankShare = MikaType.Micro.copy(fontWeight = FontWeight.Normal)
 

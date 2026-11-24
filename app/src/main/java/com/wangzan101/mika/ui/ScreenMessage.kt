@@ -39,19 +39,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wangzan101.mika.MikaApp
 import com.wangzan101.mika.core.agent.QuoteMessage
-import com.wangzan101.mika.core.cap.web.AttachedPage
+import com.wangzan101.mika.core.agent.AttachedPage
 import com.wangzan101.mika.core.userscreen.UserScreen
 import com.wangzan101.mika.core.userscreen.UserScreenMessage
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaTheme
+import com.wangzan101.mika.ui.theme.MikaType
+import com.wangzan101.mika.ui.theme.MikaRadius
+import com.wangzan101.mika.ui.theme.MikaShapes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import com.wangzan101.mika.ui.theme.MikaSpace
-import com.wangzan101.mika.ui.theme.MikaRadius
-import com.wangzan101.mika.ui.theme.MikaType
 import androidx.compose.ui.text.font.FontWeight
 
 /** 用户发来的屏幕在界面上的说法(对话页、卡片、截屏按钮共用)。 */

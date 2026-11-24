@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -53,7 +52,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -63,20 +61,23 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.wangzan101.mika.core.chat.GeneratedPhoto
 import com.wangzan101.mika.ui.components.cardSurface
 import com.wangzan101.mika.ui.theme.MikaColors
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.wangzan101.mika.ui.theme.MikaRadius
+import com.wangzan101.mika.ui.theme.MikaShapes
 import kotlinx.coroutines.launch
 import com.wangzan101.mika.ui.theme.MikaMotion
 import com.wangzan101.mika.ui.theme.MikaSpace
-import com.wangzan101.mika.ui.theme.MikaRadius
 import com.wangzan101.mika.ui.theme.MikaSize
 
 /** 对话页附件的说法。 */
@@ -99,6 +100,10 @@ object AttachCopy {
 /** The three system pickers behind the composer's plus menu. */
 @androidx.compose.runtime.Stable
 internal class AttachActions(val camera: () -> Unit, val media: () -> Unit, val files: () -> Unit)
+
+/** One more row under the pickers in the plus menu (device folders, saved tasks, checklists, workflows). */
+@androidx.compose.runtime.Immutable
+internal data class AttachExtra(val icon: ImageVector, val label: String, val tag: String, val onClick: () -> Unit)
 
 /**
  * Registers the system pickers without requesting broad media-library access.
@@ -175,6 +180,7 @@ internal fun AttachMenuOverlay(
     onTeach: (() -> Unit)? = null,
     backdrop: com.wangzan101.mika.ui.components.GlassBackdrop? = null,
     reduceMotion: Boolean = false,
+    extras: List<AttachExtra> = emptyList(),
 ) {
     androidx.activity.compose.BackHandler(enabled = open, onBack = onDismiss)
     Box(modifier.fillMaxSize()) {
@@ -197,6 +203,7 @@ internal fun AttachMenuOverlay(
                 onFiles = { onDismiss(); actions.files() },
                 onTeach = onTeach?.let { teach -> { onDismiss(); teach() } },
                 backdrop = backdrop,
+                extras = extras.map { it.copy(onClick = { onDismiss(); it.onClick() }) },
             )
         }
     }
@@ -211,12 +218,14 @@ internal fun AttachPanel(
     modifier: Modifier = Modifier,
     onTeach: (() -> Unit)? = null,
     backdrop: com.wangzan101.mika.ui.components.GlassBackdrop? = null,
+    extras: List<AttachExtra> = emptyList(),
 ) {
     SmokedGlassPanel(modifier.widthIn(min = 196.dp, max = 260.dp).width(IntrinsicSize.Max).testTag("attach-panel"), backdrop, PanelShape) {
         MenuRow(MikaIcons.Photo, AttachCopy.ALBUM, onAlbum)
         MenuRow(MikaIcons.PhotoCamera, AttachCopy.CAMERA, onCamera)
         MenuRow(MikaIcons.Paperclip, AttachCopy.FILES, onFiles)
         if (onTeach != null) MenuRow(MikaIcons.Spark, stringResource(R.string.teach_menu), onTeach, Modifier.testTag("teach-mika"))
+        extras.forEach { MenuRow(it.icon, it.label, it.onClick, Modifier.testTag(it.tag)) }
     }
 }
 
@@ -240,9 +249,14 @@ private val MenuOrigin = TransformOrigin(0.08f, 1f)
 
 // ---------- 待发 ----------
 
-/** 输入框上方一排待发的附件:照片是方块缩略图,文件是小卡片(类型、名字、大小),右上角 × 去掉。 */
+/** 输入框上方一排待发的附件:照片是方块缩略图,文件是小卡片(类型、名字、大小),点一下预览或打开,右上角 × 去掉。 */
 @Composable
-internal fun PendingTray(items: List<PendingAttachment>, onRemove: (String) -> Unit, modifier: Modifier = Modifier) {
+internal fun PendingTray(
+    items: List<PendingAttachment>,
+    onRemove: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    onOpen: ((PendingAttachment) -> Unit)? = null,
+) {
     val c = MikaTheme.colors
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -254,18 +268,23 @@ internal fun PendingTray(items: List<PendingAttachment>, onRemove: (String) -> U
             val conversationId = a.workspaceConversationId
             val path = a.workspacePath
             val workspaceImage = if (conversationId != null && path != null) AttachImage.Sent(conversationId, path) else null
-            val openModifier = if (workspaceImage != null) {
-                Modifier.clickable(
-                    role = if (a.photo) Role.Image else Role.Button,
-                    onClickLabel = stringResource(if (a.photo) R.string.attach_view_large else R.string.chat_open),
-                ) {
+            val openModifier = Modifier.clickable(
+                role = if (a.photo) Role.Image else Role.Button,
+                onClickLabel = stringResource(if (a.photo) R.string.attach_view_large else R.string.chat_open),
+            ) {
+                if (onOpen != null) {
+                    onOpen(a)
+                } else {
                     scope.launch {
-                        if (!AttachFiles.openSent(context, workspaceImage.conversationId, workspaceImage.path)) {
-                            Toast.makeText(context, AttachCopy.GONE, Toast.LENGTH_SHORT).show()
+                        val opened = if (workspaceImage != null) {
+                            AttachFiles.openSent(context, workspaceImage.conversationId, workspaceImage.path)
+                        } else {
+                            AttachFiles.openPending(context, a.uri, a.name)
                         }
+                        if (!opened) Toast.makeText(context, AttachCopy.GONE, Toast.LENGTH_SHORT).show()
                     }
                 }
-            } else Modifier
+            }
             Box {
                 if (a.photo) {
                     val thumb = rememberAttachImage(workspaceImage ?: AttachImage.Picked(a.uri), TRAY_PX)
@@ -314,6 +333,19 @@ internal fun SentAttachments(parsed: AttachmentMessage.Parsed, conversationId: S
     }
 }
 
+/** 回答里模型产出的 `/workspace/...` 引用:照片排格子、文件画卡片,和回答一起左对齐。 */
+@Composable
+internal fun OutputRefs(answer: String, conversationId: String?, onOpen: (AttachmentMessage.Item) -> Unit) {
+    val parsed = remember(answer) { outputRefsParsed(answer) }
+    if (!parsed.hasAttachments) return
+    Column(verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
+        if (parsed.photos.isNotEmpty()) SentPhotos(parsed.photos, conversationId, OutputRefMaxWidth, onOpen)
+        for (f in parsed.files) SentFileCard(f, OutputRefMaxWidth) { onOpen(f) }
+    }
+}
+
+private val OutputRefMaxWidth = MikaSpace.S8 * 40
+
 @Composable
 private fun SentPhotos(photos: List<AttachmentMessage.Item>, conversationId: String?, maxWidth: Dp, onOpen: (AttachmentMessage.Item) -> Unit) {
     val c = MikaTheme.colors
@@ -350,9 +382,45 @@ private fun SentPhotos(photos: List<AttachmentMessage.Item>, conversationId: Str
     }
 }
 
+/**
+ * Mika 生成的照片:和用户附件一样的格子(1 张一大张,2 张并排,3 张起三列),点开在 App 的查看页看。
+ * 路径来自工具结果,不解析回答文字;conversationId 为 null(旧记录没有对话)时不解码。
+ */
 @Composable
-private fun SentFileCard(f: AttachmentMessage.Item, maxWidth: Dp, onClick: () -> Unit) {
+internal fun GeneratedPhotos(photos: List<GeneratedPhoto>, conversationId: String?, maxWidth: Dp) {
+    if (conversationId == null || photos.isEmpty()) return
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val c = MikaTheme.colors
+    val cols = PhotoGrid.columns(photos.size)
+    val gap = MikaSpace.S4
+    val cell = minOf(if (cols == 1) SingleWidth else if (cols == 2) MikaSpace.S8 * 15 else MikaSpace.S8 * 12, maxWidth)
+    val px = with(LocalDensity.current) { cell.roundToPx() }.coerceAtLeast(64)
+    Column(Modifier.fillMaxWidth().padding(bottom = MikaSpace.S8), verticalArrangement = Arrangement.spacedBy(gap)) {
+        photos.chunked(cols).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
+                row.forEach { p ->
+                    val thumb = rememberAttachImage(AttachImage.Sent(conversationId, p.path), px)
+                    Box(
+                        Modifier.testTag("generated-photo").size(cell).clip(GridPhotoShape).background(c.fill)
+                            .clickable(role = Role.Image, onClickLabel = stringResource(R.string.attach_view_large)) {
+                                scope.launch {
+                                    if (!AttachFiles.openSent(context, conversationId, p.path)) {
+                                        Toast.makeText(context, AttachCopy.GONE, Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            },
+                    ) {
+                        thumb?.let { Image(it, p.path.substringAfterLast('/'), Modifier.matchParentSize(), contentScale = ContentScale.Crop) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SentFileCard(f: AttachmentMessage.Item, maxWidth: Dp, onClick: () -> Unit) {    val c = MikaTheme.colors
     Row(
         Modifier.testTag("sent-file").widthIn(min = minOf(220.dp, maxWidth), max = maxWidth).cardSurface(c, FileCardShape).clip(FileCardShape)
             .clickable(onClickLabel = stringResource(R.string.chat_open), role = Role.Button, onClick = onClick)

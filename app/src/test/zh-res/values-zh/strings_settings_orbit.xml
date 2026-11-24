@@ -35,7 +35,6 @@
     <string name="voice_key_hint_openai">粘贴来自 platform.openai.com 的密钥</string>
     <string name="voice_key_remove">移除密钥</string>
     <string name="voice_model">模型</string>
-    <string name="voice_voice">声音</string>
     <string name="voice_default">默认</string>
     <string name="voice_gemini_foot">Google 没有官方方式让其他应用使用 Google AI Pro 或 Ultra 套餐，因此需要来自 Google AI Studio 的 API 密钥。</string>
     <string name="voice_openai_foot">使用 ChatGPT 登录可让 Orbit 在聊天中使用你的 Plus 或 Pro 套餐，但 OpenAI 只对文字开放，不支持实时语音。要在通话中使用你的套餐，请选择“内置”：它会通过你聊天所用的模型来说话。</string>

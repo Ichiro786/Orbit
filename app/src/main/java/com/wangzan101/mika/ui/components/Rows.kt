@@ -28,9 +28,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
@@ -42,6 +48,9 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.wangzan101.mika.R
+import com.wangzan101.mika.i18n.tr
+import com.wangzan101.mika.ui.theme.BrandTileBg
 import com.wangzan101.mika.ui.theme.MikaColors
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaShapes
@@ -65,6 +74,34 @@ fun FooterNote(text: String, modifier: Modifier = Modifier, color: Color = Color
     )
 }
 
+/** 一行摘要 + 可展开的「详情」:默认只显示 [summary],点「详情」展开 [detail] 全文。间距由调用方用 [modifier] 给。 */
+@Composable
+fun DetailNote(summary: String, detail: String, modifier: Modifier = Modifier) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    Column(modifier) {
+        Text(summary, style = MikaType.Hint, color = MikaTheme.colors.ink3)
+        if (detail.isNotBlank()) {
+            Row(
+                Modifier.clickable { open = !open }.padding(top = MikaSpace.S4),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                DirectionalIcon(
+                    MikaIcons.Chevron, null,
+                    Modifier.size(MikaSize.SmallIcon).rotate(if (open) 90f else 0f),
+                    tint = MikaTheme.colors.accent,
+                )
+                Text(
+                    tr(R.string.details), Modifier.padding(start = 2.dp),
+                    style = MikaType.Hint.copy(fontWeight = FontWeight.SemiBold), color = MikaTheme.colors.accent,
+                )
+            }
+            if (open) {
+                Text(detail, Modifier.padding(top = MikaSpace.S8), style = MikaType.Hint, color = MikaTheme.colors.ink2)
+            }
+        }
+    }
+}
+
 /** 图标块的底色和图形色。默认中性;只有状态才上色。 */
 enum class TileTone {
     Neutral, Accent, Ok, Warn, Bad;
@@ -84,8 +121,15 @@ enum class TileTone {
  * lighter shade of it. Without a tint the tile is neutral glass and the glyph is ink.
  */
 @Composable
-fun IconTile(icon: ImageVector, tone: TileTone = TileTone.Neutral, tint: Color? = null) {
+fun IconTile(icon: ImageVector, tone: TileTone = TileTone.Neutral, tint: Color? = null, brand: Boolean = false) {
     val c = MikaTheme.colors
+    // A service's own logo keeps its brand colours on a plain light tile
+    if (brand) {
+        Box(Modifier.size(MikaSize.Tile).background(BrandTileBg, MikaShapes.Tile), contentAlignment = Alignment.Center) {
+            Icon(icon, null, Modifier.size(MikaSize.TileIcon), tint = Color.Unspecified)
+        }
+        return
+    }
     val hue = tint ?: tone.colors(c).second.takeIf { tone != TileTone.Neutral }
     val glyph = when {
         hue == null -> c.ink
@@ -131,16 +175,18 @@ fun ListRow(
     first: Boolean = false,
     titleColor: Color = Color.Unspecified,
     tone: TileTone = TileTone.Neutral,
+    brand: Boolean = false,
     detail: String? = null,
     detailColor: Color = Color.Unspecified,
     onClick: (() -> Unit)? = null,
     /** A solid colour for the icon tile with a white glyph, as on the Settings home; null keeps [tone]. */
     tint: Color? = null,
+    modifier: Modifier = Modifier,
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
     val c = MikaTheme.colors
     Row(
-        Modifier.fillMaxWidth()
+        modifier.fillMaxWidth()
             .topHairline(first, if (icon != null) TextStartWithIcon else TextStartPlain, c.hair)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .heightIn(min = MikaSize.RowMin)
@@ -148,7 +194,7 @@ fun ListRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MikaSpace.S16),
     ) {
-        if (icon != null) IconTile(icon, tone, tint)
+        if (icon != null) IconTile(icon, tone, tint, brand)
         TextAndTrailing(
             text = {
                 Column(Modifier.padding(vertical = MikaSpace.S12)) {
@@ -237,11 +283,12 @@ fun RadioRow(
     titleStyle: TextStyle = MikaType.Body,
     /** 标题下面的附加内容(例如能力小标签)。 */
     below: (@Composable () -> Unit)? = null,
+    modifier: Modifier = Modifier,
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
     val c = MikaTheme.colors
     Row(
-        Modifier.fillMaxWidth()
+        modifier.fillMaxWidth()
             .topHairline(first, 50.dp, c.hair)
             .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
             .heightIn(min = 56.dp)
@@ -278,6 +325,7 @@ private fun RadioMark(selected: Boolean, enabled: Boolean = true) {
 /**
  * 卡片里的输入行:左边固定宽的标题,右边单行输入框(空时显示 [placeholder])。
  * [secret] 为真时按密码显示;[trailing] 放在输入框右边(例如「显示」)。
+ * [onClear] 非空且输入框里有字时,在文字右边放一个清空按钮(和搜索框的叉同一套)。
  */
 @Composable
 fun InputRow(
@@ -290,6 +338,9 @@ fun InputRow(
     secret: Boolean = false,
     labelWidth: Dp = 84.dp,
     modifier: Modifier = Modifier,
+    onClear: (() -> Unit)? = null,
+    clearDescription: String = "",
+    clearModifier: Modifier = Modifier,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val c = MikaTheme.colors
@@ -310,6 +361,22 @@ fun InputRow(
             )
         }
         if (trailing != null) Box(Modifier.padding(start = MikaSpace.S8)) { trailing() }
+        if (onClear != null && value.isNotEmpty()) {
+            FieldClearButton(clearDescription, onClear, clearModifier.padding(start = MikaSpace.S4))
+        }
+        if (trailing != null) Box(Modifier.padding(start = MikaSpace.S8)) { trailing() }
+    }
+}
+
+/** 输入框末尾的叉:点一下清空。和搜索框的清空按钮同一套大小和颜色,只在有内容时由调用方放出来。 */
+@Composable
+fun FieldClearButton(description: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier.size(MikaSize.Tile).clip(CircleShape)
+            .clickable(role = Role.Button, onClickLabel = description) { onClick() },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(MikaIcons.Close, description, Modifier.size(MikaSize.SmallIcon), tint = MikaTheme.colors.ink3)
     }
 }
 

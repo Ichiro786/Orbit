@@ -4,7 +4,7 @@ display: GitHub
 description: Code hosting: repos, code, issues, pull requests
 domains: ["github.com"]
 aliases: ["GitHub", "github"]
-apps: []
+apps: ["github"]
 open: github.com
 mode: desktop
 ---

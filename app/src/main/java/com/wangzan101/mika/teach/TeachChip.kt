@@ -27,9 +27,9 @@ import com.wangzan101.mika.cap.phone.a11y.ScreenAccessibility
 import com.wangzan101.mika.core.teach.TeachPhase
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
+import com.wangzan101.mika.ui.theme.MikaRadius
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.wangzan101.mika.ui.theme.MikaSpace
-import com.wangzan101.mika.ui.theme.MikaRadius
 
 /**
  * 采集和暂停时贴在屏幕上方的一条。用的是无障碍浮层，和悬浮胶囊同一类窗口，不申请通知权限，也不申请「显示在其他应用上层」。

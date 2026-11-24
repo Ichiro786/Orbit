@@ -55,6 +55,8 @@ class WhatsappChannel(
             is Delivery.Image -> fileText(delivery)
         }
         return sendLock.withLock {
+            // Checked again after waiting for the lock: a pause or relink in between stops an older delivery.
+            if (!isAlive(peer)) return@withLock SendOutcome.Failed
             val result = try {
                 sender(peer.peerId, "$REPLY_PREFIX$text")
             } catch (e: CancellationException) {

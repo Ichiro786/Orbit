@@ -1,7 +1,7 @@
 package com.wangzan101.mika.ui
 
 import com.wangzan101.mika.core.agent.QuoteMessage
-import com.wangzan101.mika.core.cap.web.AttachedPage
+import com.wangzan101.mika.core.agent.AttachedPage
 import com.wangzan101.mika.R
 import com.wangzan101.mika.i18n.tr
 import com.wangzan101.mika.i18n.trPlural
@@ -18,21 +18,38 @@ object ChatCopy {
     }
 
     val EMPTY_PROMPT get() = tr(R.string.chat_empty_prompt)
+    /** 空对话里的一句价值主张:说明 Mika 能干嘛。 */
+    val EMPTY_VALUE get() = tr(R.string.chat_empty_value)
+
+    /** 内置示例的类型,只决定首页卡片上的图标和色调。 */
+    enum class ExampleKind { Web, Follow, GroupChat, Alarm, Schedule }
+    data class Example(val kind: ExampleKind, val title: String, val prompt: String)
 
     /**
      * 内置推荐任务的原文。只在本机还没有保存过推荐任务时用来初始化一次;
      * 标题和提示词都用这一句,之后用户在设置里改,不会因为换语言或升级被加回来。
      */
-    enum class ExampleKind { App, Web, File, Schedule, Device }
-    data class Example(val kind: ExampleKind, val text: String)
-
     val examples get() = listOf(
-        Example(ExampleKind.App, tr(R.string.chat_example_group_summary)),
-        Example(ExampleKind.Device, tr(R.string.chat_example_wind_down)),
-        Example(ExampleKind.Web, tr(R.string.chat_example_nearby)),
+        Example(ExampleKind.GroupChat, tr(R.string.chat_example_group_summary_title), tr(R.string.chat_example_group_summary)),
+        Example(ExampleKind.Alarm, tr(R.string.chat_example_wind_down), tr(R.string.chat_example_wind_down)),
+        Example(ExampleKind.Web, tr(R.string.chat_example_nearby), tr(R.string.chat_example_nearby)),
     )
 
-    fun recommendationSeeds(): List<Pair<String, String>> = examples.map { it.text to it.text }
+    fun recommendationSeeds(): List<Pair<String, String>> = examples.map { it.title to it.prompt }
+
+    /**
+     * 一条推荐任务属于哪种类型:提示词和内置示例一字不差就是内置的那条(标题改过也认得出);
+     * 自己加的任务没有类型,返回 null,界面上用通用图标。
+     */
+    fun kindOf(prompt: String): ExampleKind? = examples.firstOrNull { it.prompt == prompt }?.kind
+
+    /**
+     * 曾经内置、现在已经去掉的示例。升级时把用户还没动过的那一条从推荐列表里清掉;
+     * 标题或提示词改过的留着——那已经是用户自己的任务了。
+     */
+    fun retiredRecommendationSeeds(): List<Pair<String, String>> = listOf(
+        tr(R.string.chat_example_pdf_title) to tr(R.string.chat_example_pdf),
+    )
 
     /** The old Mika suggestions (starring its repo, following its author, a set of test alarms), dropped from saved lists once. */
     val retiredSeeds = setOf(
@@ -178,4 +195,5 @@ object ChatCopy {
         ComposerMode.Answer -> tr(R.string.voice_placeholder_answer)
         ComposerMode.Idle -> tr(R.string.voice_placeholder_idle)
     }
+
 }

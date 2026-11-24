@@ -4,7 +4,7 @@ display: Google Maps
 description: Place details and driving, transit, walking routes
 domains: ["maps.google.com"]
 aliases: ["Google Maps", "谷歌地图"]
-apps: []
+apps: ["google-maps"]
 open: maps.google.com
 mode: desktop
 ---

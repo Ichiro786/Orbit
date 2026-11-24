@@ -200,4 +200,4 @@ internal fun matchRanges(text: String, terms: List<String>): List<IntRange> {
     return merged
 }
 
-private val SearchText = MikaType.Body.copy(fontSize = 14.sp)
+private val SearchText = MikaType.Body

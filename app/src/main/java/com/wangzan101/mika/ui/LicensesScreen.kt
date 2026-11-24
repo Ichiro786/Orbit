@@ -86,6 +86,8 @@ object Licenses {
         Entry("modernc.org/sqlite", "BSD-3-Clause", "Unmodified, stores the WhatsApp linked-device session on the device. https://gitlab.com/cznic/sqlite"),
         Entry("Go and golang.org/x", "BSD-3-Clause", "Runtime and extension libraries of the WhatsApp linked-device library (including gomobile bindings), unmodified. https://go.dev"),
         Entry("xterm.js", "MIT", "Version 5.5.0 (and @xterm/addon-fit 0.10.0), the terminal emulator on the terminal page. https://github.com/xtermjs/xterm.js"),
+        Entry("Shizuku API", "Apache-2.0", "Version 13.1.5 (api and provider). Used only to bind the local helper service through the official API when Shizuku is installed, running and authorized on the device. https://github.com/RikkaApps/Shizuku-API"),
+        Entry("MCP service brand logos (mcp/mcp-logos.json)", "CC0 1.0", "The brand outline glyphs on the service directory, list and management pages are CC0 1.0; each brand's mark still belongs to its owner and is shown only to identify connectable services."),
     )
 }
 

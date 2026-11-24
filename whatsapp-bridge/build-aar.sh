@@ -15,4 +15,4 @@ if [ -z "${ANDROID_NDK_HOME:-}" ]; then
 fi
 mkdir -p "$(dirname "$out")"
 # Android 15+ phones can use 16 KB memory pages; every native library must be aligned for them.
-gomobile bind -target=android/arm64,android/amd64 -androidapi 30 -trimpath -ldflags="-s -w -extldflags=-Wl,-z,max-page-size=16384" -o "$out" .
+gomobile bind -target=android/arm64,android/amd64 -androidapi 29 -trimpath -ldflags="-s -w -extldflags=-Wl,-z,max-page-size=16384" -o "$out" .

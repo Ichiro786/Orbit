@@ -1,5 +1,7 @@
 package com.wangzan101.mika.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -7,9 +9,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import com.wangzan101.mika.ui.theme.MikaTheme
 
 /** App 里的页面。对话是根页面,其余都从它(或从设置)进去,返回时回到进来的那一页。 */
-enum class Route { Chat, Personal, Settings, Memory, Plans, Browser, Files, Run, Source, PhoneSetup, Models, Usage, SpeechModel, Welcome, ModelSetup, About, License, Screens, Teach, Calls, Tasks, Make }
+enum class Route { Chat, Personal, Settings, Memory, Plans, Browser, Files, Run, Source, PhoneSetup, Models, Usage, SpeechModel, VoiceModel, ImageModel, Welcome, ModelSetup, About, License, UpdateMirrors, Screens, Teach, Calls, Tasks, Make, Report, Playback, Persona, VoiceCatalog, RealtimeVoice, VoiceServices, CallMode }
 
 /**
  * 页面栈:最底下永远是对话页。[push] 进一页,[back] 回上一页(已在对话页时返回 false,交给系统退出)。
@@ -92,3 +96,24 @@ class NavStack(initial: List<Route> = listOf(Route.Chat), fromDrawer: Boolean = 
 @Composable
 fun rememberNavStack(first: Route = Route.Chat): NavStack =
     rememberSaveable(saver = NavStack.Saver) { NavStack(listOf(first)) }
+
+/**
+ * Sub-page switching inside one screen, with Orbit's page slide ([sharedAxis]): deeper [depth] pushes, shallower
+ * steps back; with system animations off it swaps directly. Read [targetState] in the content, not live nav state.
+ */
+@Composable
+fun <T> NavSlide(
+    targetState: T,
+    depth: (T) -> Int,
+    modifier: Modifier = Modifier,
+    content: @Composable AnimatedContentScope.(T) -> Unit,
+) {
+    val reduce = MikaTheme.reduceMotion
+    AnimatedContent(
+        targetState = targetState,
+        modifier = modifier,
+        transitionSpec = { sharedAxis(depth(targetState) >= depth(initialState), reduce) },
+        label = "nav-slide",
+        content = content,
+    )
+}

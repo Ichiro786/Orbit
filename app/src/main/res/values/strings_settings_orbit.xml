@@ -38,7 +38,6 @@
     <string name="voice_key_hint_openai">Paste a key from platform.openai.com</string>
     <string name="voice_key_remove">Remove key</string>
     <string name="voice_model">Model</string>
-    <string name="voice_voice">Voice</string>
     <string name="voice_default">Default</string>
     <string name="voice_gemini_foot">Google has no official way for other apps to use a Google AI Pro or Ultra plan, so this needs an API key from Google AI Studio.</string>
     <string name="voice_openai_foot">Sign in with ChatGPT lets Orbit use your Plus or Pro plan for chats, but OpenAI only offers that for text, not live voice. To use your plan in a call, pick Built-in: it talks through whichever model you chat with.</string>

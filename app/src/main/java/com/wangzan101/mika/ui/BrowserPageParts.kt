@@ -90,10 +90,10 @@ import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaSize
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
+import com.wangzan101.mika.ui.theme.MikaRadius
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.wangzan101.mika.ui.theme.MikaSpace
-import com.wangzan101.mika.ui.theme.MikaRadius
 
 val BROWSER_DESKTOP_TAG: String get() = tr(R.string.browser_desktop)
 val BROWSER_LOGIN_DONE: String get() = tr(R.string.browser_login_done)
@@ -231,7 +231,7 @@ private fun AddressEditor(url: String, modifier: Modifier, onGo: (String) -> Uni
             text, { text = it },
             Modifier.weight(1f).focusRequester(focus).testTag("browser-address"),
             singleLine = true,
-            textStyle = MikaType.Body.copy(fontSize = 14.5.sp, color = c.ink, textDirection = androidx.compose.ui.text.style.TextDirection.Content),
+            textStyle = MikaType.Body.copy(color = c.ink, textDirection = androidx.compose.ui.text.style.TextDirection.Content),
             cursorBrush = SolidColor(c.accent),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go, autoCorrectEnabled = false),
             keyboardActions = KeyboardActions(onGo = { onGo(text.text) }),
