@@ -298,4 +298,5 @@
     <string name="hold_to_allow_hint">링이 찰 때까지 누르세요</string>
     <string name="hold_to_allow_holding">계속 누르고 있어요</string>
     <string name="chat_jump_latest_new">최신 메시지로 이동, 새 답변 %1$d개</string>
+    <string name="chat_view_live">진행 상황 보기</string>
 </resources>

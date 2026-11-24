@@ -298,4 +298,5 @@
     <string name="hold_to_allow_hint">Tahan sampai cincin penuh</string>
     <string name="hold_to_allow_holding">Terus tahan</string>
     <string name="chat_jump_latest_new">Lompat ke terbaru, %1$d baru</string>
+    <string name="chat_view_live">Lihat prosesnya langsung</string>
 </resources>

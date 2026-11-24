@@ -312,4 +312,5 @@
     <string name="hold_to_allow_hint">تا پر شدن حلقه نگه دارید</string>
     <string name="hold_to_allow_holding">همچنان نگه دارید</string>
     <string name="chat_jump_latest_new">رفتن به جدیدترین پیام، تازه: %1$d</string>
+    <string name="chat_view_live">تماشای روند کار</string>
 </resources>

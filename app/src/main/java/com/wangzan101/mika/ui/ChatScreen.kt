@@ -110,6 +110,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -343,7 +346,7 @@ fun ChatScreen(
     // 返回聊天时同一条内容不重新滚动；新进展仅在跟随末尾时滚动。
     // 目标行直接由当前 UI 状态计算:layoutInfo 还是上一帧的测量结果,发送后立即读它会滚到旧的末尾。
     val last = ui.exchanges.lastOrNull()
-    val rowCount = chatItemCount(ui.exchanges, kept, phoneSetupNeeded, hasBlocked = ui.blocked != null)
+    val rowCount = chatItemCount(ui.exchanges, kept, phoneSetupNeeded, hasBlocked = ui.blocked != null, operatingPhone = ui.operatingPhone)
     val scrollMarker = "${ui.conversationId}:${ui.exchanges.size}:${last?.steps?.size}:${last?.steers?.size}:${last?.status?.hashCode()}:${ui.blocked?.hashCode()}"
     val jump = pendingJump?.takeIf { it.conversationId == ui.conversationId }
     // 目标行的高亮:只在目标还是当前对话时算。
@@ -353,7 +356,7 @@ fun ChatScreen(
     LaunchedEffect(scrollMarker, jump) {
         // 从搜索或文件库过来:先滚到目标消息,期间不要跟末尾;目标不在了就退回原来的逻辑。
         if (jump != null) {
-            val keys = chatItemKeys(ui.exchanges, kept, phoneSetupNeeded, hasBlocked = ui.blocked != null)
+            val keys = chatItemKeys(ui.exchanges, kept, phoneSetupNeeded, hasBlocked = ui.blocked != null, operatingPhone = ui.operatingPhone)
             val index = chatTargetKey(ui.exchanges, jump.target)?.let(keys::indexOf) ?: -1
             if (index >= 0) {
                 previousScrollMarker = scrollMarker
@@ -661,7 +664,6 @@ fun ChatScreen(
             exit = MikaTheme.motion.exit(TransformOrigin(0.5f, 1f)),
         ) {
             JumpToLatest(unreadSince(seenReplies, replyCount)) {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 followingTail = true
                 scope.launch {
                     val end = listState.layoutInfo.totalItemsCount - 1
@@ -997,13 +999,11 @@ private fun LazyListScope.exchange(
         ex.status is ExchangeStatus.NeedsTakeover || ex.status is ExchangeStatus.NeedsConfirmation ||
         ex.status is ExchangeStatus.NeedsInput || ex.status is ExchangeStatus.Queued
     val active = ex.status.isActive()
-    val answering = ex.status == ExchangeStatus.Working && !ex.draft.isNullOrBlank()
-    if (active) {
-        // Only thinking so far: the plain "Thinking" line below says it, so no second indicator above it.
-        val onlyThinking = ex.status == ExchangeStatus.Working && ex.waitingForModel && ex.steps.isEmpty() && !backgroundNote
-        if (!answering && !onlyThinking) chatItem(reduceMotion, "s$index") { WorkBlock(ex, vm, backgroundNote, openRun) }
-    } else if (ex.steps.isNotEmpty() || ex.runId != null) {
-        chatItem(reduceMotion, "s$index") { DoneLine(ex, reduceMotion, openRun, tokens) }
+    // One "still going" row at a time: the working block, or the plain Thinking line before anything else exists
+    // (see [statusRows]; the row model in ChatRows asks the same function).
+    val rows = statusRows(ex, backgroundNote)
+    if (rows.work) chatItem(reduceMotion, "s$index") {
+        if (active) WorkBlock(ex, vm, backgroundNote, openRun) else DoneLine(ex, reduceMotion, openRun, tokens)
     }
     // 任务进行中插的话:用户的原话,下面一行小字说它的去向。
     // 插话之前已经说完的回复照常显示;插话打断的那段留在原处(淡色、标「被你的新消息打断」);接着才是插话。
@@ -1028,13 +1028,11 @@ private fun LazyListScope.exchange(
     val (joined, waiting) = steersAroundDraft(ex.steers)
     joined.forEach(::steer)
     val draftText = ex.draft?.takeIf(String::isNotBlank)
-    if (draftText != null) {
-        chatItem(reduceMotion, "d$index") { DraftText(draftText, ex.waitingForModel, reduceMotion) }
-        // While the answer is still streaming in, three dots under it say more is coming.
-        if (active && ex.waitingForModel) chatItem(reduceMotion, "t$index") { TypingBubble(reduceMotion) }
-    }
-    // While the model is thinking and nothing has streamed yet, a shimmering "Thinking" line holds the answer's place.
-    else if (active && ex.status == ExchangeStatus.Working && ex.waitingForModel) chatItem(reduceMotion, "k$index") { ThinkingLine(reduceMotion) }
+    if (draftText != null) chatItem(reduceMotion, "d$index") { DraftText(draftText, ex.waitingForModel, reduceMotion) }
+    // While the answer is still streaming in, three dots under it say more is coming.
+    if (rows.typing) chatItem(reduceMotion, "t$index") { TypingBubble(reduceMotion) }
+    // Thinking, with nothing to show yet: a shimmering "Thinking" line holds the answer's place.
+    if (rows.thinking) chatItem(reduceMotion, "th$index") { ThinkingLine(reduceMotion) }
     waiting.forEach(::steer)
     chatItem(reduceMotion, "r$index") {
         JumpHighlight(highlightKey == "r$index", reduceMotion) {
@@ -1330,7 +1328,7 @@ private fun WorkBlock(ex: Exchange, vm: ChatViewModel, backgroundNote: Boolean, 
         // 跑的时候就能进运行过程(页面按秒接着长);结束后收进「做了 N 步 · 查看过程」那一行
         ex.runId?.let { id ->
             Text(
-                stringResource(R.string.chat_view_process),
+                stringResource(R.string.chat_view_live),
                 Modifier.padding(top = 2.dp).clip(MikaShapes.Pill).clickable(role = Role.Button) { openRun(id) }
                     .padding(horizontal = MikaSpace.S4, vertical = MikaSpace.S4).testTag("work-view-process"),
                 style = DoneText.copy(fontStyle = FontStyle.Italic, textDecoration = TextDecoration.Underline), color = c.ink3,
@@ -2093,6 +2091,7 @@ internal fun answerBubbleMaxWidth(rowWidth: Int): Int = (rowWidth * AnswerBubble
 /** The jump-to-latest button: a 40dp frosted circle with a down arrow inside a 48dp touch target. */
 @Composable
 private fun JumpToLatest(unread: Int, onClick: () -> Unit) {
+    val haptic = LocalHapticFeedback.current
     val c = MikaTheme.colors
     val label = if (unread > 0) stringResource(R.string.chat_jump_latest_new, unread)
         else stringResource(R.string.chat_jump_latest)
@@ -2100,7 +2099,10 @@ private fun JumpToLatest(unread: Int, onClick: () -> Unit) {
     Box(
         Modifier.size(MikaSize.TouchTarget).pressScale(press)
             .clip(CircleShape)
-            .clickable(press, androidx.compose.foundation.LocalIndication.current, role = Role.Button, onClickLabel = label, onClick = onClick)
+            .clickable(press, androidx.compose.foundation.LocalIndication.current, role = Role.Button, onClickLabel = label, onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            })
             .semantics { contentDescription = label }
             .testTag("chat-jump-latest"),
         contentAlignment = Alignment.Center,
@@ -2114,9 +2116,9 @@ private fun JumpToLatest(unread: Int, onClick: () -> Unit) {
         }
         if (unread > 0) {
             Text(
-                if (unread > 99) "99+" else unread.toString(),
+                unreadBadge(unread),
                 Modifier.align(Alignment.TopEnd).background(c.accent, MikaShapes.Pill)
-                    .padding(horizontal = MikaSpace.S4).clearAndSetSemantics {},
+                    .padding(horizontal = MikaSpace.S4).testTag("jump-to-latest-count").clearAndSetSemantics {},
                 style = MikaType.Micro, color = c.onAccent,
             )
         }
