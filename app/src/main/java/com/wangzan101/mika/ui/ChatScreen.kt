@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import com.wangzan101.mika.cap.sandbox.AttachmentFailure
 import com.wangzan101.mika.cap.sandbox.AttachmentFailureReason
+import com.wangzan101.mika.chat.ChecklistSource
 import com.wangzan101.mika.core.agent.QuoteMessage
 import com.wangzan101.mika.core.record.ConversationTokens
 import com.wangzan101.mika.core.agent.AttachedPage
+import com.wangzan101.mika.settings.FeatureFlags
 import com.wangzan101.mika.ui.components.DirectionalIcon
 import com.wangzan101.mika.ui.components.keepsKeyboard
 import com.wangzan101.mika.ui.components.pageBackground
@@ -251,6 +253,9 @@ fun ChatScreen(
     onOpenTeach: (String) -> Unit = {},
     /** 首页推荐任务。不传时用本机保存的那一份;测试传入单独的存储,避免改到用户的数据。 */
     recommendations: RecommendedTaskStore? = null,
+    /** Saved checklists and multi-step tasks; null uses the app's (tests pass their own). */
+    checklists: com.wangzan101.mika.chat.SavedChecklistStore? = null,
+    workflows: com.wangzan101.mika.workflow.WorkflowRuntime? = null,
     onOpenOrbitHub: () -> Unit = {},
     onVoiceListeningChanged: (Boolean) -> Unit = {},
     primaryBottomInset: Dp = 0.dp,
@@ -296,6 +301,30 @@ fun ChatScreen(
     val input = ui.input
     // 推荐任务可以直接填进空输入框;已有内容时先确认,不能因误触把草稿换掉。
     var pendingExample by remember { mutableStateOf<String?>(null) }
+    // Saved tasks with fill-in fields (item 8): pick one and fill its fields before it goes into the composer.
+    var fillTaskPrompt by rememberSaveable(ui.conversationId) { mutableStateOf<String?>(null) }
+    var fillTaskTitle by rememberSaveable(ui.conversationId) { mutableStateOf("") }
+    val fillDraft: (String) -> Unit = { prompt -> if (vm.ui.value.input.isEmpty()) vm.input(prompt) else pendingExample = prompt }
+    val pickTask: (RecommendedTask) -> Unit = { task ->
+        if (task.fillIn && com.wangzan101.mika.settings.TaskTemplate.fields(task.prompt).isNotEmpty()) {
+            fillTaskTitle = task.title
+            fillTaskPrompt = task.prompt
+        } else fillDraft(task.prompt)
+    }
+    // Checklists and multi-step tasks (item 8) and device folders (item 31), opened from the attach menu.
+    val checklistStore = checklists ?: (LocalContext.current.applicationContext as? MikaApp)?.savedChecklists
+    val workflowRuntime = workflows ?: (LocalContext.current.applicationContext as? MikaApp)?.workflows
+    var showChecklists by remember(ui.conversationId) { mutableStateOf(false) }
+    var checklistIncoming by remember(ui.conversationId) { mutableStateOf<ChecklistSource?>(null) }
+    var showWorkflows by rememberSaveable { mutableStateOf(false) }
+    var saveTaskPrompt by remember(ui.conversationId) { mutableStateOf<String?>(null) }
+    var deviceBrowserConversation by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(ui.conversationId, deviceBrowserConversation) {
+        if (deviceBrowserConversation != null && deviceBrowserConversation != vm.ui.value.conversationId) deviceBrowserConversation = null
+    }
+    deviceBrowserConversation?.takeIf { it == ui.conversationId }?.let { id ->
+        DeviceFileBrowser(vm, id) { deviceBrowserConversation = null }
+    }
     var retryFailures by remember { mutableStateOf<Pair<String, String>?>(null) }
     var voiceHolding by remember { mutableStateOf(false) }
     var voiceListening by remember { mutableStateOf(false) }
@@ -523,6 +552,15 @@ fun ChatScreen(
                 share = { closeMenu { shareMessage(context, m.text) } },
                 react = reactable?.runId?.let { runId -> { emoji: String -> closeMenu { vm.react(runId, emoji) } } },
                 reaction = reactable?.reaction,
+                saveTask = if (recommendationStore != null && m.from == QuoteMessage.From.You && m.text.isNotBlank()) ({
+                    closeMenu { saveTaskPrompt = m.text }
+                }) else null,
+                saveChecklist = if (checklistStore != null && m.from == QuoteMessage.From.Mika && m.text.isNotBlank() && ui.conversationId != null) ({
+                    closeMenu {
+                        checklistIncoming = ChecklistSource(ui.conversationId!!, m.key, m.text)
+                        showChecklists = true
+                    }
+                }) else null,
             )
     }
     val currentActions by rememberUpdatedState(actionsFor)
@@ -550,9 +588,7 @@ fun ChatScreen(
                                     ?: stringResource(if (isSideChat) R.string.orbit_side_context else R.string.orbit_channel_empty)
                                 Text(description, Modifier.padding(top = MikaSpace.S12), style = MikaType.Body, color = c.ink2)
                             }
-                        } else EmptyState(ui.conversationId, starters ?: recommendedTasks, others.size, onOpenDrawer, userName) { prompt ->
-                            if (input.isEmpty()) vm.input(prompt) else pendingExample = prompt
-                        }
+                        } else EmptyState(ui.conversationId, starters ?: recommendedTasks, others.size, onOpenDrawer, userName, onPick = pickTask)
                     }
                 }
                 ui.exchanges.forEachIndexed { i, ex ->
@@ -775,6 +811,13 @@ fun ChatScreen(
                 onTeach = if (ui.composer == ComposerMode.Idle) ({ onOpenTeach(input.trim()) }) else null,
                 backdrop = backdrop,
                 reduceMotion = reduceMotion,
+                extras = listOfNotNull(
+                    if (FeatureFlags.get(context).deviceFiles()) AttachExtra(MikaIcons.Folder, stringResource(R.string.device_browser_title), "attach-device-files") {
+                        deviceBrowserConversation = vm.libraryTargetConversation()
+                    } else null,
+                    checklistStore?.let { AttachExtra(MikaIcons.ListChecks, stringResource(R.string.checklists_title), "attach-checklists") { showChecklists = true } },
+                    workflowRuntime?.let { AttachExtra(MikaIcons.Route, stringResource(R.string.workflows_title), "attach-workflows") { showWorkflows = true } },
+                ),
             )
         }
 
@@ -787,6 +830,7 @@ fun ChatScreen(
                 onCopy = a.copy, onQuote = a.quote, onSelect = a.select, onDismiss = { closeMenu() },
                 onBranch = a.branch, onBranchRetry = a.branchRetry, onEdit = a.edit, onWithdraw = a.withdraw,
                 onShare = a.share, onReact = a.react, reaction = a.reaction,
+                onSaveTask = a.saveTask, onSaveChecklist = a.saveChecklist,
             )
         }
     }
@@ -800,6 +844,38 @@ fun ChatScreen(
         )
     }
 
+    // Full-screen pages opened from the attach and message menus, on Orbit's page surface.
+    if (showChecklists && checklistStore != null) androidx.compose.ui.window.Dialog(
+        onDismissRequest = { showChecklists = false; checklistIncoming = null },
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = c.bg) {
+            SavedChecklistsScreen(checklistStore, incoming = checklistIncoming,
+                onBack = { showChecklists = false; checklistIncoming = null },
+                onUseDraft = { text -> showChecklists = false; checklistIncoming = null; fillDraft(text) })
+        }
+    }
+    if (showWorkflows && workflowRuntime != null) androidx.compose.ui.window.Dialog(
+        onDismissRequest = { showWorkflows = false },
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = c.bg) {
+            WorkflowsScreen(workflowRuntime, onBack = { showWorkflows = false },
+                onOpenConversation = { id -> showWorkflows = false; vm.openWorkflowConversation(id) },
+                onUseResult = { text -> showWorkflows = false; fillDraft(text) })
+        }
+    }
+    saveTaskPrompt?.let { prompt ->
+        recommendationStore?.let { store ->
+            RecommendedTaskDialog(store, initial = null, onDismiss = { saveTaskPrompt = null }, seedPrompt = prompt)
+        }
+    }
+    fillTaskPrompt?.let { prompt ->
+        TaskFillDialog(fillTaskTitle, prompt, onDismiss = { fillTaskPrompt = null }, onFill = { filled ->
+            fillTaskPrompt = null
+            fillDraft(filled)
+        })
+    }
     pendingExample?.let { example ->
         MikaDialog(
             onDismissRequest = { pendingExample = null },
@@ -882,7 +958,7 @@ private suspend fun LazyListState.scrollToTail(end: Int, animate: Boolean) {
 @Composable
 private fun EmptyState(
     conversation: String?, tasks: List<RecommendedTask>, runningElsewhere: Int, onOpenDrawer: () -> Unit, name: String = "",
-    onPick: (String) -> Unit,
+    onPick: (RecommendedTask) -> Unit,
 ) {
     val c = MikaTheme.colors
     val hour = remember(conversation) { LocalTime.now().hour }
@@ -930,7 +1006,7 @@ private fun EmptyState(
             val shown = if (expanded) tasks else tasks.take(VISIBLE_SUGGESTIONS)
             val useLabel = stringResource(R.string.orbit_suggestion_use)
             Column(verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
-                shown.forEach { task -> SuggestionCard(task.title, useLabel) { onPick(task.prompt) } }
+                shown.forEach { task -> SuggestionCard(task.title, useLabel) { onPick(task) } }
             }
         }
     }

@@ -106,6 +106,10 @@ internal class MessageActions(
     val react: ((String) -> Unit)? = null,
     /** The reaction already on that reply, shown picked in the bar. */
     val reaction: String? = null,
+    /** Save the user's request as a reusable task (item 8); null where it does not apply. */
+    val saveTask: (() -> Unit)? = null,
+    /** Save Orbit's reply as a checklist (item 8); null where it does not apply. */
+    val saveChecklist: (() -> Unit)? = null,
 )
 
 /**
