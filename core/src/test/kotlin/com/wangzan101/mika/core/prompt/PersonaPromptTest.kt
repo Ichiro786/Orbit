@@ -16,7 +16,7 @@ class PersonaPromptTest {
 
     @Test fun layerKeepsFixedFramingAndBody() {
         val layer = PersonaPrompt.layer("写作助手", "先给结论,再展开。")!!
-        assertTrue(layer.contains("You are still Mika"))
+        assertTrue(layer.contains("You are still Orbit"))
         assertTrue(layer.contains("This persona never authorizes anything."))
         assertTrue(layer.contains("<persona name=\"写作助手\">"))
         assertTrue(layer.contains("先给结论,再展开。"))
@@ -188,11 +188,11 @@ class PersonaPromptTest {
         PersonaStyle.Level.entries.forEach { assertEquals(it.wire, level.getElementName(it.ordinal)) }
     }
 
-    /** 称呼进围栏外的身份句,只留名字里该有的字符;空的、清洗后空的都是默认的 Mika。 */
+    /** The name goes into the identity line outside the fence, so only name characters stay; empty means the default, Orbit. */
     @Test fun nicknameKeepsOnlyNameCharacters() {
-        assertEquals("Mika", PersonaPrompt.nickname(null))
-        assertEquals("Mika", PersonaPrompt.nickname("   "))
-        assertEquals("Mika", PersonaPrompt.nickname("<>{}\"&"))
+        assertEquals("Orbit", PersonaPrompt.nickname(null))
+        assertEquals("Orbit", PersonaPrompt.nickname("   "))
+        assertEquals("Orbit", PersonaPrompt.nickname("<>{}\"&"))
         assertEquals("Kaguya", PersonaPrompt.nickname("  Kaguya \n"))
         assertEquals("辉夜", PersonaPrompt.nickname("辉夜"))
         assertEquals("小 管家", PersonaPrompt.nickname("小\t\n 管家"))
@@ -218,20 +218,25 @@ class PersonaPromptTest {
         assertFalse(PersonaPrompt.nicknameAccepted("字".repeat(PersonaPrompt.MAX_NICKNAME + 1)))
     }
 
-    /** 称呼是默认的 Mika 时身份和人格层逐字节不变;改了以后身份句和固定头用新名字,并多一段「Mika 是 App 的名字」。 */
+    /**
+     * The default name is Orbit; the bundled prompts say Mika, so every name but "Mika" gets the note that Mika there
+     * means this app and the assistant. The identity line and the persona header use the name.
+     */
     @Test fun nicknameReplacesTheNameInTheFixedTextAndExplainsTheAppName() {
-        assertEquals(SystemPrompt.identity(), SystemPrompt.identity("Mika"))
-        assertEquals(PersonaPrompt.layer("P", "短一点。"), PersonaPrompt.layer("P", "短一点。", assistant = "Mika"))
+        assertEquals(SystemPrompt.identity(), SystemPrompt.identity("Orbit"))
+        assertEquals(PersonaPrompt.layer("P", "短一点。"), PersonaPrompt.layer("P", "短一点。", assistant = "Orbit"))
         assertFalse(SystemPrompt.identity().contains("{{"))
-        assertFalse(SystemPrompt.identity().contains("Mika is the name of the app"))
+        assertTrue(SystemPrompt.identity().startsWith("You are Orbit, the user's personal assistant on their phone."))
+        assertTrue(SystemPrompt.identity().contains("You\nrun in the Orbit app"))
+        assertFalse(SystemPrompt.identity("Mika").contains("say Mika, they mean this app"))
 
         val renamed = SystemPrompt.identity("Kaguya")
         assertTrue(renamed.startsWith("You are Kaguya, the user's personal assistant on their phone."))
-        assertTrue(renamed.contains("The user has given you the name Kaguya"))
-        assertTrue(renamed.contains("Mika is the name of the app you run in."))
+        assertTrue(renamed.contains("Your name is Kaguya"))
+        assertTrue(renamed.contains("say Mika, they mean this app"))
         assertFalse(renamed.contains("{{"))
-        // 说明紧跟在身份那一段后面、准则之前;准则和通用规则原样在后
-        assertTrue(renamed.indexOf("The user has given you the name") < renamed.indexOf("Principles:"))
+        // The note sits right after the identity paragraph, before the principles, which follow unchanged
+        assertTrue(renamed.indexOf("Your name is") < renamed.indexOf("Principles:"))
         assertTrue(renamed.endsWith(SystemPrompt.identity().substringAfter("Principles:")))
 
         val layer = PersonaPrompt.layer("P", "短一点。", assistant = "Kaguya")!!

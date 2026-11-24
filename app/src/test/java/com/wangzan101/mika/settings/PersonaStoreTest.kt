@@ -177,20 +177,20 @@ class PersonaStoreTest {
         assertTrue(s.editActive("x") { it.copy(nickname = "Kaguya!") }.isFailure)
         assertTrue(s.editActive("x") { it.copy(nickname = "字".repeat(17)) }.isFailure)
         assertEquals("Kaguya", s.active()?.nickname)
-        // 清空就是默认的 Mika;这一套别的也都是默认,就什么都不改了
+        // Cleared means the default, Orbit; everything else in this persona is default too, so nothing changes
         val cleared = s.editActive("x") { it.copy(nickname = "") }.getOrThrow()
-        assertEquals("Mika", cleared.assistant)
+        assertEquals("Orbit", cleared.assistant)
         assertTrue(cleared.changesNothing)
     }
 
-    /** 称呼填的就是 Mika、别的全默认:等于没改,不建。旧文件没有 nickname:按 Mika。 */
+    /** The name typed is the default Orbit and everything else is default: nothing changed, nothing is created. Old files without a nickname read as Orbit. */
     @Test fun defaultNicknameChangesNothing() {
         val dir = tmp.newFolder("p")
         val s = store(dir)
-        s.editActive("我的风格") { it.copy(nickname = " Mika ") }.getOrThrow()
+        s.editActive("我的风格") { it.copy(nickname = " Orbit ") }.getOrThrow()
         assertTrue(s.personas.value.isEmpty())
         File(dir, "personas.json").writeText("""{"version":1,"personas":[{"id":"a","name":"A","prompt":"x"}]}""")
-        assertEquals("Mika", store(dir).get("a")?.assistant)
+        assertEquals("Orbit", store(dir).get("a")?.assistant)
     }
 
     /** 新建的一套直接在用;改名只动名称;复制的名称由界面给、不是在用的。 */

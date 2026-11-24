@@ -13,20 +13,24 @@ import com.wangzan101.mika.core.prompt.Prompts
  */
 object SystemPrompt {
     /**
-     * [assistant] 是助理的自称(人格里的「称呼」),默认 Mika;进提示词前在这里由 [PersonaPrompt.nickname] 清洗。
-     * 不是 Mika 时身份句用它,并紧跟一段说明:Mika 是所在 App 的名字,后文和工具说明里的 Mika 指这个 App 和它自己。
-     * 是 Mika 时和没有这个参数之前逐字节一样。
+     * [assistant] is what the assistant calls itself (the persona's name), Orbit by default; [PersonaPrompt.nickname]
+     * cleans it here before it reaches the prompt. The bundled instructions and tool descriptions still say Mika (the
+     * upstream name), so unless the name is literally [PROMPT_NAME] a short note follows the identity: Mika there means
+     * this app and the assistant itself.
      */
     fun identity(assistant: String = PersonaPrompt.DEFAULT_NICKNAME): String {
-        // 称呼落在围栏之外,这里自己再清洗一遍,不指望调用方洗过
+        // The name sits outside the persona fence, so clean it again here rather than trusting the caller
         val name = PersonaPrompt.nickname(assistant)
         return listOfNotNull(
             Prompts.fill(Prompts.system("identity"), mapOf("assistant" to name)),
-            if (name == PersonaPrompt.DEFAULT_NICKNAME) null else Prompts.fill(Prompts.read("persona/renamed.md"), mapOf("assistant" to name)),
+            if (name == PROMPT_NAME) null else Prompts.fill(Prompts.read("persona/renamed.md"), mapOf("assistant" to name)),
             Prompts.system("principles"),
             read(GENERAL),
         ).joinToString("\n\n")
     }
+
+    /** The name the bundled prompt files use for the app and the assistant. */
+    private const val PROMPT_NAME = "Mika"
 
     /** 在身份、准则、通用规则之后接人格层;没有人格时原样返回。 */
     fun withPersona(base: String, layer: String?): String = if (layer == null) base else "$base\n\n$layer"
