@@ -20,6 +20,7 @@ import com.wangzan101.mika.settings.ImageModelSettings
 import com.wangzan101.mika.settings.ImageProtocol
 import com.wangzan101.mika.settings.ProviderConfig
 import com.wangzan101.mika.settings.ProviderStore
+import com.wangzan101.mika.settings.imageModel
 import com.wangzan101.mika.ui.components.FooterNote
 import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.GroupLabel

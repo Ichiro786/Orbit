@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.wangzan101.mika.settings.configFor
+import com.wangzan101.mika.settings.setVisionGroundingVerified
 import com.wangzan101.mika.ui.components.FooterNote
 import com.wangzan101.mika.ui.theme.MikaType
 import androidx.compose.foundation.ScrollState

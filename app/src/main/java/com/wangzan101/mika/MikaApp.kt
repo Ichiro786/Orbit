@@ -6,6 +6,9 @@ import com.wangzan101.mika.i18n.ResourceTexts
 import com.wangzan101.mika.i18n.UiText
 import com.wangzan101.mika.i18n.AppLanguage
 import com.wangzan101.mika.i18n.tr
+import com.wangzan101.mika.settings.proactiveTarget
+import com.wangzan101.mika.settings.proactiveTargeted
+import com.wangzan101.mika.settings.ttsModel
 import com.wangzan101.mika.ui.ChatCopy
 import android.app.Application
 import android.net.Uri
