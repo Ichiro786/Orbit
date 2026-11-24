@@ -48,6 +48,7 @@
     <string name="usage_allowance_self_hosted">自托管连接</string>
     <string name="usage_allowance_unsupported">未接入额度查询</string>
     <string name="chat_usage_title">对话用量与上下文</string>
+    <string name="drawer_usage">用量</string>
     <string name="chat_cache_rate">输入缓存命中率</string>
     <string name="chat_cache_coverage">已报告缓存的 %2$s 个输入 Token 中，命中 %1$s 个</string>
     <string name="chat_request_context">最近一次主模型请求</string>

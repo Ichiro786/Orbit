@@ -49,6 +49,7 @@
     <string name="usage_allowance_self_hosted">اتصال با میزبانی شخصی</string>
     <string name="usage_allowance_unsupported">بررسی سهمیه برای این اتصال در دسترس نیست</string>
     <string name="chat_usage_title">مصرف و زمینهٔ گفتگو</string>
+    <string name="drawer_usage">مصرف</string>
     <string name="chat_cache_rate">نرخ استفاده از حافظهٔ نهان ورودی</string>
     <string name="chat_cache_coverage">از %2$s توکن ورودی دارای گزارش، %1$s توکن از حافظهٔ نهان خوانده شد</string>
     <string name="chat_request_context">آخرین درخواست به مدل اصلی</string>

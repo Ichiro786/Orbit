@@ -50,6 +50,7 @@
     <string name="usage_allowance_self_hosted">Conexão com hospedagem própria</string>
     <string name="usage_allowance_unsupported">Esta conexão não permite consultar a cota</string>
     <string name="chat_usage_title">Uso e contexto da conversa</string>
+    <string name="drawer_usage">Uso</string>
     <string name="chat_cache_rate">Taxa de acertos do cache de entrada</string>
     <string name="chat_cache_coverage">%1$s acertos em %2$s tokens de entrada com dados de cache</string>
     <string name="chat_request_context">Última solicitação ao modelo principal</string>

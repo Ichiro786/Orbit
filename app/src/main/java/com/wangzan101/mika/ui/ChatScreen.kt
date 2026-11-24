@@ -1,6 +1,8 @@
 package com.wangzan101.mika.ui
 
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import com.wangzan101.mika.cap.sandbox.AttachmentFailure
 import com.wangzan101.mika.cap.sandbox.AttachmentFailureReason
 import com.wangzan101.mika.core.agent.QuoteMessage
@@ -563,6 +565,7 @@ fun ChatScreen(
                             val label = if (resume) R.string.chat_resume_request else R.string.chat_restart_request
                             vm.send(context.getString(label, ex.goal), check)
                         },
+                        openReport = openReport,
                     )
                 }
                 if (phoneSetupNeeded && ui.exchanges.isNotEmpty()) item("phone-setup") { PhoneSetupLine(openPhoneSetup) }
@@ -988,6 +991,8 @@ private fun LazyListScope.exchange(
     tokens: Long? = null,
     /** 终态后的两个新运行入口:true 从摘要断点继续,false 按原目标重新开始。 */
     recover: (Boolean) -> Unit = {},
+    /** Opens the run's task report (upstream item 1); its replay is one tap further in. */
+    openReport: (String) -> Unit = {},
 ) {
     if (ex.goal.isNotEmpty()) chatItem(reduceMotion, "u$index") {
         JumpHighlight(highlightKey == "u$index", reduceMotion) {
@@ -1008,7 +1013,7 @@ private fun LazyListScope.exchange(
     // (see [statusRows]; the row model in ChatRows asks the same function).
     val rows = statusRows(ex, backgroundNote)
     if (rows.work) chatItem(reduceMotion, "s$index") {
-        if (active) WorkBlock(ex, vm, backgroundNote, openRun) else DoneLine(ex, reduceMotion, openRun, tokens)
+        if (active) WorkBlock(ex, vm, backgroundNote, openRun) else DoneLine(ex, reduceMotion, openRun, tokens, openReport)
     }
     // 任务进行中插的话:用户的原话,下面一行小字说它的去向。
     // 插话之前已经说完的回复照常显示;插话打断的那段留在原处(淡色、标「被你的新消息打断」);接着才是插话。
@@ -1423,30 +1428,40 @@ internal fun Spinner(modifier: Modifier, spinning: Boolean, track: Color, head: 
  * 结束后过程收成一行:「做了 N 步 · 用时 · 1.2 万 Token」(点了在下面展开步骤)和「查看过程」(进时间线)。
  * 没做步骤的(只聊了几句)只写 token;[tokens] 为 null(还没读到小结、服务商没报用量)时不写。
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun DoneLine(ex: Exchange, reduceMotion: Boolean, openRun: (String) -> Unit, tokens: Long? = null) {
+private fun DoneLine(ex: Exchange, reduceMotion: Boolean, openRun: (String) -> Unit, tokens: Long? = null, openReport: (String) -> Unit = {}) {
     val tokenText = tokens?.let(ChatTokensCopy::amount)
     val c = MikaTheme.colors
     var open by rememberSaveable { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth().padding(bottom = MikaSpace.S8)) {
-        Row(
-            Modifier.heightIn(min = 28.dp), verticalAlignment = Alignment.CenterVertically,
+        // Wraps on narrow screens: summary, "View process" and "Task report" may not fit on one line
+        FlowRow(
+            Modifier.heightIn(min = 28.dp),
             horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
         ) {
-            if (ex.status is ExchangeStatus.Done) Icon(MikaIcons.Check, null, Modifier.size(MikaSize.SmallIcon), tint = c.ink3)
+            if (ex.status is ExchangeStatus.Done) Icon(MikaIcons.Check, null, Modifier.align(Alignment.CenterVertically).size(MikaSize.SmallIcon), tint = c.ink3)
             if (ex.steps.isNotEmpty()) {
                 Text(
                     stepsSummary(ex) + tokenText?.let { " · $it" }.orEmpty(),
-                    Modifier.clickable(onClickLabel = if (open) stringResource(R.string.chat_collapse_steps) else stringResource(R.string.chat_expand_steps)) { open = !open },
+                    Modifier.align(Alignment.CenterVertically)
+                        .clickable(onClickLabel = if (open) stringResource(R.string.chat_collapse_steps) else stringResource(R.string.chat_expand_steps)) { open = !open },
                     style = DoneText, color = c.ink3,
                 )
             } else if (tokenText != null) {
-                Text(tokenText, style = DoneText, color = c.ink3)
+                Text(tokenText, Modifier.align(Alignment.CenterVertically), style = DoneText, color = c.ink3)
             }
             ex.runId?.let { id ->
                 Text(
                     // 灰色斜体加下划线:和回答融在一起,又看得出能点
                     stringResource(R.string.chat_view_process), Modifier.clip(MikaShapes.Pill).clickable(role = Role.Button) { openRun(id) }.padding(horizontal = MikaSpace.S4, vertical = MikaSpace.S4),
+                    style = DoneText.copy(fontStyle = FontStyle.Italic, textDecoration = TextDecoration.Underline), color = c.ink3,
+                )
+                // The task report: a summary of the run with its replay (same quiet link style)
+                Text(
+                    stringResource(R.string.report_title),
+                    Modifier.clip(MikaShapes.Pill).clickable(role = Role.Button) { openReport(id) }.padding(horizontal = MikaSpace.S4, vertical = MikaSpace.S4)
+                        .testTag("done-open-report"),
                     style = DoneText.copy(fontStyle = FontStyle.Italic, textDecoration = TextDecoration.Underline), color = c.ink3,
                 )
             }

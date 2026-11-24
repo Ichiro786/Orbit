@@ -61,7 +61,7 @@ internal fun ConversationUsageSheet(id: String?, onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = c.surface, shape = RoundedCornerShape(topStart = MikaRadius.Xl, topEnd = MikaRadius.Xl)) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding()
-            .padding(start = MikaSpace.S20, end = MikaSpace.S20, bottom = MikaSpace.S20).testTag("conversation-usage-sheet")) {
+            .padding(start = MikaSpace.Page, end = MikaSpace.Page, bottom = MikaSpace.S16).testTag("conversation-usage-sheet")) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.chat_usage_title), Modifier.weight(1f), style = MikaType.Title, color = c.ink)
                 IconButton(onClick = onDismiss, modifier = Modifier.testTag("close-conversation-usage")) {

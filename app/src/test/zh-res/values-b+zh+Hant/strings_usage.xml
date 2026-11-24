@@ -48,6 +48,7 @@
     <string name="usage_allowance_self_hosted">自行託管的連線</string>
     <string name="usage_allowance_unsupported">此連線未提供額度查詢</string>
     <string name="chat_usage_title">對話用量與上下文</string>
+    <string name="drawer_usage">用量</string>
     <string name="chat_cache_rate">輸入快取命中率</string>
     <string name="chat_cache_coverage">已回報快取的 %2$s 個輸入 Token 中，命中 %1$s 個</string>
     <string name="chat_request_context">最近一次主模型請求</string>

@@ -1336,6 +1336,9 @@ fun ChatWithDrawer(
     }
     /** 正在改名的那条。 */
     var renaming by remember { mutableStateOf<DrawerConversation?>(null) }
+    /** The conversation being exported to a file, and the one whose usage sheet is open (from the row's long-press menu). */
+    var exporting by remember { mutableStateOf<DrawerConversation?>(null) }
+    var usageFor by remember { mutableStateOf<String?>(null) }
     // Spaces: the store, the one long-pressed, and the dialogs and screen they open.
     val spaceStore = remember(context) { SpaceStore.shared(context) }
     val spaces by spaceStore.spaces.collectAsState()
@@ -1664,9 +1667,15 @@ fun ChatWithDrawer(
                     selecting = true
                     selected = setOf(id)
                 } }),
+                onExport = if (item.channel || !item.saved) null else ({ closeMenu { exporting = item } }),
+                onUsage = if (item.channel || !item.saved) null else ({ closeMenu { usageFor = id } }),
                 onDismiss = { closeMenu() },
             )
         }
+        exporting?.let { item ->
+            item.id?.let { id -> com.wangzan101.mika.export.ExportConversationDialog(id, item.title, onDismiss = { exporting = null }) }
+        }
+        usageFor?.let { id -> ConversationUsageSheet(id) { usageFor = null } }
         spaceActing?.let { (space, bounds) ->
             SpaceMenu(
                 space, bounds, progress = { lift.value },
