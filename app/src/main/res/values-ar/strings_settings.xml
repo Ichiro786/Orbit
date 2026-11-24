@@ -337,4 +337,24 @@
     <string name="settings_other">أخرى</string>
     <string name="settings_privacy">بياناتي</string>
     <string name="settings_connections">الشبكة والاتصالات</string>
+    <string name="settings_attachment_file_limit">حد الملف الواحد عند الرفع</string>
+    <string name="settings_attachment_file_limit_sub">أكبر حجم لملف واحد في مرفقات الدردشة واستيراد ملفات الجهاز. تحتفظ الملفات المرسلة عبر رابط الكمبيوتر بحدها الثابت. الافتراضي 200 ميغابايت.</string>
+    <plurals name="settings_attachment_file_limit_mb_n">
+        <item quantity="zero">%1$d MB</item>
+        <item quantity="one">%1$d MB</item>
+        <item quantity="two">%1$d MB</item>
+        <item quantity="few">%1$d MB</item>
+        <item quantity="many">%1$d MB</item>
+        <item quantity="other">%1$d MB</item>
+    </plurals>
+    <string name="settings_workspace_size_limit">حد مساحة العمل الواحدة</string>
+    <string name="settings_workspace_size_limit_sub">مساحة التخزين لمرفقات المحادثة والملفات المستوردة من الجهاز. الافتراضي 4 GB.</string>
+    <plurals name="settings_workspace_size_limit_gb_n">
+        <item quantity="zero">%1$d GB</item>
+        <item quantity="one">%1$d GB</item>
+        <item quantity="two">%1$d GB</item>
+        <item quantity="few">%1$d GB</item>
+        <item quantity="many">%1$d GB</item>
+        <item quantity="other">%1$d GB</item>
+    </plurals>
 </resources>

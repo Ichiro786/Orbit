@@ -316,4 +316,18 @@
     <string name="settings_other">Otros</string>
     <string name="settings_privacy">Mis datos</string>
     <string name="settings_connections">Red y conexiones</string>
+    <string name="settings_attachment_file_limit">Límite por archivo subido</string>
+    <string name="settings_attachment_file_limit_sub">Tamaño máximo de un archivo en adjuntos del chat e importaciones de archivos del dispositivo. Los archivos enviados desde el enlace con el ordenador mantienen su límite fijo. Predeterminado: 200 MB.</string>
+    <plurals name="settings_attachment_file_limit_mb_n">
+        <item quantity="one">%1$d MB</item>
+        <item quantity="many">%1$d MB</item>
+        <item quantity="other">%1$d MB</item>
+    </plurals>
+    <string name="settings_workspace_size_limit">Límite por espacio de trabajo</string>
+    <string name="settings_workspace_size_limit_sub">Espacio del espacio de trabajo para adjuntos del chat e importaciones de archivos del dispositivo. Por defecto, 4 GB.</string>
+    <plurals name="settings_workspace_size_limit_gb_n">
+        <item quantity="one">%1$d GB</item>
+        <item quantity="many">%1$d GB</item>
+        <item quantity="other">%1$d GB</item>
+    </plurals>
 </resources>

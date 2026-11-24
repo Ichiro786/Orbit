@@ -323,4 +323,20 @@
     <string name="settings_other">Другое</string>
     <string name="settings_privacy">Мои данные</string>
     <string name="settings_connections">Сеть и подключения</string>
+    <string name="settings_attachment_file_limit">Лимит на один загружаемый файл</string>
+    <string name="settings_attachment_file_limit_sub">Наибольший размер одного файла во вложениях чата и при импорте файлов устройства. Для файлов, отправленных через связь с компьютером, лимит фиксированный. По умолчанию 200 МБ.</string>
+    <plurals name="settings_attachment_file_limit_mb_n">
+        <item quantity="one">%1$d МБ</item>
+        <item quantity="few">%1$d МБ</item>
+        <item quantity="many">%1$d МБ</item>
+        <item quantity="other">%1$d МБ</item>
+    </plurals>
+    <string name="settings_workspace_size_limit">Лимит на одно рабочее пространство</string>
+    <string name="settings_workspace_size_limit_sub">Место рабочей области для вложений чата и импорта файлов с устройства. По умолчанию 4 ГБ.</string>
+    <plurals name="settings_workspace_size_limit_gb_n">
+        <item quantity="one">%1$d ГБ</item>
+        <item quantity="few">%1$d ГБ</item>
+        <item quantity="many">%1$d ГБ</item>
+        <item quantity="other">%1$d ГБ</item>
+    </plurals>
 </resources>

@@ -302,4 +302,14 @@
     <string name="settings_other">その他</string>
     <string name="settings_privacy">自分のデータ</string>
     <string name="settings_connections">ネットワークと接続</string>
+    <string name="settings_attachment_file_limit">アップロード1ファイルの上限</string>
+    <string name="settings_attachment_file_limit_sub">チャットの添付とデバイスのファイル取り込みで受け付ける 1 ファイルの上限です。パソコン連携で送ったファイルは固定の上限のままです。既定は 200 MB です。</string>
+    <plurals name="settings_attachment_file_limit_mb_n">
+        <item quantity="other">%1$d MB</item>
+    </plurals>
+    <string name="settings_workspace_size_limit">ワークスペース1つあたりの上限</string>
+    <string name="settings_workspace_size_limit_sub">チャット添付とデバイスのファイル取り込みに使えるワークスペース容量。デフォルトは 4 GB。</string>
+    <plurals name="settings_workspace_size_limit_gb_n">
+        <item quantity="other">%1$d GB</item>
+    </plurals>
 </resources>

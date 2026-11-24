@@ -302,4 +302,14 @@
     <string name="settings_other">Lainnya</string>
     <string name="settings_privacy">Data saya</string>
     <string name="settings_connections">Jaringan &amp; koneksi</string>
+    <string name="settings_attachment_file_limit">Batas per berkas unggahan</string>
+    <string name="settings_attachment_file_limit_sub">Ukuran maksimum satu file dari lampiran chat dan impor file perangkat. File yang dikirim lewat tautan komputer tetap memakai batas tetapnya. Bawaan 200 MB.</string>
+    <plurals name="settings_attachment_file_limit_mb_n">
+        <item quantity="other">%1$d MB</item>
+    </plurals>
+    <string name="settings_workspace_size_limit">Batas per ruang kerja</string>
+    <string name="settings_workspace_size_limit_sub">Ruang penyimpanan untuk lampiran obrolan dan impor berkas perangkat. Bawaan 4 GB.</string>
+    <plurals name="settings_workspace_size_limit_gb_n">
+        <item quantity="other">%1$d GB</item>
+    </plurals>
 </resources>

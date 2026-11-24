@@ -300,4 +300,14 @@
         <item quantity="other">%1$d 分钟</item>
     </plurals>
     <string name="settings_connections">网络与连接</string>
+    <string name="settings_attachment_file_limit">单个上传文件上限</string>
+    <string name="settings_attachment_file_limit_sub">聊天附件和设备文件导入时单个文件的上限。电脑连接传来的文件仍按固定上限。默认 200 MB。</string>
+    <plurals name="settings_attachment_file_limit_mb_n">
+        <item quantity="other">%1$d MB</item>
+    </plurals>
+    <string name="settings_workspace_size_limit">单个工作区上限</string>
+    <string name="settings_workspace_size_limit_sub">聊天附件与设备文件导入可用的工作区空间;默认 4 GB。</string>
+    <plurals name="settings_workspace_size_limit_gb_n">
+        <item quantity="other">%1$d GB</item>
+    </plurals>
 </resources>
