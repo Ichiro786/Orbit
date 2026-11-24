@@ -1,5 +1,8 @@
 package com.wangzan101.mika.ui
 
+import com.wangzan101.mika.ui.theme.attentionInk
+import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaSpace
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -83,7 +85,7 @@ internal fun TaskDetail(
     onDelete: () -> Unit,
 ) {
     val c = MikaTheme.colors
-    val attention = if (c.isDark) c.warn else Color(0xFF8C5000)
+    val attention = c.attentionInk
     Column(Modifier.fillMaxSize().background(c.bg).testTag("task-detail")) {
         TopBar(
             title = "", left = MikaIcons.Back, onLeft = onBack, leftLabel = stringResource(R.string.back),
@@ -91,7 +93,7 @@ internal fun TaskDetail(
         )
         Column(
             Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
-                .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 24.dp),
+                .padding(start = MikaSpace.S24, end = MikaSpace.S24, top = MikaSpace.S8, bottom = MikaSpace.S24),
         ) {
             Row(verticalAlignment = Alignment.Top) {
                 TaskCircle(
@@ -100,28 +102,28 @@ internal fun TaskDetail(
                     label = stringResource(if (ui.live) R.string.tasks_mark_done_live else R.string.tasks_mark_done),
                     onClick = onMarkDone,
                 )
-                Column(Modifier.weight(1f).padding(top = 9.dp)) {
+                Column(Modifier.weight(1f).padding(top = MikaSpace.S8)) {
                     Text(ui.title, Modifier.semantics { heading() }, style = MikaType.Title.copy(fontSize = MikaType.LargeTitle.fontSize * 0.69f, lineHeight = MikaType.LargeTitle.lineHeight * 0.72f), color = c.ink)
-                    Text(ui.status, Modifier.padding(top = 6.dp), style = MikaType.Body,
+                    Text(ui.status, Modifier.padding(top = MikaSpace.S8), style = MikaType.Body,
                         color = if (ui.group == TaskGroup.NeedsYou) attention else c.ink2)
                 }
             }
             if (ui.progress != null) LinearProgressIndicator(
-                progress = { ui.progress }, modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(4.dp),
+                progress = { ui.progress }, modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S16).height(MikaSpace.S4),
                 color = c.accent, trackColor = c.fill,
             )
             ui.progressText?.takeIf { it != ui.status && it != ui.title }?.let { Section(stringResource(R.string.personal_progress)) { BodyText(it) } }
             ui.goal?.let { Section(stringResource(R.string.personal_goal)) { BodyText(it) } }
             Section(stringResource(R.string.task_detail_steps)) {
                 when {
-                    steps == null -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                    steps == null -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
+                        CircularProgressIndicator(Modifier.size(MikaSize.TileIcon), strokeWidth = 2.dp)
                         Text(stringResource(R.string.loading), style = MikaType.Caption, color = c.ink2)
                     }
                     steps.isEmpty() -> Text(stringResource(R.string.task_detail_no_steps), style = MikaType.Body, color = c.ink2)
                     else -> {
                         val (recent, earlier) = recentSteps(steps)
-                        if (earlier > 0) Text(stringResource(R.string.task_detail_earlier_steps, earlier), Modifier.padding(bottom = 6.dp), style = MikaType.Caption, color = c.ink3)
+                        if (earlier > 0) Text(stringResource(R.string.task_detail_earlier_steps, earlier), Modifier.padding(bottom = MikaSpace.S8), style = MikaType.Caption, color = c.ink3)
                         recent.forEachIndexed { i, step ->
                             val last = i == recent.lastIndex
                             StepItem(
@@ -132,8 +134,8 @@ internal fun TaskDetail(
                                 Text(line.ifBlank { stringResource(R.string.chat_working) }, style = MikaType.Body, color = c.ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                 val under = listOfNotNull(step.detail, step.result).filter { it.isNotBlank() }.joinToString(" · ")
                                 if (under.isNotEmpty()) Text(under, style = MikaType.Caption, color = c.ink2, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                if (step.tool != null && step.said.isNotBlank()) Text(step.said, Modifier.padding(bottom = 8.dp), style = MikaType.Caption, color = c.ink3, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                else androidx.compose.foundation.layout.Spacer(Modifier.height(8.dp))
+                                if (step.tool != null && step.said.isNotBlank()) Text(step.said, Modifier.padding(bottom = MikaSpace.S8), style = MikaType.Caption, color = c.ink3, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                else androidx.compose.foundation.layout.Spacer(Modifier.height(MikaSpace.S8))
                             }
                         }
                     }
@@ -141,13 +143,13 @@ internal fun TaskDetail(
             }
             ui.result?.let { result ->
                 Section(stringResource(R.string.personal_result)) {
-                    MikaCard { MarkdownText(result, MikaType.Body.copy(color = c.ink), Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) }
+                    MikaCard { MarkdownText(result, MikaType.Body.copy(color = c.ink), Modifier.padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12)) }
                 }
             }
         }
         Column(
-            Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = bottomInset + 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            Modifier.fillMaxWidth().padding(start = MikaSpace.S24, end = MikaSpace.S24, top = MikaSpace.S8, bottom = bottomInset + MikaSpace.S12),
+            verticalArrangement = Arrangement.spacedBy(MikaSpace.S8),
         ) {
             MikaButton(
                 stringResource(R.string.task_detail_open_chat), onOpenChat,
@@ -158,7 +160,7 @@ internal fun TaskDetail(
                 onReplay?.let { stringResource(R.string.personal_view_replay) to it },
                 onStop?.let { stringResource(R.string.chat_stop) to it },
             )
-            if (secondary.isNotEmpty()) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (secondary.isNotEmpty()) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
                 secondary.forEach { (label, action) ->
                     MikaButton(label, action, Modifier.weight(1f), kind = ButtonKind.Tonal, size = ButtonSize.Medium)
                 }
@@ -170,7 +172,7 @@ internal fun TaskDetail(
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {
     Text(
-        title, Modifier.padding(top = 26.dp, bottom = 8.dp).semantics { heading() },
+        title, Modifier.padding(top = MikaSpace.S24, bottom = MikaSpace.S8).semantics { heading() },
         style = MikaType.Label, color = MikaTheme.colors.ink3,
     )
     content()

@@ -1,5 +1,6 @@
 package com.wangzan101.mika.ui.onboarding
 
+import com.wangzan101.mika.ui.theme.MikaSpace
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.background
@@ -30,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -43,7 +43,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.gemini.GeminiEngine
 import com.wangzan101.mika.core.model.ModelRole
@@ -113,31 +112,31 @@ internal fun ModelStep(
             ) {
                 FlowTitleBlock(stringResource(R.string.ob_model_title), stringResource(R.string.ob_model_lead))
                 if (connected) {
-                    ResultPanel(ok = true, stringResource(R.string.ob_model_ok), stringResource(R.string.ob_model_ready_body), Modifier.padding(top = 22.dp))
+                    ResultPanel(ok = true, stringResource(R.string.ob_model_ok), stringResource(R.string.ob_model_ready_body), Modifier.padding(top = MikaSpace.S24))
                     if (mainModel != null) MainModelRow(mainModel) { advanced = true }
                 }
                 SectionLabel(stringResource(R.string.ob_model_plans))
                 // The Gemini plan's own section: setup, sign-in and its states are exactly as on the models page.
                 GeminiPlanSection()
-                GlassCard(Modifier.padding(top = 12.dp)) {
+                GlassCard(Modifier.padding(top = MikaSpace.S12)) {
                     val signIn = ui.chatGptSignIn
                     Row(
                         Modifier.fillMaxWidth().clickable(enabled = signIn != ListState.Running, role = Role.Button, onClick = vm::signInWithChatGpt)
-                            .heightIn(min = 64.dp).padding(start = 18.dp, end = 16.dp, top = 14.dp, bottom = 14.dp).testTag("onboarding-chatgpt"),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            .heightIn(min = (MikaSpace.S32 * 2)).padding(start = MikaSpace.S16, end = MikaSpace.S16, top = MikaSpace.S12, bottom = MikaSpace.S12).testTag("onboarding-chatgpt"),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12),
                     ) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(stringResource(R.string.ob_model_chatgpt), fontSize = 16.5.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, color = c.ink)
+                            Text(stringResource(R.string.ob_model_chatgpt), style = MikaType.BodyStrong, color = c.ink)
                             val line = when {
                                 ui.chatGptAccount?.signedIn == true -> stringResource(R.string.ob_model_ok)
                                 signIn == ListState.Running -> stringResource(R.string.chatgpt_waiting)
                                 signIn is ListState.Failed -> signIn.message
                                 else -> stringResource(R.string.ob_model_chatgpt_body)
                             }
-                            Text(line, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, fontSize = 14.sp, lineHeight = 20.sp,
+                            Text(line, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MikaType.Callout,
                                 color = if (signIn is ListState.Failed) c.bad else c.ink2)
                         }
-                        Icon(MikaIcons.Chevron, null, Modifier.size(18.dp), tint = c.ink3)
+                        Icon(MikaIcons.Chevron, null, Modifier.size(MikaSize.TileIcon), tint = c.ink3)
                     }
                 }
                 SectionLabel(stringResource(R.string.ob_model_keys))
@@ -150,8 +149,8 @@ internal fun ModelStep(
 @Composable
 private fun SectionLabel(text: String) {
     Text(
-        text.uppercase(), Modifier.padding(start = 4.dp, top = 26.dp, bottom = 10.dp).semantics { heading() },
-        fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.8.sp, color = MikaTheme.colors.ink3,
+        text.uppercase(), Modifier.padding(start = MikaSpace.S4, top = MikaSpace.S24, bottom = MikaSpace.S12).semantics { heading() },
+        style = MikaType.Overline, color = MikaTheme.colors.ink3,
     )
 }
 
@@ -159,21 +158,21 @@ private fun SectionLabel(text: String) {
 @Composable
 private fun ProviderChips(labels: List<String>, onPick: (String) -> Unit, onMore: () -> Unit) {
     val c = MikaTheme.colors
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8), verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
         labels.forEach { label ->
             Box(
                 Modifier.heightIn(min = MikaSize.TouchTarget).clip(MikaShapes.Pill).background(c.fill).border(0.75.dp, c.glassEdge, MikaShapes.Pill)
-                    .clickable(role = Role.Button) { onPick(label) }.padding(horizontal = 18.dp, vertical = 8.dp).testTag("preset-$label"),
+                    .clickable(role = Role.Button) { onPick(label) }.padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8).testTag("preset-$label"),
                 contentAlignment = Alignment.Center,
-            ) { Text(label, fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium, color = c.ink) }
+            ) { Text(label, style = MikaType.BodyStrong, color = c.ink) }
         }
         Row(
             Modifier.heightIn(min = MikaSize.TouchTarget).clip(MikaShapes.Pill).border(1.dp, c.ink.copy(alpha = 0.18f), MikaShapes.Pill)
-                .clickable(role = Role.Button, onClick = onMore).padding(start = 18.dp, end = 14.dp, top = 8.dp, bottom = 8.dp).testTag("onboarding-more-models"),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
+                .clickable(role = Role.Button, onClick = onMore).padding(start = MikaSpace.S16, end = MikaSpace.S12, top = MikaSpace.S8, bottom = MikaSpace.S8).testTag("onboarding-more-models"),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S4),
         ) {
-            Text(stringResource(R.string.ob_model_more), fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium, color = c.ink2)
-            Icon(MikaIcons.Chevron, null, Modifier.size(16.dp), tint = c.ink2)
+            Text(stringResource(R.string.ob_model_more), style = MikaType.BodyStrong, color = c.ink2)
+            Icon(MikaIcons.Chevron, null, Modifier.size(MikaSize.SmallIcon), tint = c.ink2)
         }
     }
 }
@@ -202,7 +201,7 @@ private fun KeyPage(
         FlowTitleBlock(stringResource(R.string.ob_model_connect, provider), stringResource(R.string.ob_model_key_lead))
         OrbitTextField(
             form.apiKey, onKey, stringResource(R.string.ob_model_key_label),
-            Modifier.fillMaxWidth().padding(top = 24.dp).testTag("setup-api-key"),
+            Modifier.fillMaxWidth().padding(top = MikaSpace.S24).testTag("setup-api-key"),
             placeholder = ModelSetupCopy.KEY_HINT, keyboardType = KeyboardType.Password, secret = !showKey,
             trailing = {
                 BarIconButton(
@@ -213,30 +212,30 @@ private fun KeyPage(
         )
         when {
             saved -> {
-                ResultPanel(ok = true, stringResource(R.string.ob_model_ok), ui.probeNote ?: stringResource(R.string.ob_model_ok_body), Modifier.padding(top = 16.dp))
+                ResultPanel(ok = true, stringResource(R.string.ob_model_ok), ui.probeNote ?: stringResource(R.string.ob_model_ok_body), Modifier.padding(top = MikaSpace.S16))
                 if (mainModel != null) MainModelRow(mainModel, onChangeModel)
             }
             failed != null -> {
-                ResultPanel(ok = false, stringResource(R.string.ob_model_fail), failed.message, Modifier.padding(top = 16.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                ResultPanel(ok = false, stringResource(R.string.ob_model_fail), failed.message, Modifier.padding(top = MikaSpace.S16)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8), verticalAlignment = Alignment.CenterVertically) {
                         SmallButton(stringResource(R.string.ob_model_retry), primary = true, tag = "setup-test", enabled = form.canTest, onClick = onTest)
                         if (failed.details != null) Box(
                             Modifier.heightIn(min = MikaSize.TouchTarget).clip(MikaShapes.Pill).clickable(role = Role.Button) { showDetails = !showDetails }
-                                .padding(horizontal = 14.dp).testTag("setup-test-details-toggle"),
+                                .padding(horizontal = MikaSpace.S12).testTag("setup-test-details-toggle"),
                             contentAlignment = Alignment.Center,
                         ) { Text(stringResource(if (showDetails) R.string.model_details_hide else R.string.model_details_show), style = MikaType.Body, fontWeight = FontWeight.Medium, color = c.ink) }
                     }
                     if (showDetails) failed.details?.let {
-                        Text(it, Modifier.testTag("setup-test-details"), fontSize = 12.sp, lineHeight = 16.sp, fontFamily = FontFamily.Monospace, color = c.ink2)
+                        Text(it, Modifier.testTag("setup-test-details"), style = MikaType.Hint, fontFamily = FontFamily.Monospace, color = c.ink2)
                     }
                 }
                 Box(
-                    Modifier.padding(top = 6.dp).heightIn(min = MikaSize.TouchTarget).clip(MikaShapes.Pill).clickable(role = Role.Button) { confirmUntested = true }
-                        .padding(horizontal = 4.dp).testTag("setup-save-untested"),
+                    Modifier.padding(top = MikaSpace.S8).heightIn(min = MikaSize.TouchTarget).clip(MikaShapes.Pill).clickable(role = Role.Button) { confirmUntested = true }
+                        .padding(horizontal = MikaSpace.S4).testTag("setup-save-untested"),
                     contentAlignment = Alignment.CenterStart,
                 ) { Text(ModelSetupCopy.SAVE_UNTESTED, style = MikaType.Body, fontWeight = FontWeight.Medium, color = c.ink2) }
             }
-            else -> Box(Modifier.padding(top = 16.dp)) {
+            else -> Box(Modifier.padding(top = MikaSpace.S16)) {
                 FlowButton(
                     if (testing) ModelSetupCopy.TESTING else stringResource(R.string.ob_model_test), onTest,
                     Modifier.testTag("setup-test"), enabled = form.canTest,
@@ -260,16 +259,16 @@ internal fun ResultPanel(ok: Boolean, title: String, body: String, modifier: Mod
     val tone = if (ok) c.ok else c.bad
     Column(
         modifier.fillMaxWidth().clip(FlowCard).background(if (ok) c.okSoft else c.badSoft).border(0.75.dp, tone.copy(alpha = 0.3f), FlowCard)
-            .padding(18.dp).semantics { liveRegion = LiveRegionMode.Polite }.testTag(if (ok) "setup-test-ok" else "setup-test-failed"),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+            .padding(MikaSpace.S16).semantics { liveRegion = LiveRegionMode.Polite }.testTag(if (ok) "setup-test-ok" else "setup-test-failed"),
+        verticalArrangement = Arrangement.spacedBy(MikaSpace.S12),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Box(Modifier.size(32.dp).background(tone, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(if (ok) MikaIcons.Check else MikaIcons.Exclaim, null, Modifier.size(18.dp), tint = if (c.isDark) Color(0xFF0B0B0C) else Color.White)
+        Row(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
+            Box(Modifier.size(MikaSpace.S32).background(tone, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(if (ok) MikaIcons.Check else MikaIcons.Exclaim, null, Modifier.size(MikaSize.TileIcon), tint = c.bg)
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(title, fontSize = 16.5.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, color = c.ink)
-                Text(body, fontSize = 14.5.sp, lineHeight = 21.sp, color = c.ink)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MikaSpace.S4)) {
+                Text(title, style = MikaType.BodyStrong, color = c.ink)
+                Text(body, style = MikaType.Body, color = c.ink)
             }
         }
         actions?.invoke()
@@ -279,18 +278,18 @@ internal fun ResultPanel(ok: Boolean, title: String, body: String, modifier: Mod
 @Composable
 private fun MainModelRow(model: String, onChange: () -> Unit) {
     val c = MikaTheme.colors
-    GlassCard(Modifier.padding(top = 12.dp)) {
+    GlassCard(Modifier.padding(top = MikaSpace.S12)) {
         Row(
             Modifier.fillMaxWidth().clickable(onClickLabel = stringResource(R.string.ob_model_change), role = Role.Button, onClick = onChange)
-                .heightIn(min = 64.dp).padding(start = 18.dp, end = 14.dp, top = 10.dp, bottom = 10.dp).testTag("setup-pick-main"),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .heightIn(min = (MikaSpace.S32 * 2)).padding(start = MikaSpace.S16, end = MikaSpace.S12, top = MikaSpace.S12, bottom = MikaSpace.S12).testTag("setup-pick-main"),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12),
         ) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(stringResource(R.string.ob_model_main), style = MikaType.Caption, color = c.ink2)
-                Text(model, fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, color = c.ink)
+                Text(model, style = MikaType.BodyStrong, color = c.ink)
             }
-            Text(stringResource(R.string.ob_model_change), fontSize = 14.sp, color = c.ink3)
-            Icon(MikaIcons.Chevron, null, Modifier.size(18.dp), tint = c.ink3)
+            Text(stringResource(R.string.ob_model_change), style = MikaType.Callout, color = c.ink3)
+            Icon(MikaIcons.Chevron, null, Modifier.size(MikaSize.TileIcon), tint = c.ink3)
         }
     }
 }

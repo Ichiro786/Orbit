@@ -110,9 +110,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -192,9 +189,7 @@ import androidx.compose.animation.core.VisibilityThreshold
 import com.wangzan101.mika.ui.plan.LivePlans
 import com.wangzan101.mika.ui.plan.LivePlanCard
 import com.wangzan101.mika.ui.plan.LivePlanSteps
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.graphics.TransformOrigin
-import com.wangzan101.mika.ui.theme.pressScale
 import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaRadius
 import com.wangzan101.mika.ui.theme.indicator
@@ -204,7 +199,6 @@ import com.wangzan101.mika.ui.theme.shimmerShine
 import com.wangzan101.mika.ui.theme.attentionInk
 import com.wangzan101.mika.ui.theme.errorInk
 import com.wangzan101.mika.ui.components.HoldToAllowButton
-import com.wangzan101.mika.core.shell.BuiltinShellStatus
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.LiveRegionMode
 
@@ -341,7 +335,7 @@ fun ChatScreen(
     val showJumpToLatest = farFromLatest && ui.exchanges.isNotEmpty()
     val replyCount = chatReplyCount(ui.exchanges)
     var seenReplies by rememberSaveable(ui.conversationId) { mutableIntStateOf(replyCount) }
-    LaunchedEffect(showJumpToLatest, replyCount) { if (!showJumpToLatest) seenReplies = replyCount }
+    LaunchedEffect(showJumpToLatest, followingTail, replyCount) { if (!showJumpToLatest || followingTail) seenReplies = replyCount }
 
     // 返回聊天时同一条内容不重新滚动；新进展仅在跟随末尾时滚动。
     // 目标行直接由当前 UI 状态计算:layoutInfo 还是上一帧的测量结果,发送后立即读它会滚到旧的末尾。
@@ -663,11 +657,11 @@ fun ChatScreen(
             enter = MikaTheme.motion.enter(TransformOrigin(0.5f, 1f)),
             exit = MikaTheme.motion.exit(TransformOrigin(0.5f, 1f)),
         ) {
-            JumpToLatest(unreadSince(seenReplies, replyCount)) {
+            JumpToLatest(unreadSince(seenReplies, replyCount), backdrop) {
                 followingTail = true
                 scope.launch {
                     val end = listState.layoutInfo.totalItemsCount - 1
-                    if (end >= 0) { if (reduceMotion) listState.scrollToItem(end) else listState.animateScrollToItem(end) }
+                    listState.scrollToTail(end, animate = !reduceMotion)
                 }
             }
         }
@@ -1322,17 +1316,27 @@ private fun Modifier.answerSurface(): Modifier =
 private fun WorkBlock(ex: Exchange, vm: ChatViewModel, backgroundNote: Boolean, openRun: (String) -> Unit) {
     val c = MikaTheme.colors
     val plan = remember(ex) { LivePlans.from(ex) }
-    // No card behind it: it sits in the chat like the "Thinking" line does.
-    Column(Modifier.fillMaxWidth().padding(bottom = MikaSpace.S8).padding(horizontal = MikaSpace.S4, vertical = 2.dp)) {
-        LivePlanCard(plan, onStop = vm::cancel, showTitle = false)
-        // 跑的时候就能进运行过程(页面按秒接着长);结束后收进「做了 N 步 · 查看过程」那一行
-        ex.runId?.let { id ->
-            Text(
-                stringResource(R.string.chat_view_live),
-                Modifier.padding(top = 2.dp).clip(MikaShapes.Pill).clickable(role = Role.Button) { openRun(id) }
-                    .padding(horizontal = MikaSpace.S4, vertical = MikaSpace.S4).testTag("work-view-process"),
-                style = DoneText.copy(fontStyle = FontStyle.Italic, textDecoration = TextDecoration.Underline), color = c.ink3,
-            )
+    var showSteps by rememberSaveable { mutableStateOf(false) }
+    val thinking = ex.status == ExchangeStatus.Working && ex.waitingForModel && ex.steps.isNotEmpty()
+    Column(Modifier.fillMaxWidth().padding(bottom = MikaSpace.S8).padding(horizontal = MikaSpace.S4)) {
+        LivePlanCard(
+            plan, onStop = vm::cancel, showTitle = false,
+            statusText = if (thinking) stringResource(R.string.orbit_call_thinking) else null,
+            showSteps = showSteps,
+        ) {
+            if (plan.steps.isNotEmpty() || ex.runId != null) Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
+            ) {
+                if (plan.steps.isNotEmpty()) {
+                    TextLink(stringResource(if (showSteps) R.string.chat_collapse_steps else R.string.chat_expand_steps)) {
+                        showSteps = !showSteps
+                    }
+                }
+                ex.runId?.let { id ->
+                    TextLink(stringResource(R.string.chat_view_live), Modifier.testTag("work-view-process")) { openRun(id) }
+                }
+            }
         }
         if (backgroundNote) {
             Row(
@@ -1488,7 +1492,7 @@ private fun StatusCard(
             val text = if (handedOver) stringResource(R.string.takeover_handed_over_hint) else status.message
             // 付款的商品、金额、地址单独成行:这张卡片就是付款前的确认
             val body = listOfNotNull(text, StatusCopy.paymentLines(status.item, status.amount, status.address)).joinToString("\n")
-            NeedCard(title, body, footer = { TextLink(stringResource(R.string.action_cancel_task), vm::cancel) }) {
+            NeedCard(title, body, footer = { TextLink(stringResource(R.string.action_cancel_task), onClick = vm::cancel) }) {
                 if (handedOver) {
                     CardButton(stringResource(R.string.action_finished_myself), onClick = vm::finishedMyself)
                     CardButton(stringResource(R.string.action_hand_back), primary = true, onClick = vm::handBack)
@@ -1740,8 +1744,8 @@ private fun PhoneDownCard(link: PhoneLink, onCancel: () -> Unit, onContinue: () 
 }
 
 @Composable
-private fun TextLink(text: String, onClick: () -> Unit) {
-    Text(text, Modifier.clip(MikaShapes.Pill).clickable(onClick = onClick).padding(MikaSpace.S4), style = MikaType.Caption, color = MikaTheme.colors.ink3)
+private fun TextLink(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Text(text, modifier.clip(MikaShapes.Pill).clickable(role = Role.Button, onClick = onClick).padding(MikaSpace.S4), style = MikaType.Caption, color = MikaTheme.colors.ink3)
 }
 
 /** 导出到「下载/Mika」的文件:小卡片,名字、大小和存放处;点了能看的在 App 里打开([FileViewer]),其余交给系统里能打开它的 App。 */
@@ -1931,7 +1935,7 @@ internal fun Composer(
                         ).joinToString("\n")
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(why, Modifier.weight(1f), style = MikaType.Caption, color = c.warn)
-                            TextLink(stringResource(R.string.ok_got_it), onDismissRejected)
+                            TextLink(stringResource(R.string.ok_got_it), onClick = onDismissRejected)
                         }
                     }
                 }
@@ -2087,43 +2091,6 @@ private fun FocusPill(state: PresenceState, title: String, status: String?, stat
 internal const val AnswerBubbleWidth = 0.85f
 
 internal fun answerBubbleMaxWidth(rowWidth: Int): Int = (rowWidth * AnswerBubbleWidth).toInt()
-
-/** The jump-to-latest button: a 40dp frosted circle with a down arrow inside a 48dp touch target. */
-@Composable
-private fun JumpToLatest(unread: Int, onClick: () -> Unit) {
-    val haptic = LocalHapticFeedback.current
-    val c = MikaTheme.colors
-    val label = if (unread > 0) stringResource(R.string.chat_jump_latest_new, unread)
-        else stringResource(R.string.chat_jump_latest)
-    val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    Box(
-        Modifier.size(MikaSize.TouchTarget).pressScale(press)
-            .clip(CircleShape)
-            .clickable(press, androidx.compose.foundation.LocalIndication.current, role = Role.Button, onClickLabel = label, onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onClick()
-            })
-            .semantics { contentDescription = label }
-            .testTag("chat-jump-latest"),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            Modifier.size(MikaSize.IconButton).floatShadow(c, CircleShape).background(c.surface, CircleShape)
-                .border(0.5.dp, c.glassEdge, CircleShape),
-            contentAlignment = Alignment.Center,
-         ) {
-            Icon(MikaIcons.Down, null, Modifier.size(MikaSize.SmallIcon + MikaSpace.S4), tint = c.ink)
-        }
-        if (unread > 0) {
-            Text(
-                unreadBadge(unread),
-                Modifier.align(Alignment.TopEnd).background(c.accent, MikaShapes.Pill)
-                    .padding(horizontal = MikaSpace.S4).testTag("jump-to-latest-count").clearAndSetSemantics {},
-                style = MikaType.Micro, color = c.onAccent,
-            )
-        }
-    }
-}
 
 /**
  * Phone control dropped (the wireless-debugging helper stopped or lost its connection). One line says what

@@ -645,7 +645,7 @@ private fun MikaRoot(
             val inOnboarding = onboarding == OnboardingStep.Model
             ModelSetupScreen(
                 store, onboarding = inOnboarding,
-                onBack = { if (inOnboarding) { welcomeFromBack = true; goOnboarding(OnboardingStep.Welcome) } else nav.back() },
+                onBack = { if (inOnboarding) { goOnboarding(OnboardingStep.Welcome) } else nav.back() },
                 onDone = {
                     if (inOnboarding) {
                         onboardingState.markModelSetupDone()

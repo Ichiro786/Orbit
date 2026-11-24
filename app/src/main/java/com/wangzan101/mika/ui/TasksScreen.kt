@@ -1,22 +1,11 @@
 package com.wangzan101.mika.ui
 
+import com.wangzan101.mika.ui.theme.rememberMikaPhase
+import com.wangzan101.mika.ui.theme.onMedia
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
@@ -153,7 +142,6 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaRadius
-import com.wangzan101.mika.ui.theme.MikaSize
 import com.wangzan101.mika.ui.theme.errorInk
 import com.wangzan101.mika.ui.theme.attentionInk
 
@@ -337,7 +325,7 @@ internal fun TasksScreen(
         Box(Modifier.weight(1f).fillMaxWidth()) {
             LazyColumn(
                 state = list, modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = MikaSpace.S24, end = MikaSpace.S24, top = MikaSpace.S24, bottom = bottomInset + 88.dp),
+                contentPadding = PaddingValues(start = MikaSpace.S24, end = MikaSpace.S24, top = MikaSpace.S24, bottom = bottomInset + (MikaSize.TopBar + MikaSpace.S32)),
             ) {
                 item("heading") {
                     val title = stringResource(R.string.tasks_title)
@@ -429,11 +417,11 @@ internal fun TasksScreen(
                 }
             }
             Box(
-                Modifier.align(Alignment.BottomEnd).padding(end = MikaSpace.S24, bottom = bottomInset + MikaSpace.S24).size(56.dp)
+                Modifier.align(Alignment.BottomEnd).padding(end = MikaSpace.S24, bottom = bottomInset + MikaSpace.S24).size(MikaSize.TopBar)
                     .clip(RoundedCornerShape(MikaRadius.Xl)).background(c.accent)
                     .clickable(onClickLabel = stringResource(R.string.plans_add), role = Role.Button, onClick = startPlan),
                 contentAlignment = Alignment.Center,
-            ) { Icon(MikaIcons.Plus, null, Modifier.size(24.dp), tint = c.onAccent) }
+            ) { Icon(MikaIcons.Plus, null, Modifier.size(MikaSpace.S24), tint = c.onAccent) }
         }
     }
 
@@ -442,8 +430,8 @@ internal fun TasksScreen(
     LaunchedEffect(detail, open == null) { if (detail != null && open == null) detail = null }
     AnimatedVisibility(
         open != null,
-        enter = if (reduceMotion) EnterTransition.None else slideInHorizontally(spring(dampingRatio = 0.8f, stiffness = 380f)) { it / 3 } + fadeIn(tween(180)),
-        exit = if (reduceMotion) ExitTransition.None else slideOutHorizontally(tween(180)) { it / 3 } + fadeOut(tween(160)),
+        enter = MikaMotion.specs(reduceMotion).enter(),
+        exit = MikaMotion.specs(reduceMotion).exit(),
     ) {
         // Keep showing the task while the page slides away after it is closed.
         var held by remember { mutableStateOf(open) }
@@ -498,7 +486,7 @@ internal fun TasksScreen(
         }
     }
 
-    SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(start = 16.dp, end = 16.dp, bottom = bottomInset + 12.dp)) { data ->
+    SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(start = MikaSpace.S16, end = MikaSpace.S16, bottom = bottomInset + MikaSpace.S12)) { data ->
         UndoBar(data)
     }
     }
@@ -545,7 +533,7 @@ private fun sectionTitleText(label: String, count: Int): Pair<String, TextStyle>
 @Composable
 private fun TaskSectionTitle(label: String, count: Int) {
     val (text, style) = sectionTitleText(label, count)
-    Text(text, Modifier.padding(top = 28.dp, bottom = 4.dp).semantics { heading() },
+    Text(text, Modifier.padding(top = MikaSpace.S32, bottom = MikaSpace.S4).semantics { heading() },
         style = style, fontWeight = FontWeight.SemiBold, color = MikaTheme.colors.ink3)
 }
 
@@ -556,13 +544,13 @@ private fun DoneHeader(count: Int, open: Boolean, reduceMotion: Boolean, onToggl
     val (text, style) = sectionTitleText(stringResource(R.string.done), count)
     val turn by animateFloatAsState(if (open) 90f else 0f, MikaMotion.spatial(reduceMotion), label = "done-chevron")
     Row(
-        Modifier.fillMaxWidth().padding(top = 16.dp).heightIn(min = MikaSize.TouchTarget).clip(MikaShapes.Tile)
+        Modifier.fillMaxWidth().padding(top = MikaSpace.S16).heightIn(min = MikaSize.TouchTarget).clip(MikaShapes.Tile)
             .clickable(onClickLabel = stringResource(if (open) R.string.hide else R.string.show), role = Role.Button, onClick = onToggle)
             .semantics { heading() }.testTag("tasks-done-header"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text, Modifier.weight(1f), style = style, fontWeight = FontWeight.SemiBold, color = c.ink3)
-        Icon(MikaIcons.Chevron, null, Modifier.size(18.dp).graphicsLayer { rotationZ = turn }, tint = c.ink3)
+        Icon(MikaIcons.Chevron, null, Modifier.size(MikaSize.TileIcon).graphicsLayer { rotationZ = turn }, tint = c.ink3)
     }
 }
 
@@ -625,10 +613,10 @@ private fun TaskEntry(
         backgroundContent = {
             if (dismiss.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
                 Box(
-                    Modifier.fillMaxSize().padding(vertical = 4.dp).clip(MikaShapes.Card).background(c.bad)
-                        .padding(horizontal = 22.dp).testTag("task-delete-swipe"),
+                    Modifier.fillMaxSize().padding(vertical = MikaSpace.S4).clip(MikaShapes.Card).background(c.bad)
+                        .padding(horizontal = MikaSpace.S24).testTag("task-delete-swipe"),
                     contentAlignment = Alignment.CenterEnd,
-                ) { Icon(MikaIcons.Trash, null, Modifier.size(22.dp), tint = if (c.isDark) Color(0xFF1F0503) else Color.White) }
+                ) { Icon(MikaIcons.Trash, null, Modifier.size(MikaSize.Icon), tint = c.onMedia) }
             }
         },
     ) {
@@ -650,7 +638,7 @@ private fun TaskRow(
     val detail = taskDetailLine(item, context)
         ?: taskResult(item, context)?.takeIf { group == TaskGroup.Done }
     val progress = state?.let(::taskProgress)
-    val attention = if (c.isDark) c.warn else Color(0xFF8C5000)
+    val attention = c.attentionInk
     val going = item.section != TaskSection.Resolved
     val markLabel = stringResource(if (going) R.string.tasks_mark_done_live else R.string.tasks_mark_done)
     Column(Modifier.fillMaxWidth().background(c.bg)) {
@@ -663,7 +651,7 @@ private fun TaskRow(
                         CustomAccessibilityAction(deleteLabel) { onDelete(); true },
                     )
                 }
-                .padding(top = 4.dp, bottom = 12.dp).testTag("task-row"),
+                .padding(top = MikaSpace.S4, bottom = MikaSpace.S12).testTag("task-row"),
             verticalAlignment = Alignment.Top,
         ) {
             TaskCircle(
@@ -671,18 +659,18 @@ private fun TaskRow(
                 attention = group == TaskGroup.NeedsYou, reduceMotion = reduceMotion,
                 label = markLabel, onClick = onMarkDone.takeIf { !checked },
             )
-            Column(Modifier.weight(1f).padding(top = 12.dp, end = 8.dp)) {
+            Column(Modifier.weight(1f).padding(top = MikaSpace.S12, end = MikaSpace.S8)) {
                 // Two lines, then an ellipsis: a long request never runs on or cuts off mid-word at the edge.
                 Text(title, style = MikaType.BodyStrong, color = if (checked) c.ink2 else c.ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(status, Modifier.padding(top = 4.dp), style = MikaType.Caption,
+                Text(status, Modifier.padding(top = MikaSpace.S4), style = MikaType.Caption,
                     color = if (group == TaskGroup.NeedsYou) attention else c.ink2)
                 if (!detail.isNullOrBlank() && detail != title && detail != status) Text(detail,
-                    Modifier.padding(top = 3.dp), style = MikaType.Caption, color = c.ink2, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                if (progress != null) LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp).height(4.dp),
+                    Modifier.padding(top = MikaSpace.S4), style = MikaType.Caption, color = c.ink2, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                if (progress != null) LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().padding(top = MikaSpace.S12).height(MikaSpace.S4),
                     color = c.accent, trackColor = c.fill)
             }
-            if (item.section == TaskSection.Review) Text(stringResource(R.string.teach_review), Modifier.padding(top = 14.dp, end = 4.dp), style = MikaType.Caption, color = attention)
-            Icon(MikaIcons.Chevron, null, Modifier.padding(top = 15.dp).size(18.dp), tint = c.ink3)
+            if (item.section == TaskSection.Review) Text(stringResource(R.string.teach_review), Modifier.padding(top = MikaSpace.S12, end = MikaSpace.S4), style = MikaType.Caption, color = attention)
+            Icon(MikaIcons.Chevron, null, Modifier.padding(top = MikaSize.SmallIcon).size(MikaSize.TileIcon), tint = c.ink3)
         }
         HorizontalDivider(color = c.hair)
     }
@@ -701,12 +689,10 @@ internal fun TaskCircle(
     val c = MikaTheme.colors
     val fill by animateFloatAsState(
         if (checked) 1f else 0f,
-        if (reduceMotion) snap() else spring(dampingRatio = 0.55f, stiffness = 420f), label = "task-check",
+        MikaMotion.specs(reduceMotion).bouncy(), label = "task-check",
     )
     val turning = running && !checked && progress == null && !reduceMotion
-    val angle = if (turning) rememberInfiniteTransition(label = "task-arc").animateFloat(
-        0f, 360f, infiniteRepeatable(tween(1100, easing = LinearEasing), RepeatMode.Restart), label = "task-arc-angle",
-    ) else null
+    val angle = if (turning) rememberMikaPhase("task-arc") else null
     Box(
         Modifier.size(MikaSize.TouchTarget)
             .then(
@@ -717,7 +703,7 @@ internal fun TaskCircle(
             .testTag("task-circle"),
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.size(24.dp)) {
+        Canvas(Modifier.size(MikaSpace.S24)) {
             val stroke = 2.dp.toPx()
             val radius = size.minDimension / 2 - stroke / 2
             val ring = if (attention) c.warnSolid else c.ink3
@@ -725,7 +711,7 @@ internal fun TaskCircle(
             if (running && !checked) {
                 val inset = stroke / 2
                 drawArc(
-                    c.accent, startAngle = -90f + (angle?.value ?: 0f), sweepAngle = progress?.let { 360f * it.coerceIn(0.02f, 1f) } ?: 100f,
+                    c.accent, startAngle = -90f + ((angle?.value ?: 0f) * 360f), sweepAngle = progress?.let { 360f * it.coerceIn(0.02f, 1f) } ?: 100f,
                     useCenter = false, topLeft = Offset(inset, inset), size = Size(size.width - stroke, size.height - stroke),
                     style = Stroke(stroke, cap = StrokeCap.Round),
                 )
@@ -749,15 +735,15 @@ private fun UndoBar(data: SnackbarData) {
     val c = MikaTheme.colors
     Row(
         Modifier.fillMaxWidth().floatShadow(c, MikaShapes.Card).clip(MikaShapes.Card).background(c.surface)
-            .border(0.75.dp, c.glassEdge, MikaShapes.Card).padding(start = 18.dp, end = 6.dp).heightIn(min = 56.dp)
+            .border(0.75.dp, c.glassEdge, MikaShapes.Card).padding(start = MikaSpace.S16, end = MikaSpace.S8).heightIn(min = MikaSize.TopBar)
             .testTag("tasks-undo-bar"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(data.visuals.message, Modifier.weight(1f).padding(vertical = 10.dp), style = MikaType.Body, color = c.ink)
+        Text(data.visuals.message, Modifier.weight(1f).padding(vertical = MikaSpace.S12), style = MikaType.Body, color = c.ink)
         data.visuals.actionLabel?.let { label ->
             Box(
                 Modifier.heightIn(min = MikaSize.TouchTarget).clip(MikaShapes.Pill)
-                    .clickable(role = Role.Button, onClick = data::performAction).padding(horizontal = 14.dp).testTag("tasks-undo"),
+                    .clickable(role = Role.Button, onClick = data::performAction).padding(horizontal = MikaSpace.S12).testTag("tasks-undo"),
                 contentAlignment = Alignment.Center,
             ) { Text(label, style = MikaType.BodyStrong, color = c.accent) }
         }

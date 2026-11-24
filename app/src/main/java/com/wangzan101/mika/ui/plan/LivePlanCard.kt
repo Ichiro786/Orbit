@@ -94,10 +94,14 @@ fun LivePlanCard(
     maxStepsHeight: Dp? = null,
     showHeader: Boolean = true,
     showTitle: Boolean = true,
+    statusText: String? = null,
+    showSteps: Boolean = true,
+    actions: (@Composable () -> Unit)? = null,
 ) {
     Column(modifier.fillMaxWidth().testTag("live-plan")) {
-        if (showHeader) PlanHeader(plan, onStop, showTitle)
-        if (plan.steps.isNotEmpty()) {
+        if (showHeader) PlanHeader(plan, onStop, showTitle, statusText)
+        actions?.invoke()
+        if (showSteps && plan.steps.isNotEmpty()) {
             if (maxStepsHeight != null) BoundedSteps(plan, maxStepsHeight, if (showHeader) MikaSpace.S8 else 0.dp)
             else FoldedSteps(plan, Modifier.padding(top = if (showHeader) MikaSpace.S8 else 0.dp))
         }
@@ -112,7 +116,7 @@ fun LivePlanSteps(plan: LivePlan, modifier: Modifier = Modifier) {
 
 /** Header: status ring, title, "Step 3 · 0:42", Stop. */
 @Composable
-private fun PlanHeader(plan: LivePlan, onStop: (() -> Unit)?, showTitle: Boolean) {
+private fun PlanHeader(plan: LivePlan, onStop: (() -> Unit)?, showTitle: Boolean, statusText: String?) {
     val c = MikaTheme.colors
     val elapsed = if (plan.active) rememberElapsed(plan.startedAt) else plan.elapsedMs
     val stepText = when {
@@ -132,6 +136,7 @@ private fun PlanHeader(plan: LivePlan, onStop: (() -> Unit)?, showTitle: Boolean
                 plan.title, Modifier.semantics { heading() }, style = MikaType.BodyStrong, color = c.ink,
                 maxLines = 2, overflow = TextOverflow.Ellipsis,
             )
+            if (statusText != null) Text(statusText, style = MikaType.BodyStrong, color = c.ink)
             if (meta.isNotEmpty()) Text(
                 meta, Modifier.testTag("live-plan-meta"),
                 style = MikaType.Caption, color = if (showTitle) c.ink3 else c.ink2,

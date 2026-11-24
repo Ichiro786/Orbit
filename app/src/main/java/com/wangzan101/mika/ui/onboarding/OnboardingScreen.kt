@@ -1,19 +1,15 @@
 package com.wangzan101.mika.ui.onboarding
 
+import com.wangzan101.mika.ui.theme.rememberMikaPulse
+import com.wangzan101.mika.ui.theme.MikaMotion
+import com.wangzan101.mika.ui.theme.MikaRadius
+import com.wangzan101.mika.ui.theme.MikaSpace
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -74,12 +70,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.wangzan101.mika.R
 import com.wangzan101.mika.core.shell.BuiltinShellStatus
@@ -103,9 +97,7 @@ import com.wangzan101.mika.ui.theme.MikaType
 import kotlinx.coroutines.launch
 
 /** Shapes and type the flow uses on top of the app's tokens: a slightly rounder card, and its page title. */
-internal val FlowCard = RoundedCornerShape(24.dp)
-private val FlowTitle = TextStyle(fontSize = 30.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp)
-private val FlowLead = TextStyle(fontSize = 16.sp, lineHeight = 24.sp)
+internal val FlowCard = MikaShapes.Card
 
 /**
  * The first-run flow: welcome, what Orbit can do, privacy, a model, phone control, permissions, optional extras,
@@ -155,8 +147,8 @@ fun OnboardingScreen(
                 if (reduceMotion) EnterTransition.None togetherWith ExitTransition.None
                 else {
                     val dir = if (forward) 1 else -1
-                    (slideInHorizontally(spring(dampingRatio = 0.82f, stiffness = 360f)) { dir * it / 3 } + fadeIn(tween(220))) togetherWith
-                        (slideOutHorizontally(tween(200)) { -dir * it / 4 } + fadeOut(tween(140)))
+                    (slideInHorizontally(MikaMotion.specs(reduceMotion).offset()) { dir * it / 3 } + MikaMotion.specs(reduceMotion).fadeEnter()) togetherWith
+                        (slideOutHorizontally(MikaMotion.specs(reduceMotion).offset()) { -dir * it / 4 } + MikaMotion.specs(reduceMotion).fadeExit())
                 }
             },
             label = "onboarding-step",
@@ -215,29 +207,29 @@ internal fun FlowHeader(position: Int, total: Int, onBack: (() -> Unit)?, traili
     val c = MikaTheme.colors
     val label = stringResource(R.string.ob_step_of, position, total)
     Row(
-        Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(start = 12.dp, end = 12.dp, top = 8.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+        Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(start = MikaSpace.S12, end = MikaSpace.S12, top = MikaSpace.S8),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12),
     ) {
         if (onBack != null) Box(
             Modifier.size(MikaSize.TouchTarget).clip(CircleShape).background(c.fill).border(0.75.dp, c.glassEdge, CircleShape)
                 .clickable(onClickLabel = stringResource(R.string.back), role = Role.Button, onClick = onBack).testTag("onboarding-back"),
             contentAlignment = Alignment.Center,
-        ) { Icon(MikaIcons.Back, stringResource(R.string.back), Modifier.size(22.dp), tint = c.ink) }
+        ) { Icon(MikaIcons.Back, stringResource(R.string.back), Modifier.size(MikaSize.Icon), tint = c.ink) }
         else Spacer(Modifier.size(MikaSize.TouchTarget))
         Row(
             Modifier.weight(1f).semantics(mergeDescendants = true) {
                 contentDescription = label
                 progressBarRangeInfo = ProgressBarRangeInfo(position.toFloat(), 1f..total.toFloat(), total - 2)
             }.testTag("onboarding-progress"),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(MikaSpace.S4),
         ) {
             repeat(total) { i ->
-                Box(Modifier.weight(1f).height(3.dp).background(if (i < position) c.ink else c.ink.copy(alpha = 0.18f), CircleShape))
+                Box(Modifier.weight(1f).height(MikaSpace.S4).background(if (i < position) c.ink else c.ink.copy(alpha = 0.18f), CircleShape))
             }
         }
         if (trailing != null) Box(
             Modifier.heightIn(min = MikaSize.TouchTarget).widthIn(min = MikaSize.TouchTarget).clip(MikaShapes.Pill)
-                .clickable(role = Role.Button, onClick = onTrailing).padding(horizontal = 8.dp).testTag("onboarding-skip"),
+                .clickable(role = Role.Button, onClick = onTrailing).padding(horizontal = MikaSpace.S8).testTag("onboarding-skip"),
             contentAlignment = Alignment.Center,
         ) { Text(trailing, style = MikaType.Body, fontWeight = FontWeight.Medium, color = c.ink2, maxLines = 1) }
         else Spacer(Modifier.size(MikaSize.TouchTarget))
@@ -252,12 +244,12 @@ internal fun FlowHeader(position: Int, total: Int, onBack: (() -> Unit)?, traili
 internal fun FlowButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     val c = MikaTheme.colors
     Box(
-        modifier.fillMaxWidth().heightIn(min = 54.dp).clip(MikaShapes.Button)
+        modifier.fillMaxWidth().heightIn(min = MikaSize.Button).clip(MikaShapes.Button)
             .background(if (enabled) c.ink else c.ink.copy(alpha = 0.12f))
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(horizontal = 20.dp, vertical = 12.dp),
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(horizontal = MikaSpace.S24, vertical = MikaSpace.S12),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, fontSize = 16.5.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
+        Text(text, style = MikaType.BodyStrong, textAlign = TextAlign.Center,
             color = if (enabled) c.bg else c.ink3)
     }
 }
@@ -269,7 +261,7 @@ internal fun FlowLater(label: String, note: String, onClick: () -> Unit, tag: St
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             Modifier.heightIn(min = MikaSize.TouchTarget).clip(MikaShapes.Pill).clickable(role = Role.Button, onClick = onClick)
-                .padding(horizontal = 20.dp).testTag(tag),
+                .padding(horizontal = MikaSpace.S24).testTag(tag),
             contentAlignment = Alignment.Center,
         ) { Text(label, style = MikaType.BodyStrong, color = c.ink) }
         Text(note, style = MikaType.Caption, color = c.ink3, textAlign = TextAlign.Center)
@@ -286,18 +278,18 @@ internal fun FlowPage(
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars)) {
         header()
         Column(
-            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 8.dp),
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = MikaSpace.S24, end = MikaSpace.S24, top = MikaSpace.S24, bottom = MikaSpace.S8),
             content = content,
         )
-        Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 18.dp), content = bottom)
+        Column(Modifier.fillMaxWidth().padding(start = MikaSpace.S24, end = MikaSpace.S24, top = MikaSpace.S12, bottom = MikaSpace.S16), content = bottom)
     }
 }
 
 @Composable
 internal fun FlowTitleBlock(title: String, lead: String?) {
     val c = MikaTheme.colors
-    Text(title, Modifier.semantics { heading() }, style = FlowTitle, color = c.ink)
-    if (lead != null) Text(lead, Modifier.padding(top = 10.dp), style = FlowLead, color = c.ink2)
+    Text(title, Modifier.semantics { heading() }, style = MikaType.LargeTitle, color = c.ink)
+    if (lead != null) Text(lead, Modifier.padding(top = MikaSpace.S12), style = MikaType.Body, color = c.ink2)
 }
 
 /** A frosted card: a soft fill and a hairline, in the flow's rounder shape. */
@@ -309,25 +301,22 @@ internal fun GlassCard(modifier: Modifier = Modifier, content: @Composable Colum
 
 @Composable
 private fun IconSquare(icon: ImageVector, tint: Color, fill: Color) {
-    Box(Modifier.size(44.dp).background(fill, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
-        Icon(icon, null, Modifier.size(22.dp), tint = tint)
+    Box(Modifier.size(MikaSize.IconButton).background(fill, RoundedCornerShape(MikaRadius.Md)), contentAlignment = Alignment.Center) {
+        Icon(icon, null, Modifier.size(MikaSize.Icon), tint = tint)
     }
 }
 
 /** A small state pill: a dot or check and a word, in the state's colour and never colour alone. */
 @Composable
 internal fun StatePill(text: String, color: Color, soft: Color, pulsing: Boolean = false, check: Boolean = false, modifier: Modifier = Modifier) {
-    val reduceMotion = MikaTheme.reduceMotion
-    val pulse = if (pulsing && !reduceMotion) rememberInfiniteTransition(label = "pill").animateFloat(
-        1f, 0.35f, infiniteRepeatable(tween(800, easing = LinearEasing), RepeatMode.Reverse), label = "pill-dot",
-    ) else null
+    val pulse = if (pulsing) rememberMikaPulse(label = "pill-dot") else null
     Row(
-        modifier.heightIn(min = 32.dp).background(soft, MikaShapes.Pill).padding(start = 10.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp),
+        modifier.heightIn(min = MikaSpace.S32).background(soft, MikaShapes.Pill).padding(start = MikaSpace.S12, end = MikaSpace.S12, top = MikaSpace.S4, bottom = MikaSpace.S4),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
     ) {
-        if (check) Icon(MikaIcons.Check, null, Modifier.size(15.dp), tint = color)
-        else Box(Modifier.size(8.dp).graphicsLayer { alpha = pulse?.value ?: 1f }.background(color, CircleShape))
-        Text(text, fontSize = 13.5.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold, color = color)
+        if (check) Icon(MikaIcons.Check, null, Modifier.size(MikaSize.SmallIcon), tint = color)
+        else Box(Modifier.size(MikaSpace.S8).graphicsLayer { alpha = pulse?.value?.let { 0.35f + 0.65f * it } ?: 1f }.background(color, CircleShape))
+        Text(text, style = MikaType.LabelStrong, color = color)
     }
 }
 
@@ -343,51 +332,48 @@ private fun WelcomeStep(reduceMotion: Boolean, onStart: () -> Unit) {
     val orb = remember { Animatable(if (reduceMotion) 1f else 0f) }
     val text = remember { Animatable(if (reduceMotion) 1f else 0f) }
     val cta = remember { Animatable(if (reduceMotion) 1f else 0f) }
-    LaunchedEffect(Unit) {
-        if (reduceMotion) return@LaunchedEffect
-        launch { orb.animateTo(1f, spring(dampingRatio = 0.55f, stiffness = 120f)) }
-        launch { text.animateTo(1f, tween(520, delayMillis = 380)) }
-        launch { cta.animateTo(1f, tween(520, delayMillis = 640)) }
+    LaunchedEffect(reduceMotion) {
+        launch { orb.animateTo(1f, MikaMotion.specs(reduceMotion).spatialSlow()) }
+        launch { text.animateTo(1f, MikaMotion.specs(reduceMotion).timed(MikaMotion.Duration.MEDIUM, delayMs = MikaMotion.Duration.MICRO)) }
+        launch { cta.animateTo(1f, MikaMotion.specs(reduceMotion).timed(MikaMotion.Duration.MEDIUM, delayMs = MikaMotion.Duration.SHORT)) }
     }
-    val breathe = if (reduceMotion) null else rememberInfiniteTransition(label = "welcome").animateFloat(
-        0.75f, 1f, infiniteRepeatable(tween(2600), RepeatMode.Reverse), label = "welcome-glow",
-    )
-    val glow = Color(0xFFE97D60)
+    val breathe = rememberMikaPulse(label = "welcome-glow")
+    val glow = c.accent
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars).windowInsetsPadding(WindowInsets.navigationBars)) {
         Column(
-            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 32.dp),
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = MikaSpace.S32),
             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
         ) {
             Box(
-                Modifier.size(260.dp).drawBehind {
-                    val a = (breathe?.value ?: 1f) * orb.value.coerceIn(0f, 1f)
+                Modifier.size(MikaSize.IntroWelcomeHalo).drawBehind {
+                    val a = (0.75f + 0.25f * breathe.value) * orb.value.coerceIn(0f, 1f)
                     drawCircle(Brush.radialGradient(listOf(glow.copy(alpha = 0.30f * a), glow.copy(alpha = 0.10f * a), Color.Transparent)))
                 },
                 contentAlignment = Alignment.Center,
             ) {
                 MikaMark(
-                    Modifier.size(168.dp).graphicsLayer {
+                    Modifier.size(MikaSize.IntroMark).graphicsLayer {
                         val p = orb.value
                         scaleX = 0.55f + 0.45f * p; scaleY = 0.55f + 0.45f * p
-                        translationY = (1f - p) * 46.dp.toPx()
+                        translationY = (1f - p) * MikaSize.TouchTarget.toPx()
                         alpha = p.coerceIn(0f, 1f)
                     }.clearAndSetSemantics {},
                 )
             }
             Column(
-                Modifier.graphicsLayer { alpha = text.value; translationY = (1f - text.value) * 14.dp.toPx() },
+                Modifier.graphicsLayer { alpha = text.value; translationY = (1f - text.value) * MikaSpace.S12.toPx() },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(stringResource(R.string.welcome_title), Modifier.padding(top = 4.dp).semantics { heading() },
-                    fontSize = 36.sp, lineHeight = 42.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp, color = c.ink, textAlign = TextAlign.Center)
-                Text(stringResource(R.string.ob_welcome_lead), Modifier.padding(top = 14.dp),
-                    fontSize = 17.sp, lineHeight = 26.sp, color = c.ink2, textAlign = TextAlign.Center)
+                Text(stringResource(R.string.welcome_title), Modifier.padding(top = MikaSpace.S4).semantics { heading() },
+                    style = MikaType.LargeTitle, color = c.ink, textAlign = TextAlign.Center)
+                Text(stringResource(R.string.ob_welcome_lead), Modifier.padding(top = MikaSpace.S12),
+                    style = MikaType.Title, color = c.ink2, textAlign = TextAlign.Center)
             }
         }
         Column(
-            Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 18.dp)
-                .graphicsLayer { alpha = cta.value; translationY = (1f - cta.value) * 14.dp.toPx() },
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxWidth().padding(start = MikaSpace.S24, end = MikaSpace.S24, bottom = MikaSpace.S16)
+                .graphicsLayer { alpha = cta.value; translationY = (1f - cta.value) * MikaSpace.S12.toPx() },
+            verticalArrangement = Arrangement.spacedBy(MikaSpace.S16),
         ) {
             Text(stringResource(R.string.ob_welcome_note), Modifier.fillMaxWidth(), style = MikaType.Caption, color = c.ink3, textAlign = TextAlign.Center)
             FlowButton(stringResource(R.string.welcome_start), onStart, Modifier.testTag("welcome-start"))
@@ -406,35 +392,35 @@ private fun CanDoStep(reduceMotion: Boolean, header: @Composable () -> Unit, onD
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars)) {
         header()
         HorizontalPager(
-            pager, Modifier.weight(1f).fillMaxWidth().padding(top = 20.dp).testTag("onboarding-cards"),
-            contentPadding = PaddingValues(start = 20.dp, end = 34.dp), pageSpacing = 12.dp,
+            pager, Modifier.weight(1f).fillMaxWidth().padding(top = MikaSpace.S24).testTag("onboarding-cards"),
+            contentPadding = PaddingValues(start = MikaSpace.S24, end = MikaSpace.S32), pageSpacing = MikaSpace.S12,
         ) { page ->
-            GlassCard(Modifier.fillMaxSize().clip(RoundedCornerShape(28.dp))) {
-                Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 18.dp, end = 18.dp, top = 20.dp)) {
+            GlassCard(Modifier.fillMaxSize().clip(RoundedCornerShape(MikaRadius.Xxl))) {
+                Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = MikaSpace.S16, end = MikaSpace.S16, top = MikaSpace.S24)) {
                     when (page) {
                         0 -> MessageScene()
                         1 -> SummaryScene()
                         else -> BackgroundScene()
                     }
                 }
-                Column(Modifier.padding(start = 22.dp, end = 22.dp, top = 18.dp, bottom = 24.dp)) {
+                Column(Modifier.padding(start = MikaSpace.S24, end = MikaSpace.S24, top = MikaSpace.S16, bottom = MikaSpace.S24)) {
                     val (title, body) = when (page) {
                         0 -> R.string.ob_can1_title to R.string.ob_can1_body
                         1 -> R.string.ob_can2_title to R.string.ob_can2_body
                         else -> R.string.ob_can3_title to R.string.ob_can3_body
                     }
-                    Text(stringResource(title), Modifier.semantics { heading() }, fontSize = 25.sp, lineHeight = 31.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.2).sp, color = c.ink)
-                    Text(stringResource(body), Modifier.padding(top = 8.dp), fontSize = 15.sp, lineHeight = 22.sp, color = c.ink2)
+                    Text(stringResource(title), Modifier.semantics { heading() }, style = MikaType.Headline, color = c.ink)
+                    Text(stringResource(body), Modifier.padding(top = MikaSpace.S8), style = MikaType.Body, color = c.ink2)
                 }
             }
         }
-        Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 18.dp, bottom = 18.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        Column(Modifier.fillMaxWidth().padding(start = MikaSpace.S24, end = MikaSpace.S24, top = MikaSpace.S16, bottom = MikaSpace.S16), verticalArrangement = Arrangement.spacedBy(MikaSpace.S16)) {
             Row(
                 Modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = pageLabel },
-                horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8, Alignment.CenterHorizontally),
             ) {
                 repeat(3) { i ->
-                    Box(Modifier.height(6.dp).width(if (i == pager.currentPage) 20.dp else 6.dp).background(if (i == pager.currentPage) c.ink else c.ink.copy(alpha = 0.28f), CircleShape))
+                    Box(Modifier.height(MikaSpace.S8).width(if (i == pager.currentPage) MikaSpace.S24 else MikaSpace.S8).background(if (i == pager.currentPage) c.ink else c.ink.copy(alpha = 0.28f), CircleShape))
                 }
             }
             val last = pager.currentPage == 2
@@ -451,16 +437,16 @@ private fun CanDoStep(reduceMotion: Boolean, header: @Composable () -> Unit, onD
 private fun UserLine(text: String) {
     val tone = MikaTheme.userBubble
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-        Text(text, Modifier.widthIn(max = 250.dp).background(tone.bg, MikaShapes.UserBubble).padding(horizontal = 14.dp, vertical = 10.dp),
-            fontSize = 15.sp, lineHeight = 21.sp, color = tone.fg)
+        Text(text, Modifier.widthIn(max = MikaSize.IntroExampleBubble).background(tone.bg, MikaShapes.UserBubble).padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S12),
+            style = MikaType.Body, color = tone.fg)
     }
 }
 
 @Composable
 private fun DoneLineSmall(text: String) {
     val c = MikaTheme.colors
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Icon(MikaIcons.Check, null, Modifier.size(16.dp), tint = c.ok)
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
+        Icon(MikaIcons.Check, null, Modifier.size(MikaSize.SmallIcon), tint = c.ok)
         Text(text, style = MikaType.Caption, color = c.ink2)
     }
 }
@@ -469,25 +455,25 @@ private fun DoneLineSmall(text: String) {
 @Composable
 private fun MessageScene() {
     val c = MikaTheme.colors
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
         UserLine(stringResource(R.string.ob_can1_ask))
-        Column(Modifier.padding(horizontal = 2.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+        Column(Modifier.padding(horizontal = 2.dp, vertical = MikaSpace.S4), verticalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
             DoneLineSmall(stringResource(R.string.ob_can1_step1))
             DoneLineSmall(stringResource(R.string.ob_can1_step2))
             DoneLineSmall(stringResource(R.string.ob_can1_step3))
         }
-        Column(Modifier.fillMaxWidth().background(c.answer, MikaShapes.AnswerBubble).padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(stringResource(R.string.ob_can1_confirm), fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold, color = c.ink)
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Box(Modifier.width(2.dp).height(40.dp).background(c.ink.copy(alpha = 0.2f)))
-                Text(stringResource(R.string.ob_can1_message), fontSize = 14.sp, lineHeight = 20.sp, color = c.ink2)
+        Column(Modifier.fillMaxWidth().background(c.answer, MikaShapes.AnswerBubble).padding(MikaSpace.S12), verticalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
+            Text(stringResource(R.string.ob_can1_confirm), style = MikaType.CalloutStrong, color = c.ink)
+            Row(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
+                Box(Modifier.width(2.dp).height(MikaSize.IconButton).background(c.ink.copy(alpha = 0.2f)))
+                Text(stringResource(R.string.ob_can1_message), style = MikaType.Callout, color = c.ink2)
             }
             // A picture of the approval, not working buttons: TalkBack reads the texts, nothing here is a control.
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.chat_send), Modifier.background(c.ink, MikaShapes.Pill).padding(horizontal = 18.dp, vertical = 8.dp),
-                    fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = c.bg)
-                Text(stringResource(R.string.ob_edit), Modifier.background(c.fill, MikaShapes.Pill).padding(horizontal = 16.dp, vertical = 8.dp),
-                    fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.ink)
+            Row(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8)) {
+                Text(stringResource(R.string.chat_send), Modifier.background(c.ink, MikaShapes.Pill).padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8),
+                    style = MikaType.CalloutStrong, color = c.bg)
+                Text(stringResource(R.string.ob_edit), Modifier.background(c.fill, MikaShapes.Pill).padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S8),
+                    style = MikaType.CalloutStrong, color = c.ink)
             }
         }
     }
@@ -497,20 +483,20 @@ private fun MessageScene() {
 @Composable
 private fun SummaryScene() {
     val c = MikaTheme.colors
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
         UserLine(stringResource(R.string.ob_can2_ask))
-        Column(Modifier.fillMaxWidth(0.92f).background(c.answer, MikaShapes.AnswerBubble).padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(stringResource(R.string.ob_can2_lead), fontSize = 14.sp, lineHeight = 20.sp, color = c.ink)
+        Column(Modifier.fillMaxWidth(0.92f).background(c.answer, MikaShapes.AnswerBubble).padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12), verticalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
+            Text(stringResource(R.string.ob_can2_lead), style = MikaType.Callout, color = c.ink)
             listOf(
                 R.string.ob_can2_n1 to R.string.ob_can2_t1, R.string.ob_can2_n2 to R.string.ob_can2_t2, R.string.ob_can2_n3 to R.string.ob_can2_t3,
             ).forEach { (name, line) ->
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(stringResource(name), fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold, color = c.ink)
-                    Text(stringResource(line), fontSize = 14.sp, lineHeight = 20.sp, color = c.ink2)
+                    Text(stringResource(name), style = MikaType.CalloutStrong, color = c.ink)
+                    Text(stringResource(line), style = MikaType.Callout, color = c.ink2)
                 }
             }
         }
-        Box(Modifier.padding(start = 4.dp)) { DoneLineSmall(stringResource(R.string.ob_can2_meta)) }
+        Box(Modifier.padding(start = MikaSpace.S4)) { DoneLineSmall(stringResource(R.string.ob_can2_meta)) }
     }
 }
 
@@ -518,25 +504,25 @@ private fun SummaryScene() {
 @Composable
 private fun BackgroundScene() {
     val c = MikaTheme.colors
-    @Composable fun label(text: String) = Text(text.uppercase(), Modifier.padding(start = 2.dp), fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.8.sp, color = c.ink3)
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    @Composable fun label(text: String) = Text(text.uppercase(), Modifier.padding(start = 2.dp), style = MikaType.Overline, color = c.ink3)
+    Column(verticalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
         label(stringResource(R.string.personal_status_running))
-        Column(Modifier.fillMaxWidth().background(c.answer, MikaShapes.Card).padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(stringResource(R.string.ob_can3_task), fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.SemiBold, color = c.ink)
+        Column(Modifier.fillMaxWidth().background(c.answer, MikaShapes.Card).padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12), verticalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
+            Text(stringResource(R.string.ob_can3_task), style = MikaType.BodyStrong, color = c.ink)
             Text(stringResource(R.string.ob_can3_progress), style = MikaType.Caption, color = c.ink2)
-            Box(Modifier.fillMaxWidth().height(4.dp).background(c.ink.copy(alpha = 0.12f), CircleShape)) {
-                Box(Modifier.fillMaxWidth(0.56f).height(4.dp).background(c.accent, CircleShape))
+            Box(Modifier.fillMaxWidth().height(MikaSpace.S4).background(c.ink.copy(alpha = 0.12f), CircleShape)) {
+                Box(Modifier.fillMaxWidth(0.56f).height(MikaSpace.S4).background(c.accent, CircleShape))
             }
         }
-        Box(Modifier.padding(top = 6.dp)) { label(stringResource(R.string.tasks_up_next)) }
-        Row(Modifier.fillMaxWidth().background(c.answer, MikaShapes.Card).padding(horizontal = 16.dp, vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(MikaIcons.Clock, null, Modifier.padding(top = 1.dp).size(22.dp), tint = c.ink2)
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(stringResource(R.string.ob_can3_next), fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.SemiBold, color = c.ink)
+        Box(Modifier.padding(top = MikaSpace.S8)) { label(stringResource(R.string.tasks_up_next)) }
+        Row(Modifier.fillMaxWidth().background(c.answer, MikaShapes.Card).padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
+            Icon(MikaIcons.Clock, null, Modifier.padding(top = 1.dp).size(MikaSpace.S24), tint = c.ink2)
+            Column(verticalArrangement = Arrangement.spacedBy(MikaSpace.S4)) {
+                Text(stringResource(R.string.ob_can3_next), style = MikaType.BodyStrong, color = c.ink)
                 Text(stringResource(R.string.ob_can3_when), style = MikaType.Caption, color = c.ink2)
             }
         }
-        Box(Modifier.padding(start = 2.dp, top = 4.dp)) { DoneLineSmall(stringResource(R.string.ob_can3_done)) }
+        Box(Modifier.padding(start = 2.dp, top = MikaSpace.S4)) { DoneLineSmall(stringResource(R.string.ob_can3_done)) }
     }
 }
 
@@ -547,20 +533,20 @@ private fun PrivacyStep(header: @Composable () -> Unit, onOpenSource: () -> Unit
     val c = MikaTheme.colors
     FlowPage(header, bottom = { FlowButton(stringResource(R.string.ob_continue), onContinue, Modifier.testTag("onboarding-next")) }) {
         FlowTitleBlock(stringResource(R.string.ob_privacy_title), stringResource(R.string.ob_privacy_lead))
-        GlassCard(Modifier.padding(top = 26.dp)) {
+        GlassCard(Modifier.padding(top = MikaSpace.S24)) {
             PrivacyRow(MikaIcons.Code, c.ink, c.fill, R.string.ob_privacy_open, R.string.ob_privacy_open_body)
-            Box(Modifier.padding(start = 80.dp).fillMaxWidth().height(0.75.dp).background(c.hair))
+            Box(Modifier.padding(start = (MikaSize.IconButton * 2)).fillMaxWidth().height(0.75.dp).background(c.hair))
             PrivacyRow(MikaIcons.Phone, c.ok, c.okSoft, R.string.ob_privacy_local, R.string.ob_privacy_local_body)
-            Box(Modifier.padding(start = 80.dp).fillMaxWidth().height(0.75.dp).background(c.hair))
+            Box(Modifier.padding(start = (MikaSize.IconButton * 2)).fillMaxWidth().height(0.75.dp).background(c.hair))
             PrivacyRow(MikaIcons.External, c.warn, c.warnSoft, R.string.ob_privacy_sent, R.string.ob_privacy_sent_body)
         }
         Row(
-            Modifier.padding(top = 8.dp).heightIn(min = MikaSize.TouchTarget).clip(MikaShapes.Pill)
-                .clickable(role = Role.Button, onClick = onOpenSource).padding(horizontal = 4.dp).testTag("onboarding-source"),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
+            Modifier.padding(top = MikaSpace.S8).heightIn(min = MikaSize.TouchTarget).clip(MikaShapes.Pill)
+                .clickable(role = Role.Button, onClick = onOpenSource).padding(horizontal = MikaSpace.S4).testTag("onboarding-source"),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
         ) {
             Text(stringResource(R.string.ob_privacy_source), style = MikaType.Body, fontWeight = FontWeight.Medium, color = c.accent)
-            Icon(MikaIcons.External, null, Modifier.size(16.dp), tint = c.accent)
+            Icon(MikaIcons.External, null, Modifier.size(MikaSize.SmallIcon), tint = c.accent)
         }
     }
 }
@@ -568,11 +554,11 @@ private fun PrivacyStep(header: @Composable () -> Unit, onOpenSource: () -> Unit
 @Composable
 private fun PrivacyRow(icon: ImageVector, tint: Color, fill: Color, title: Int, body: Int) {
     val c = MikaTheme.colors
-    Row(Modifier.fillMaxWidth().padding(20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    Row(Modifier.fillMaxWidth().padding(MikaSpace.S24), horizontalArrangement = Arrangement.spacedBy(MikaSpace.S16)) {
         IconSquare(icon, tint, fill)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(stringResource(title), Modifier.semantics { heading() }, fontSize = 16.5.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, color = c.ink)
-            Text(stringResource(body), fontSize = 14.5.sp, lineHeight = 21.sp, color = c.ink2)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MikaSpace.S4)) {
+            Text(stringResource(title), Modifier.semantics { heading() }, style = MikaType.BodyStrong, color = c.ink)
+            Text(stringResource(body), style = MikaType.Body, color = c.ink2)
         }
     }
 }
@@ -583,16 +569,16 @@ private fun PrivacyRow(icon: ImageVector, tint: Color, fill: Color, title: Int, 
 @Composable
 internal fun PhoneStepIntro(connected: Boolean) {
     val c = MikaTheme.colors
-    Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 24.dp, bottom = 18.dp)) {
+    Column(Modifier.padding(start = MikaSpace.S8, end = MikaSpace.S8, top = MikaSpace.S24, bottom = MikaSpace.S16)) {
         if (connected) {
-            Box(Modifier.padding(bottom = 14.dp).size(64.dp).background(c.ok, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(MikaIcons.Check, null, Modifier.size(32.dp), tint = if (c.isDark) Color(0xFF04140B) else Color.White)
+            Box(Modifier.padding(bottom = MikaSpace.S12).size((MikaSpace.S32 * 2)).background(c.ok, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(MikaIcons.Check, null, Modifier.size(MikaSpace.S32), tint = c.bg)
             }
             FlowTitleBlock(stringResource(R.string.ob_phone_on_title), stringResource(R.string.ob_phone_on_body))
-            StatePill(stringResource(R.string.phone_connected), c.ok, c.okSoft, check = true, modifier = Modifier.padding(top = 16.dp).testTag("onboarding-phone-state"))
+            StatePill(stringResource(R.string.phone_connected), c.ok, c.okSoft, check = true, modifier = Modifier.padding(top = MikaSpace.S16).testTag("onboarding-phone-state"))
         } else {
             FlowTitleBlock(stringResource(R.string.ob_phone_title), stringResource(R.string.ob_phone_lead))
-            StatePill(stringResource(R.string.ob_phone_not_connected), c.warn, c.warnSoft, pulsing = true, modifier = Modifier.padding(top = 16.dp).testTag("onboarding-phone-state"))
+            StatePill(stringResource(R.string.ob_phone_not_connected), c.warn, c.warnSoft, pulsing = true, modifier = Modifier.padding(top = MikaSpace.S16).testTag("onboarding-phone-state"))
         }
     }
 }
@@ -614,7 +600,7 @@ private fun PermissionsStep(status: SystemStatus, onFix: (Fix) -> Unit, header: 
     }
     FlowPage(header, bottom = { FlowButton(stringResource(R.string.ob_continue), onContinue, Modifier.testTag("onboarding-next")) }) {
         FlowTitleBlock(stringResource(R.string.ob_perm_title), stringResource(R.string.ob_perm_lead))
-        Column(Modifier.padding(top = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(top = MikaSpace.S24), verticalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
             PermissionRow(MikaIcons.Bell, R.string.ob_perm_notif, R.string.ob_perm_notif_body, "perm-notifications") {
                 if (status.notificationsAllowed) StatePill(stringResource(R.string.ob_perm_allowed), c.ok, c.okSoft, check = true)
                 else SmallButton(stringResource(R.string.ob_perm_allow), primary = true) { onFix(Fix.AllowNotifications) }
@@ -631,7 +617,7 @@ private fun PermissionsStep(status: SystemStatus, onFix: (Fix) -> Unit, header: 
                 }
             }
         }
-        Text(stringResource(R.string.ob_perm_note), Modifier.padding(start = 4.dp, end = 4.dp, top = 16.dp), style = MikaType.Caption, color = c.ink3)
+        Text(stringResource(R.string.ob_perm_note), Modifier.padding(start = MikaSpace.S4, end = MikaSpace.S4, top = MikaSpace.S16), style = MikaType.Caption, color = c.ink3)
     }
 }
 
@@ -639,16 +625,16 @@ private fun PermissionsStep(status: SystemStatus, onFix: (Fix) -> Unit, header: 
 private fun PermissionRow(icon: ImageVector, title: Int, body: Int, tag: String, trailing: @Composable () -> Unit) {
     val c = MikaTheme.colors
     GlassCard(Modifier.testTag(tag)) {
-        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(Modifier.padding(MikaSpace.S16), verticalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
                 IconSquare(icon, c.ink, c.fill)
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(stringResource(title), Modifier.semantics { heading() }, fontSize = 16.5.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, color = c.ink)
-                    Text(stringResource(body), fontSize = 14.sp, lineHeight = 20.sp, color = c.ink2)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MikaSpace.S4)) {
+                    Text(stringResource(title), Modifier.semantics { heading() }, style = MikaType.BodyStrong, color = c.ink)
+                    Text(stringResource(body), style = MikaType.Callout, color = c.ink2)
                 }
             }
             // On its own line so a long label or a large font never squeezes the explanation.
-            Box(Modifier.padding(start = 58.dp)) { trailing() }
+            Box(Modifier.padding(start = MikaSize.TopBar)) { trailing() }
         }
     }
 }
@@ -659,11 +645,11 @@ internal fun SmallButton(text: String, primary: Boolean, tag: String? = null, en
     Box(
         Modifier.heightIn(min = MikaSize.TouchTarget).clip(MikaShapes.Pill)
             .then(if (primary) Modifier.background(if (enabled) c.ink else c.ink.copy(alpha = 0.12f)) else Modifier.border(1.dp, c.ink.copy(alpha = 0.22f), MikaShapes.Pill))
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(horizontal = 20.dp, vertical = 8.dp)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(horizontal = MikaSpace.S24, vertical = MikaSpace.S8)
             .then(if (tag != null) Modifier.testTag(tag) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, fontSize = 15.sp, lineHeight = 20.sp, fontWeight = if (primary) FontWeight.SemiBold else FontWeight.Medium,
+        Text(text, style = MikaType.BodyStrong,
             color = if (!primary) c.ink else if (enabled) c.bg else c.ink3)
     }
 }
@@ -680,8 +666,8 @@ private fun PersonalStep(
     val save = { progress.setName(name); onContinue() }
     FlowPage(header, bottom = { FlowButton(stringResource(R.string.ob_continue), save, Modifier.testTag("onboarding-next")) }) {
         FlowTitleBlock(stringResource(R.string.ob_personal_title), stringResource(R.string.ob_personal_lead))
-        GlassCard(Modifier.padding(top = 24.dp)) {
-            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        GlassCard(Modifier.padding(top = MikaSpace.S24)) {
+            Column(Modifier.padding(MikaSpace.S16), verticalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
                 OrbitTextField(
                     name, { name = it.take(OnboardingFlow.NAME_MAX) }, stringResource(R.string.ob_name_label),
                     Modifier.fillMaxWidth().testTag("onboarding-name"), placeholder = stringResource(R.string.ob_name_placeholder),
@@ -689,21 +675,21 @@ private fun PersonalStep(
                 Text(stringResource(R.string.ob_name_hint), style = MikaType.Caption, color = c.ink3)
             }
         }
-        GlassCard(Modifier.padding(top = 12.dp)) {
-            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        GlassCard(Modifier.padding(top = MikaSpace.S12)) {
+            Column(Modifier.padding(MikaSpace.S16), verticalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12)) {
                     IconSquare(MikaIcons.Message, c.ok, c.okSoft)
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Text(stringResource(R.string.ob_wa_title), Modifier.semantics { heading() }, fontSize = 16.5.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, color = c.ink)
-                        Text(stringResource(R.string.ob_wa_body), fontSize = 14.5.sp, lineHeight = 21.sp, color = c.ink2)
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MikaSpace.S4)) {
+                        Text(stringResource(R.string.ob_wa_title), Modifier.semantics { heading() }, style = MikaType.BodyStrong, color = c.ink)
+                        Text(stringResource(R.string.ob_wa_body), style = MikaType.Body, color = c.ink2)
                     }
                 }
                 Row(
-                    Modifier.fillMaxWidth().background(c.warnSoft, RoundedCornerShape(16.dp)).padding(horizontal = 14.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    Modifier.fillMaxWidth().background(c.warnSoft, RoundedCornerShape(MikaRadius.Lg)).padding(horizontal = MikaSpace.S12, vertical = MikaSpace.S12),
+                    horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12),
                 ) {
-                    Icon(MikaIcons.Exclaim, null, Modifier.padding(top = 2.dp).size(16.dp), tint = c.warn)
-                    Text(stringResource(R.string.ob_wa_risk), Modifier.weight(1f), fontSize = 13.5.sp, lineHeight = 19.sp, color = c.ink)
+                    Icon(MikaIcons.Exclaim, null, Modifier.padding(top = 2.dp).size(MikaSize.SmallIcon), tint = c.warn)
+                    Text(stringResource(R.string.ob_wa_risk), Modifier.weight(1f), style = MikaType.Caption, color = c.ink)
                 }
                 if (whatsappLinked) StatePill(stringResource(R.string.ob_wa_linked), c.ok, c.okSoft, check = true)
                 else SmallButton(stringResource(R.string.ob_wa_title), primary = false, tag = "onboarding-whatsapp") { progress.setName(name); onLinkWhatsapp() }
@@ -727,16 +713,15 @@ private fun DoneStep(
     val model = remember(roles) { store.mainModelName() } ?: stringResource(R.string.ob_model_gemini).takeIf { geminiOn }
     val settle = remember { Animatable(if (reduceMotion) 1f else 0f) }
     val ring = remember { Animatable(if (reduceMotion) 1f else 0f) }
-    LaunchedEffect(Unit) {
-        if (reduceMotion) return@LaunchedEffect
-        launch { settle.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = 160f)) }
-        launch { ring.animateTo(1f, tween(1100, delayMillis = 100)) }
+    LaunchedEffect(reduceMotion) {
+        launch { settle.animateTo(1f, MikaMotion.specs(reduceMotion).bouncy()) }
+        launch { ring.animateTo(1f, MikaMotion.specs(reduceMotion).timed(MikaMotion.Duration.LONG)) }
     }
-    val glow = Color(0xFFE97D60)
+    val glow = c.accent
     FlowPage(header, bottom = { FlowButton(stringResource(R.string.ob_done_start), onFinish, Modifier.testTag("onboarding-finish")) }) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
-                Modifier.size(220.dp).drawBehind {
+                Modifier.size(MikaSize.IntroHalo).drawBehind {
                     drawCircle(Brush.radialGradient(listOf(glow.copy(alpha = 0.30f), glow.copy(alpha = 0.10f), Color.Transparent)))
                     // One ring goes out and fades: the short celebration. Still, it is not drawn at all.
                     val p = ring.value
@@ -747,23 +732,23 @@ private fun DoneStep(
                 },
                 contentAlignment = Alignment.Center,
             ) {
-                MikaMark(Modifier.size(136.dp).graphicsLayer {
+                MikaMark(Modifier.size(MikaSize.IntroDoneMark).graphicsLayer {
                     val p = settle.value
                     scaleX = 0.6f + 0.4f * p; scaleY = 0.6f + 0.4f * p; alpha = p.coerceIn(0f, 1f)
                 }.clearAndSetSemantics {})
             }
             Text(
                 if (name.isBlank()) stringResource(R.string.ob_done_title) else stringResource(R.string.ob_done_title_named, name),
-                Modifier.semantics { heading() }, fontSize = 34.sp, lineHeight = 40.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp,
+                Modifier.semantics { heading() }, style = MikaType.LargeTitle,
                 color = c.ink, textAlign = TextAlign.Center,
             )
-            Text(stringResource(R.string.ob_done_lead), Modifier.padding(top = 10.dp), style = FlowLead, color = c.ink2, textAlign = TextAlign.Center)
+            Text(stringResource(R.string.ob_done_lead), Modifier.padding(top = MikaSpace.S12), style = MikaType.Body, color = c.ink2, textAlign = TextAlign.Center)
         }
-        GlassCard(Modifier.padding(top = 26.dp)) {
+        GlassCard(Modifier.padding(top = MikaSpace.S24)) {
             SummaryRow(stringResource(R.string.ob_done_model), model ?: stringResource(R.string.ob_phone_later), ok = model != null)
-            Box(Modifier.padding(horizontal = 18.dp).fillMaxWidth().height(0.75.dp).background(c.hair))
+            Box(Modifier.padding(horizontal = MikaSpace.S16).fillMaxWidth().height(0.75.dp).background(c.hair))
             SummaryRow(stringResource(R.string.ob_done_phone), stringResource(if (phoneReady) R.string.phone_connected else R.string.ob_phone_later), ok = phoneReady)
-            Box(Modifier.padding(horizontal = 18.dp).fillMaxWidth().height(0.75.dp).background(c.hair))
+            Box(Modifier.padding(horizontal = MikaSpace.S16).fillMaxWidth().height(0.75.dp).background(c.hair))
             SummaryRow(stringResource(R.string.whatsapp_title), stringResource(if (whatsappLinked) R.string.ob_wa_linked else R.string.ob_done_not_linked), ok = whatsappLinked)
         }
     }
@@ -773,13 +758,13 @@ private fun DoneStep(
 private fun SummaryRow(label: String, value: String, ok: Boolean) {
     val c = MikaTheme.colors
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 54.dp).padding(horizontal = 18.dp, vertical = 10.dp).semantics(mergeDescendants = true) {},
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+        Modifier.fillMaxWidth().heightIn(min = MikaSize.Button).padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12).semantics(mergeDescendants = true) {},
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MikaSpace.S12),
     ) {
-        Text(label, Modifier.weight(1f), fontSize = 15.5.sp, lineHeight = 22.sp, color = c.ink2)
-        Text(value, Modifier.weight(1f, fill = false), fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.Medium,
+        Text(label, Modifier.weight(1f), style = MikaType.Body, color = c.ink2)
+        Text(value, Modifier.weight(1f, fill = false), style = MikaType.BodyStrong,
             color = if (ok) c.ink else c.ink3, textAlign = TextAlign.End)
-        if (ok) Icon(MikaIcons.Check, null, Modifier.size(16.dp), tint = c.ok)
+        if (ok) Icon(MikaIcons.Check, null, Modifier.size(MikaSize.SmallIcon), tint = c.ok)
     }
 }
 

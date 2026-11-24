@@ -59,6 +59,11 @@ object MikaSpace {
 
 /** 各类元素的尺寸。 */
 object MikaSize {
+    val IntroMark = 168.dp
+    val IntroDoneMark = 136.dp
+    val IntroWelcomeHalo = 260.dp
+    val IntroHalo = 220.dp
+    val IntroExampleBubble = 250.dp
     val TopBar = 56.dp
     val IconButton = 40.dp
     /** Minimum touch target for icon-only buttons (Android accessibility guidance). */
