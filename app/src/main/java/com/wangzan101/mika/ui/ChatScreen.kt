@@ -25,6 +25,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -140,6 +142,8 @@ import com.wangzan101.mika.settings.Prerequisites
 import com.wangzan101.mika.settings.RecommendedTask
 import com.wangzan101.mika.settings.RecommendedTaskStore
 import com.wangzan101.mika.takeover.Takeover
+import com.wangzan101.mika.task.TaskGate
+import com.wangzan101.mika.core.shell.BuiltinShellStatus
 import com.wangzan101.mika.task.SteerNote
 import com.wangzan101.mika.task.SteerState
 import com.wangzan101.mika.task.TaskService
@@ -185,9 +189,7 @@ import androidx.compose.animation.core.VisibilityThreshold
 import com.wangzan101.mika.ui.plan.LivePlans
 import com.wangzan101.mika.ui.plan.LivePlanCard
 import com.wangzan101.mika.ui.plan.LivePlanSteps
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.graphics.TransformOrigin
-import com.wangzan101.mika.ui.theme.pressScale
 import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.ui.theme.MikaRadius
 import com.wangzan101.mika.ui.theme.indicator
@@ -197,7 +199,6 @@ import com.wangzan101.mika.ui.theme.shimmerShine
 import com.wangzan101.mika.ui.theme.attentionInk
 import com.wangzan101.mika.ui.theme.errorInk
 import com.wangzan101.mika.ui.components.HoldToAllowButton
-import com.wangzan101.mika.core.shell.BuiltinShellStatus
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.LiveRegionMode
 
@@ -243,6 +244,11 @@ fun ChatScreen(
     onOpenOrbitHub: () -> Unit = {},
     onVoiceListeningChanged: (Boolean) -> Unit = {},
     primaryBottomInset: Dp = 0.dp,
+    /** The name the user gave in the first-run flow, for the greeting; blank when none. */
+    userName: String = "",
+    /** Right after the first-run flow: three starters shown in place of the saved suggestions until a message is sent. */
+    starters: List<RecommendedTask>? = null,
+    onStartersUsed: () -> Unit = {},
 ) {
     DisposableEffect(vm) {
         onDispose { onVoiceListeningChanged(false) }
@@ -322,10 +328,19 @@ fun ChatScreen(
         }
     }
 
+    // Jump to latest: offered once the newest message is more than about a screen below; replies that arrive
+    // while the user is up there are counted on the button until they are back at the bottom.
+    LaunchedEffect(starters != null, ui.exchanges.isNotEmpty()) { if (starters != null && ui.exchanges.isNotEmpty()) onStartersUsed() }
+    val farFromLatest by remember(listState) { derivedStateOf { listState.farFromTail() } }
+    val showJumpToLatest = farFromLatest && ui.exchanges.isNotEmpty()
+    val replyCount = chatReplyCount(ui.exchanges)
+    var seenReplies by rememberSaveable(ui.conversationId) { mutableIntStateOf(replyCount) }
+    LaunchedEffect(showJumpToLatest, followingTail, replyCount) { if (!showJumpToLatest || followingTail) seenReplies = replyCount }
+
     // 返回聊天时同一条内容不重新滚动；新进展仅在跟随末尾时滚动。
     // 目标行直接由当前 UI 状态计算:layoutInfo 还是上一帧的测量结果,发送后立即读它会滚到旧的末尾。
     val last = ui.exchanges.lastOrNull()
-    val rowCount = chatItemCount(ui.exchanges, kept, phoneSetupNeeded, hasBlocked = ui.blocked != null)
+    val rowCount = chatItemCount(ui.exchanges, kept, phoneSetupNeeded, hasBlocked = ui.blocked != null, operatingPhone = ui.operatingPhone)
     val scrollMarker = "${ui.conversationId}:${ui.exchanges.size}:${last?.steps?.size}:${last?.steers?.size}:${last?.status?.hashCode()}:${ui.blocked?.hashCode()}"
     val jump = pendingJump?.takeIf { it.conversationId == ui.conversationId }
     // 目标行的高亮:只在目标还是当前对话时算。
@@ -335,7 +350,7 @@ fun ChatScreen(
     LaunchedEffect(scrollMarker, jump) {
         // 从搜索或文件库过来:先滚到目标消息,期间不要跟末尾;目标不在了就退回原来的逻辑。
         if (jump != null) {
-            val keys = chatItemKeys(ui.exchanges, kept, phoneSetupNeeded, hasBlocked = ui.blocked != null)
+            val keys = chatItemKeys(ui.exchanges, kept, phoneSetupNeeded, hasBlocked = ui.blocked != null, operatingPhone = ui.operatingPhone)
             val index = chatTargetKey(ui.exchanges, jump.target)?.let(keys::indexOf) ?: -1
             if (index >= 0) {
                 previousScrollMarker = scrollMarker
@@ -523,7 +538,7 @@ fun ChatScreen(
                                     ?: stringResource(if (isSideChat) R.string.orbit_side_context else R.string.orbit_channel_empty)
                                 Text(description, Modifier.padding(top = MikaSpace.S12), style = MikaType.Body, color = c.ink2)
                             }
-                        } else EmptyState(ui.conversationId, recommendedTasks, others.size, onOpenDrawer) { prompt ->
+                        } else EmptyState(ui.conversationId, starters ?: recommendedTasks, others.size, onOpenDrawer, userName) { prompt ->
                             if (input.isEmpty()) vm.input(prompt) else pendingExample = prompt
                         }
                     }
@@ -576,7 +591,7 @@ fun ChatScreen(
                 Modifier.fillMaxWidth()
                     .layout { m, cons ->
                         val p = m.measure(cons.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity))
-                        layout(p.width, 0) { p.place(0, 0) }
+                        layout(p.width, 0) { p.placeRelative(0, 0) }
                     }
                     .height(scrimHeight),
             ) { com.wangzan101.mika.ui.components.FadingGlassScrim(Modifier.fillMaxSize(), backdrop) }
@@ -635,19 +650,18 @@ fun ChatScreen(
         } else null
         LaunchedEffect(canAttachNow) { if (!canAttachNow) attachOpen = false }
         // Scrolled up away from the newest message: a small glass arrow above the message bar brings you back.
-        val showJump by remember { derivedStateOf { !followingTail && listState.canScrollForward } }
         AnimatedVisibility(
-            showJump && !menuOpen,
+            showJumpToLatest && !followingTail && !menuOpen && !attachOpen,
             Modifier.align(Alignment.BottomCenter)
                 .padding(bottom = with(density) { composerHeight.toDp() } + MikaSpace.S12),
             enter = MikaTheme.motion.enter(TransformOrigin(0.5f, 1f)),
             exit = MikaTheme.motion.exit(TransformOrigin(0.5f, 1f)),
         ) {
-            JumpToLatest {
+            JumpToLatest(unreadSince(seenReplies, replyCount), backdrop) {
                 followingTail = true
                 scope.launch {
                     val end = listState.layoutInfo.totalItemsCount - 1
-                    if (end >= 0) { if (reduceMotion) listState.scrollToItem(end) else listState.animateScrollToItem(end) }
+                    listState.scrollToTail(end, animate = !reduceMotion)
                 }
             }
         }
@@ -820,18 +834,48 @@ private fun LazyListState.nearTail(thresholdPx: Int): Boolean {
     return tail.offset + tail.size - layout.viewportEndOffset <= thresholdPx
 }
 
+/**
+ * True when the newest row is more than about one screen below what is showing. When the last row is not laid
+ * out yet, the distance is estimated from the rows that are: what is left of the last visible row plus the
+ * rows after it at the average visible height.
+ */
+private fun LazyListState.farFromTail(): Boolean {
+    val layout = layoutInfo
+    val end = layout.totalItemsCount - 1
+    val visible = layout.visibleItemsInfo
+    if (end < 0 || visible.isEmpty()) return false
+    val viewport = layout.viewportEndOffset - layout.viewportStartOffset
+    val lastVisible = visible.last()
+    val below = lastVisible.offset + lastVisible.size - layout.viewportEndOffset
+    if (lastVisible.index >= end) return below > viewport
+    val average = visible.sumOf { it.size } / visible.size
+    return below.coerceAtLeast(0) + (end - lastVisible.index) * average > viewport
+}
+
+/** Scrolls to the very end of row [end], below a reply taller than the screen too; smoothly when [animate]. */
+private suspend fun LazyListState.scrollToTail(end: Int, animate: Boolean) {
+    if (end < 0) return
+    if (animate) animateScrollToItem(end) else scrollToItem(end)
+    val layout = layoutInfo
+    val tail = layout.visibleItemsInfo.firstOrNull { it.index == end } ?: return
+    val below = tail.offset + tail.size - layout.viewportEndOffset + layout.afterContentPadding
+    if (below > 0) if (animate) animateScrollBy(below.toFloat()) else scrollBy(below.toFloat())
+}
+
 // ---------- 空对话 ----------
 
 /** 问候、一句「想让 Mika 做什么？」和推荐任务。点一条把提示词填进输入框,改好了再发;一条都没有时不显示列表。 */
 @Composable
 private fun EmptyState(
-    conversation: String?, tasks: List<RecommendedTask>, runningElsewhere: Int, onOpenDrawer: () -> Unit, onPick: (String) -> Unit,
+    conversation: String?, tasks: List<RecommendedTask>, runningElsewhere: Int, onOpenDrawer: () -> Unit, name: String = "",
+    onPick: (String) -> Unit,
 ) {
     val c = MikaTheme.colors
     val hour = remember(conversation) { LocalTime.now().hour }
     val greeting = ChatCopy.greeting(hour)
     val locale = LocalConfiguration.current.locales[0]
     val english = locale.language == "en"
+    val named = if (name.isBlank()) null else stringResource(R.string.chat_greeting_named, greeting, name)
     val latin = locale.language in setOf("en", "es", "in", "pt")
     var expanded by rememberSaveable(conversation) { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth()) {
@@ -841,9 +885,10 @@ private fun EmptyState(
                     append("Good ")
                     pushStyle(SpanStyle(fontFamily = FontFamily.Serif, fontStyle = FontStyle.Italic, fontWeight = FontWeight.Normal))
                     append(greeting.removePrefix("Good "))
-                    append('.')
+                    if (name.isBlank()) append('.')
                     pop()
-                } else append(greeting)
+                    if (name.isNotBlank()) append(", $name.")
+                } else append(named ?: greeting)
             }, style = MikaType.LargeTitle, color = c.ink)
             Text(stringResource(R.string.home_editorial_subtitle), Modifier.padding(top = MikaSpace.S8), style = EmptyLead, color = c.ink2)
         }
@@ -948,13 +993,11 @@ private fun LazyListScope.exchange(
         ex.status is ExchangeStatus.NeedsTakeover || ex.status is ExchangeStatus.NeedsConfirmation ||
         ex.status is ExchangeStatus.NeedsInput || ex.status is ExchangeStatus.Queued
     val active = ex.status.isActive()
-    val answering = ex.status == ExchangeStatus.Working && !ex.draft.isNullOrBlank()
-    if (active) {
-        // Only thinking so far: the plain "Thinking" line below says it, so no second indicator above it.
-        val onlyThinking = ex.status == ExchangeStatus.Working && ex.waitingForModel && ex.steps.isEmpty() && !backgroundNote
-        if (!answering && !onlyThinking) chatItem(reduceMotion, "s$index") { WorkBlock(ex, vm, backgroundNote, openRun) }
-    } else if (ex.steps.isNotEmpty() || ex.runId != null) {
-        chatItem(reduceMotion, "s$index") { DoneLine(ex, reduceMotion, openRun, tokens) }
+    // One "still going" row at a time: the working block, or the plain Thinking line before anything else exists
+    // (see [statusRows]; the row model in ChatRows asks the same function).
+    val rows = statusRows(ex, backgroundNote)
+    if (rows.work) chatItem(reduceMotion, "s$index") {
+        if (active) WorkBlock(ex, vm, backgroundNote, openRun) else DoneLine(ex, reduceMotion, openRun, tokens)
     }
     // 任务进行中插的话:用户的原话,下面一行小字说它的去向。
     // 插话之前已经说完的回复照常显示;插话打断的那段留在原处(淡色、标「被你的新消息打断」);接着才是插话。
@@ -979,13 +1022,11 @@ private fun LazyListScope.exchange(
     val (joined, waiting) = steersAroundDraft(ex.steers)
     joined.forEach(::steer)
     val draftText = ex.draft?.takeIf(String::isNotBlank)
-    if (draftText != null) {
-        chatItem(reduceMotion, "d$index") { DraftText(draftText, ex.waitingForModel, reduceMotion) }
-        // While the answer is still streaming in, three dots under it say more is coming.
-        if (active && ex.waitingForModel) chatItem(reduceMotion, "t$index") { TypingBubble(reduceMotion) }
-    }
-    // While the model is thinking and nothing has streamed yet, a shimmering "Thinking" line holds the answer's place.
-    else if (active && ex.status == ExchangeStatus.Working && ex.waitingForModel) chatItem(reduceMotion, "k$index") { ThinkingLine(reduceMotion) }
+    if (draftText != null) chatItem(reduceMotion, "d$index") { DraftText(draftText, ex.waitingForModel, reduceMotion) }
+    // While the answer is still streaming in, three dots under it say more is coming.
+    if (rows.typing) chatItem(reduceMotion, "t$index") { TypingBubble(reduceMotion) }
+    // Thinking, with nothing to show yet: a shimmering "Thinking" line holds the answer's place.
+    if (rows.thinking) chatItem(reduceMotion, "th$index") { ThinkingLine(reduceMotion) }
     waiting.forEach(::steer)
     chatItem(reduceMotion, "r$index") {
         JumpHighlight(highlightKey == "r$index", reduceMotion) {
@@ -1252,15 +1293,18 @@ private fun RepliedTo(text: String) {
  */
 @Composable
 private fun Modifier.answerBubble(): Modifier = layout { m, c ->
-    val max = if (c.hasBoundedWidth) (c.maxWidth * AnswerWidthFraction).toInt() else c.maxWidth
+    val max = if (c.hasBoundedWidth) answerBubbleMaxWidth(c.maxWidth) else c.maxWidth
     val p = m.measure(c.copy(minWidth = 0, maxWidth = max))
-    layout(p.width, p.height) { p.place(0, 0) }
+    layout(p.width, p.height) { p.placeRelative(0, 0) }
 }.answerSurface()
 
 /** Mika 回答的底:很淡的灰,左下尾角。 */
 @Composable
 private fun Modifier.answerSurface(): Modifier =
-    background(MikaTheme.colors.answer, MikaShapes.AnswerBubble).padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12)
+    background(MikaTheme.colors.answer, MikaShapes.AnswerBubble)
+        .border(0.75.dp, MikaTheme.colors.edge, MikaShapes.AnswerBubble)
+        .clip(MikaShapes.AnswerBubble)
+        .padding(horizontal = MikaSpace.S16, vertical = MikaSpace.S12)
 
 // ---------- 进度 ----------
 
@@ -1272,17 +1316,27 @@ private fun Modifier.answerSurface(): Modifier =
 private fun WorkBlock(ex: Exchange, vm: ChatViewModel, backgroundNote: Boolean, openRun: (String) -> Unit) {
     val c = MikaTheme.colors
     val plan = remember(ex) { LivePlans.from(ex) }
-    // No card behind it: it sits in the chat like the "Thinking" line does.
-    Column(Modifier.fillMaxWidth().padding(bottom = MikaSpace.S8).padding(horizontal = MikaSpace.S4, vertical = 2.dp)) {
-        LivePlanCard(plan, onStop = vm::cancel, showTitle = false)
-        // 跑的时候就能进运行过程(页面按秒接着长);结束后收进「做了 N 步 · 查看过程」那一行
-        ex.runId?.let { id ->
-            Text(
-                stringResource(R.string.chat_view_process),
-                Modifier.padding(top = 2.dp).clip(MikaShapes.Pill).clickable(role = Role.Button) { openRun(id) }
-                    .padding(horizontal = MikaSpace.S4, vertical = MikaSpace.S4).testTag("work-view-process"),
-                style = DoneText.copy(fontStyle = FontStyle.Italic, textDecoration = TextDecoration.Underline), color = c.ink3,
-            )
+    var showSteps by rememberSaveable { mutableStateOf(false) }
+    val thinking = ex.status == ExchangeStatus.Working && ex.waitingForModel && ex.steps.isNotEmpty()
+    Column(Modifier.fillMaxWidth().padding(bottom = MikaSpace.S8).padding(horizontal = MikaSpace.S4)) {
+        LivePlanCard(
+            plan, onStop = vm::cancel, showTitle = false,
+            statusText = if (thinking) stringResource(R.string.orbit_call_thinking) else null,
+            showSteps = showSteps,
+        ) {
+            if (plan.steps.isNotEmpty() || ex.runId != null) Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MikaSpace.S8),
+            ) {
+                if (plan.steps.isNotEmpty()) {
+                    TextLink(stringResource(if (showSteps) R.string.chat_collapse_steps else R.string.chat_expand_steps)) {
+                        showSteps = !showSteps
+                    }
+                }
+                ex.runId?.let { id ->
+                    TextLink(stringResource(R.string.chat_view_live), Modifier.testTag("work-view-process")) { openRun(id) }
+                }
+            }
         }
         if (backgroundNote) {
             Row(
@@ -1438,7 +1492,7 @@ private fun StatusCard(
             val text = if (handedOver) stringResource(R.string.takeover_handed_over_hint) else status.message
             // 付款的商品、金额、地址单独成行:这张卡片就是付款前的确认
             val body = listOfNotNull(text, StatusCopy.paymentLines(status.item, status.amount, status.address)).joinToString("\n")
-            NeedCard(title, body, footer = { TextLink(stringResource(R.string.action_cancel_task), vm::cancel) }) {
+            NeedCard(title, body, footer = { TextLink(stringResource(R.string.action_cancel_task), onClick = vm::cancel) }) {
                 if (handedOver) {
                     CardButton(stringResource(R.string.action_finished_myself), onClick = vm::finishedMyself)
                     CardButton(stringResource(R.string.action_hand_back), primary = true, onClick = vm::handBack)
@@ -1465,9 +1519,15 @@ private fun StatusCard(
             val submission = rememberSaveable(saver = ApprovalSubmission.Saver) { ApprovalSubmission() }
             ApprovalCard(status, submission, onApprove = { vm.approve(status.key) }, onDecline = { vm.decline(status.key) })
         }
-        is ExchangeStatus.Paused -> NeedCard(stringResource(if (status.resumable) R.string.chat_paused else R.string.chat_waiting_for_you), status.why) {
-            CardButton(stringResource(R.string.action_cancel_task), onClick = vm::cancel)
-            if (status.resumable) CardButton(stringResource(R.string.chat_continue), primary = true, onClick = vm::resume)
+        is ExchangeStatus.Paused -> {
+            // Paused because the phone control helper dropped (it can, for instance, die while Wi-Fi is off and then
+            // has no way back): say what is wrong and offer Reconnect here instead of sending the user to Settings.
+            val link = LocalPhoneLink.current
+            if (link != null && status.resumable && status.why == TaskGate.SHELL_DOWN) PhoneDownCard(link, vm::cancel, vm::resume)
+            else NeedCard(stringResource(if (status.resumable) R.string.chat_paused else R.string.chat_waiting_for_you), status.why) {
+                CardButton(stringResource(R.string.action_cancel_task), onClick = vm::cancel)
+                if (status.resumable) CardButton(stringResource(R.string.chat_continue), primary = true, onClick = vm::resume)
+            }
         }
         // 排队等开始:轮到时自动开始,点继续不能插队,只给取消
         is ExchangeStatus.Queued -> NeedCard(stringResource(R.string.chat_queued), status.why) {
@@ -1497,6 +1557,15 @@ private fun StatusCard(
                 Text(stringResource(R.string.chat_not_done), style = MikaType.BodyStrong, color = MikaTheme.colors.ink)
             }
             Text(status.reason, Modifier.padding(top = MikaSpace.S4), style = CardBody, color = MikaTheme.colors.ink2)
+            // The task ended because the helper went away: while it is still down, offer to reconnect before retrying.
+            val link = LocalPhoneLink.current
+            if (link != null && status.reason == TaskService.SHELL_DIED && link.status != BuiltinShellStatus.Running) {
+                val copy = PhoneDownCopy.card(link.status)
+                Text(copy.body, Modifier.padding(top = MikaSpace.S8), style = MikaType.Caption, color = MikaTheme.colors.ink2)
+                Row(Modifier.fillMaxWidth().padding(top = MikaSpace.S12)) {
+                    CardButton(PhoneSetupCopy.RECONNECT, primary = true, enabled = !copy.connecting, tag = "phone-reconnect", onClick = link.reconnect)
+                }
+            }
             RecoveryActions(runId, recover)
         }
         // 停止后补上的交代当作这一轮的回答,排在「已停止」下面;还在写时一行小字
@@ -1645,16 +1714,38 @@ private fun NeedCard(
 }
 
 @Composable
-private fun RowScope.CardButton(text: String, primary: Boolean = false, onClick: () -> Unit) {
+private fun RowScope.CardButton(text: String, primary: Boolean = false, enabled: Boolean = true, tag: String? = null, onClick: () -> Unit) {
     MikaButton(
-        text, onClick, Modifier.weight(1f),
-        kind = if (primary) ButtonKind.Primary else ButtonKind.Tonal, size = ButtonSize.Medium,
+        text, onClick, Modifier.weight(1f).then(if (tag != null) Modifier.testTag(tag) else Modifier),
+        kind = if (primary) ButtonKind.Primary else ButtonKind.Tonal, size = ButtonSize.Medium, enabled = enabled,
     )
 }
 
+/**
+ * A task paused because phone control dropped. The card follows the helper's live state: what is wrong (Wi-Fi off,
+ * wireless debugging off, reconnecting), a Reconnect button that uses the existing paired-key reconnect, and
+ * Continue once it is back. After the user asked to reconnect, the task continues by itself when the helper returns.
+ */
 @Composable
-private fun TextLink(text: String, onClick: () -> Unit) {
-    Text(text, Modifier.clip(MikaShapes.Pill).clickable(onClick = onClick).padding(MikaSpace.S4), style = MikaType.Caption, color = MikaTheme.colors.ink3)
+private fun PhoneDownCard(link: PhoneLink, onCancel: () -> Unit, onContinue: () -> Unit) {
+    val copy = PhoneDownCopy.card(link.status)
+    var asked by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(copy.back, asked) {
+        if (copy.back && asked) { asked = false; onContinue() }
+    }
+    NeedCard(copy.title, copy.body) {
+        CardButton(stringResource(R.string.action_cancel_task), onClick = onCancel)
+        if (copy.back) CardButton(stringResource(R.string.chat_continue), primary = true, tag = "phone-continue", onClick = onContinue)
+        else CardButton(PhoneSetupCopy.RECONNECT, primary = true, enabled = !copy.connecting, tag = "phone-reconnect") {
+            asked = true
+            link.reconnect()
+        }
+    }
+}
+
+@Composable
+private fun TextLink(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Text(text, modifier.clip(MikaShapes.Pill).clickable(role = Role.Button, onClick = onClick).padding(MikaSpace.S4), style = MikaType.Caption, color = MikaTheme.colors.ink3)
 }
 
 /** 导出到「下载/Mika」的文件:小卡片,名字、大小和存放处;点了能看的在 App 里打开([FileViewer]),其余交给系统里能打开它的 App。 */
@@ -1815,7 +1906,7 @@ internal fun Composer(
                 val keyboardNow = (ime.getBottom(this) - nav.getBottom(this)).coerceAtLeast(0)
                 val extra = (minBottom.roundToPx() - keyboardNow).coerceAtLeast(0)
                 val p = m.measure(cons.offset(vertical = -extra))
-                layout(p.width, p.height + extra) { p.place(0, 0) }
+                layout(p.width, p.height + extra) { p.placeRelative(0, 0) }
             } else Modifier)
             .padding(start = if (editorial) MikaSpace.S16 else MikaSpace.S12, end = if (editorial) MikaSpace.S16 else MikaSpace.S12, top = MikaSpace.S12, bottom = if (editorial) MikaSpace.S8 else MikaSpace.S8),
     ) {
@@ -1844,7 +1935,7 @@ internal fun Composer(
                         ).joinToString("\n")
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(why, Modifier.weight(1f), style = MikaType.Caption, color = c.warn)
-                            TextLink(stringResource(R.string.ok_got_it), onDismissRejected)
+                            TextLink(stringResource(R.string.ok_got_it), onClick = onDismissRejected)
                         }
                     }
                 }
@@ -1997,29 +2088,9 @@ private fun FocusPill(state: PresenceState, title: String, status: String?, stat
 }
 
 /** How wide Orbit's reply bubble may grow, as a share of the chat column. */
-private const val AnswerWidthFraction = 0.85f
+internal const val AnswerBubbleWidth = 0.85f
 
-/** The jump-to-latest button: a 40dp frosted circle with a down arrow inside a 48dp touch target. */
-@Composable
-private fun JumpToLatest(onClick: () -> Unit) {
-    val c = MikaTheme.colors
-    val label = stringResource(R.string.chat_jump_latest)
-    val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    Box(
-        Modifier.size(MikaSize.TouchTarget).pressScale(press)
-            .clip(CircleShape)
-            .clickable(press, androidx.compose.foundation.LocalIndication.current, role = Role.Button, onClickLabel = label, onClick = onClick)
-            .semantics { contentDescription = label }
-            .testTag("chat-jump-latest"),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            Modifier.size(MikaSize.IconButton).floatShadow(c, CircleShape).background(c.surface, CircleShape)
-                .border(0.5.dp, c.glassEdge, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) { Icon(MikaIcons.Down, null, Modifier.size(MikaSize.SmallIcon + MikaSpace.S4), tint = c.ink) }
-    }
-}
+internal fun answerBubbleMaxWidth(rowWidth: Int): Int = (rowWidth * AnswerBubbleWidth).toInt()
 
 /**
  * Phone control dropped (the wireless-debugging helper stopped or lost its connection). One line says what

@@ -54,7 +54,6 @@ import com.wangzan101.mika.takeover.TakeoverQueue
 import com.wangzan101.mika.ui.ChatCopy
 import com.wangzan101.mika.ui.FollowUpMode
 import com.wangzan101.mika.ui.VoiceCopy
-import com.wangzan101.mika.i18n.tr
 import com.wangzan101.mika.voice.HoldToTalk
 import com.wangzan101.mika.voice.SpeechChoice
 import com.wangzan101.mika.voice.SpeechFailure

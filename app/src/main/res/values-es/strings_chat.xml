@@ -325,4 +325,6 @@
     <string name="chat_hold_to_allow">Mantén para permitir una vez</string>
     <string name="hold_to_allow_hint">Mantén pulsado hasta que se llene el anillo</string>
     <string name="hold_to_allow_holding">Sigue manteniendo</string>
+    <string name="chat_jump_latest_new">Ir a lo más reciente, nuevos: %1$d</string>
+    <string name="chat_view_live">Ver cómo trabaja</string>
 </resources>

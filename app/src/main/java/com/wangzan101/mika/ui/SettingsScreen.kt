@@ -123,6 +123,8 @@ fun SettingsScreen(
     /** 查到的新版本号;有它时「关于 Mika」一行写「x 可更新」带红点。 */
     updateVersion: String? = null,
     onOpenAbout: () -> Unit = {},
+    /** Opens the first-run flow again; nothing it remembers is reset. */
+    onReplayIntro: (() -> Unit)? = null,
     /** 外部 MCP server 设置(outbound);为空时不显示入口。 */
     mcpServers: com.wangzan101.mika.settings.McpServerStore? = null,
     onOpenSpeech: () -> Unit = {},
@@ -244,7 +246,7 @@ fun SettingsScreen(
             onOpenPrompts = { page = SettingsPage.Prompts },
             onOpenFix = if (status.sdkInt >= Prerequisites.MIN_SDK) ({ page = SettingsPage.Recovery }) else null,
             onQuit = { confirmingQuit = true },
-            versionName = BuildConfig.VERSION_NAME, updateVersion = updateVersion, onOpenAbout = onOpenAbout,
+            versionName = BuildConfig.VERSION_NAME, updateVersion = updateVersion, onOpenAbout = onOpenAbout, onReplayIntro = onReplayIntro,
         )
         SettingsPage.Advanced -> AdvancedSettingsContent(
             proxy = proxy, proxyNote = proxy?.let { NetProxyCopy.subtitle(it, browserProxy) }, onOpenProxy = { editingProxy = true },
@@ -434,6 +436,8 @@ fun SettingsContent(
     versionName: String = "",
     updateVersion: String? = null,
     onOpenAbout: () -> Unit = {},
+    /** Opens the first-run flow again; nothing it remembers is reset. */
+    onReplayIntro: (() -> Unit)? = null,
     personalStart: Boolean = false,
     onPersonalStart: ((Boolean) -> Unit)? = null,
     /** 自动归档:多久没有新消息的对话自动归档;0 表示关闭。 */
@@ -516,6 +520,10 @@ fun SettingsContent(
             onOpenFix?.let {
                 SettingsEntry(MikaIcons.Wrench, SettingsTint.Gray, stringResource(R.string.settings_recovery), stringResource(R.string.settings_recovery_sub),
                     "repair recovery self-check reset problem", it)
+            },
+            onReplayIntro?.let {
+                SettingsEntry(MikaIcons.Refresh, SettingsTint.Gray, stringResource(R.string.settings_replay_intro), stringResource(R.string.settings_replay_intro_sub),
+                    "intro welcome onboarding setup replay tour first run", it)
             },
             SettingsEntry(MikaIcons.Info, SettingsTint.Gray, stringResource(R.string.settings_about), stringResource(R.string.settings_about_sub),
                 "about version update licence license", onOpenAbout) { TrailingValue(AboutCopy.settingsValue(updateVersion, versionName)); RowChevron() },
